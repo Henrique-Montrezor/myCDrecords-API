@@ -1,0 +1,291 @@
+{% extends "_base.html" %}
+
+{% block title %}Perfil de {{ user.username }} • myCDrecords{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilos baseados no Letterboxd */
+    .lb-bg-main { background-color: #14181c; }
+    .lb-bg-card { background-color: #191e25; }
+    .lb-text-muted { color: #9ab; }
+    .lb-green { color: #00e054; }
+    
+    body {
+        overflow-x: hidden; /* Previne scroll horizontal devido ao breakout do banner */
+    }
+
+    /* BANNER CONFIGURATION (Backdrop Blur Effect) */
+    .profile-banner-container {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
+        width: 100vw;
+        height: 550px;
+        z-index: 0;
+        pointer-events: none;
+        overflow: hidden;
+        margin-top: -2rem;
+    }
+
+    .profile-banner-image {
+        width: 100%;
+        height: 100%;
+        background-image: url('{{ url_for('static', filename=user.banner_image) }}');
+        background-size: cover;
+        background-position: center 20%;
+        
+        /* O Efeito de album_details: Blur intenso e filtros de cor */
+        filter: blur(5px) brightness(1.0) saturate(1.0);
+        
+        /* Máscara de gradiente para fundir com o fundo escuro */
+        -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+        mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+        
+        opacity: 0.6;
+    }
+
+    /* Conteúdo Principal (fica sobre o banner) */
+    .profile-content-wrapper {
+        position: relative;
+        z-index: 10;
+    }
+
+    .poster-container {
+        position: relative;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+    }
+    .poster-container:hover {
+        border-color: #00e054;
+        box-shadow: 0 0 10px rgba(0, 224, 84, 0.4);
+    }
+    
+    .profile-nav-link {
+        color: #9ab;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.5rem 1rem;
+    }
+    .profile-nav-link:hover, .profile-nav-link.active {
+        color: white;
+        border-bottom: 3px solid #00e054;
+    }
+</style>
+
+<!-- BANNER FULL WIDTH (BACKDROP BLUR) -->
+{% if user.banner_image %}
+<div class="profile-banner-container">
+    <div class="profile-banner-image"></div>
+</div>
+{% endif %}
+
+<!-- CONTEÚDO DO PERFIL -->
+<div class="profile-content-wrapper min-h-screen text-gray-300 font-poppins">
+    
+    <!-- HERO SECTION -->
+    <div class="container mx-auto pt-12 md:pt-24 pb-8 border-b border-gray-700/50">
+        <div class="flex flex-col md:flex-row gap-8 items-end">
+            
+            <!-- Avatar e Info -->
+            <div class="flex-shrink-0 flex flex-col items-center md:items-start text-center md:text-left">
+                <div class="relative group">
+                    {% if user.profile_image %}
+                        <img src="{{ url_for('static', filename=user.profile_image) }}" class="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-[#14181c] object-cover shadow-2xl">
+                    {% else %}
+                        <div class="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gray-700 flex items-center justify-center text-5xl font-bold border-4 border-[#14181c] text-white shadow-2xl">
+                            {{ user.username[0] | upper }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <h1 class="text-3xl md:text-4xl font-bold text-white mt-4 drop-shadow-md">{{ user.username }}</h1>
+                <!-- TEMPO DE CASA -->
+                <p class="text-sm lb-text-muted mt-1 drop-shadow-sm">Membro há {{ member_since }}</p>
+                
+                <div class="flex gap-6 mt-4 text-xs font-bold uppercase tracking-wider text-white">
+                    <div class="text-center md:text-left">
+                        <span class="block text-xl md:text-2xl font-normal text-white">{{ reviews|length }}</span>
+                        <span class="lb-text-muted">Reviews</span>
+                    </div>
+                    <div class="text-center md:text-left">
+                        <span class="block text-xl md:text-2xl font-normal text-white">{{ lists|length }}</span>
+                        <span class="lb-text-muted">Listas</span>
+                    </div>
+                    <div class="text-center md:text-left">
+                        <span class="block text-xl md:text-2xl font-normal text-white">{{ followers_count }}</span>
+                        <span class="lb-text-muted">Seguidores</span>
+                    </div>
+                </div>
+                
+                <!-- BOTÃO DE AÇÃO (Seguir/Editar) -->
+                <div class="mt-6">
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.id == user.id %}
+                            <a href="{{ url_for('settings') }}" class="px-5 py-2 border border-gray-500 rounded text-xs uppercase font-bold text-gray-300 hover:text-white hover:border-white transition-colors bg-[#14181c]/60 backdrop-blur-sm">
+                                Editar Perfil
+                            </a>
+                        {% else %}
+                            {% if is_following %}
+                                <a href="{{ url_for('unfollow', username=user.username) }}" class="px-6 py-2 border border-red-500/50 bg-red-500/10 text-red-400 rounded text-xs uppercase font-bold hover:bg-red-500 hover:text-white transition-colors backdrop-blur-sm">
+                                    Deixar de Seguir
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('follow', username=user.username) }}" class="px-6 py-2 bg-[#00e054] text-gray-900 rounded text-xs uppercase font-bold hover:bg-white transition-colors shadow-lg hover:shadow-green-500/20">
+                                    Seguir
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- ÁLBUNS DEFINIDORES (TOP 4) -->
+            <div class="flex-grow w-full md:w-auto mt-6 md:mt-0">
+                <div class="flex justify-between items-baseline mb-2 border-b border-gray-700/50 pb-1">
+                    <h3 class="text-xs font-bold uppercase tracking-wider lb-text-muted drop-shadow-md">Álbuns que me definem</h3>
+                </div>
+                <div class="grid grid-cols-4 gap-2 md:gap-4">
+                    {% for i in range(4) %}
+                        {% if top_albums_map[i] %}
+                            <a href="{{ url_for('album_details', album_id=top_albums_map[i].album_id) }}" class="poster-container rounded overflow-hidden aspect-square bg-gray-800 cursor-pointer group block shadow-lg border border-gray-800/50">
+                                <img src="{{ top_albums_map[i].album_image }}" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" alt="{{ top_albums_map[i].album_title }}">
+                            </a>
+                        {% else %}
+                            <div class="rounded overflow-hidden aspect-square bg-[#191e25]/50 border border-gray-700/30 flex items-center justify-center backdrop-blur-sm">
+                                <span class="text-gray-600 text-2xl font-bold">+</span>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Navegação -->
+        <div class="flex items-center space-x-2 mt-10 overflow-x-auto">
+            <a href="#" class="profile-nav-link active">Perfil</a>
+            <a href="#" class="profile-nav-link">Reviews</a>
+            <a href="#" class="profile-nav-link">Listas</a>
+            <a href="#" class="profile-nav-link">Seguindo</a>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="mx-auto pt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Reviews Recentes -->
+        <div class="lg:col-span-2 space-y-6">
+            <div class="flex justify-between items-end border-b border-gray-700/50 pb-2 mb-4">
+                <h2 class="text-sm font-bold uppercase tracking-wider lb-text-muted">Atividades Recentes</h2>
+            </div>
+
+            {% if reviews %}
+                {% for review in reviews %}
+                <div class="flex gap-4 border-b border-gray-800 pb-6 group">
+                    <div class="w-20 md:w-24 flex-shrink-0">
+                        <a href="{{ url_for('album_details', album_id=review.album_id) }}" class="poster-container rounded aspect-square overflow-hidden cursor-pointer shadow-lg block">
+                            <img src="{{ review.album_image or 'https://via.placeholder.com/150' }}" class="w-full h-full object-cover">
+                        </a>
+                    </div>
+                    <div class="flex-grow min-w-0">
+                        <div class="flex flex-wrap items-baseline gap-2 mb-1">
+                            <h3 class="text-lg md:text-xl font-bold text-white hover:text-[#00e054] transition-colors cursor-pointer truncate">
+                                <a href="{{ url_for('album_details', album_id=review.album_id) }}">{{ review.album_title }}</a>
+                            </h3>
+                        </div>
+                        
+                        <div class="flex items-center gap-2 mb-3 text-xs">
+                            <div class="flex text-[#00e054] text-sm">
+                                {% for i in range(review.rating) %}★{% endfor %}
+                                <span class="text-gray-700">{% for i in range(5 - review.rating) %}★{% endfor %}</span>
+                            </div>
+                            <span class="lb-text-muted">{{ review.created_at.strftime('%d %b %Y') }}</span>
+                        </div>
+
+                        {% if review.text %}
+                        <div class="text-sm text-gray-300 leading-relaxed font-serif pl-3 border-l-2 border-gray-700">
+                            <p class="line-clamp-3 italic">{{ review.text }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mt-3 flex items-center gap-4 text-xs lb-text-muted">
+                            <div class="flex items-center gap-1 group-hover:text-gray-400 transition-colors cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                                Curtir
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="py-10 text-center text-gray-500 bg-[#191e25] rounded border border-gray-800 border-dashed">
+                    Nenhuma review recente.
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-1 space-y-8">
+            
+            <!-- Bio -->
+            <div class="bg-[#191e25] p-4 rounded border border-gray-800 shadow-lg">
+                <h4 class="text-xs font-bold uppercase text-gray-500 mb-2">Sobre</h4>
+                {% if user.bio %}
+                    <p class="text-sm text-gray-300 leading-snug font-serif">{{ user.bio }}</p>
+                {% else %}
+                    <p class="text-sm text-gray-500 italic">Sem biografia.</p>
+                {% endif %}
+            </div>
+
+            <!-- Rede -->
+            <div>
+                <div class="flex justify-between items-end border-b border-gray-700/50 pb-2 mb-4">
+                    <h2 class="text-sm font-bold uppercase tracking-wider lb-text-muted">Rede</h2>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-[#191e25] p-3 rounded text-center border border-gray-800">
+                        <span class="block text-2xl font-bold text-white">{{ followers_count }}</span>
+                        <span class="text-xs lb-text-muted uppercase font-bold">Seguidores</span>
+                    </div>
+                    <div class="bg-[#191e25] p-3 rounded text-center border border-gray-800">
+                        <span class="block text-2xl font-bold text-white">{{ following_count }}</span>
+                        <span class="text-xs lb-text-muted uppercase font-bold">Seguindo</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LISTAS -->
+            {% if lists %}
+            <div>
+                <div class="flex justify-between items-end border-b border-gray-700/50 pb-2 mb-4">
+                    <h2 class="text-sm font-bold uppercase tracking-wider lb-text-muted">Listas Recentes</h2>
+                </div>
+                
+                <div class="space-y-4">
+                    {% for lst in lists %}
+                    <a href="{{ url_for('list_details', list_id=lst.id) }}" class="group cursor-pointer block">
+                        <!-- Mosaico -->
+                        <div class="grid grid-cols-3 gap-0.5 rounded overflow-hidden border border-transparent group-hover:border-white transition-all h-24 mb-1 bg-gray-800">
+                            {% for item in lst.items[:3] %}
+                                <img src="{{ item.album_image or '' }}" class="w-full h-full object-cover {{ 'col-span-2 row-span-2' if loop.index == 1 else '' }}">
+                            {% endfor %}
+                            {% if lst.items|length < 3 %}
+                                <div class="bg-gray-700 w-full h-full col-span-3 flex items-center justify-center text-xs text-gray-500">...</div>
+                            {% endif %}
+                        </div>
+                        <h3 class="font-bold text-white text-sm group-hover:text-[#00e054] truncate">{{ lst.title }}</h3>
+                        <p class="text-xs lb-text-muted">{{ lst.items|length }} álbuns</p>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}

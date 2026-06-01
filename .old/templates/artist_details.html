@@ -1,0 +1,176 @@
+{% extends "_base.html" %}
+
+{% block title %}{{ artist.name if artist else 'Artista' }} - myCDrecords{% endblock %}
+
+{% block content %}
+<!-- TRUQUE: Fechamos a tag <main> do _base.html para sair do container centralizado -->
+</main>
+
+<!-- HERO SECTION: Agora 100% Full Width (fora do container) -->
+<!-- ADICIONADO: -mt-16 para compensar o padding py-8 (aprox 64px) que o <main> vazio acima ocupa -->
+<!-- AJUSTE: Altura controlada para não ser excessiva, mas suficiente para impacto -->
+<div class="relative w-full h-[500px] md:h-[600px] overflow-hidden group -mt-16">
+    {% if artist.images and artist.images|length > 0 %}
+        <!-- Imagem de fundo Full Screen -->
+        <!-- ALTERADO: De 'bg-top' para 'bg-center' para focar melhor nos integrantes da banda -->
+        <div class="absolute inset-0 bg-cover bg-center scale-105 opacity-60" 
+             style="background-image: url('{{ artist.images[0].url }}');">
+        </div>
+        
+        <!-- Gradiente Complexo para fusão perfeita com o fundo cinza do site -->
+        <!-- Topo escuro para ler menu, meio transparente, fundo fundindo com gray-900 -->
+        <div class="absolute inset-0 bg-gradient-to-b from-gray-900/60 via-transparent to-gray-900"></div>
+        <!-- Gradiente inferior mais alto para cobrir a transição estendida -->
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/90 to-transparent"></div>
+    {% else %}
+        <div class="absolute inset-0 bg-gradient-to-br from-purple-900 to-gray-900"></div>
+    {% endif %}
+
+    <!-- Conteúdo Interno do Banner (Recriamos o container aqui dentro para alinhar o texto) -->
+    <!-- AJUSTE: pb-16 md:pb-24 é um valor equilibrado para que o conteúdo não fique colado no fundo, mas também não suba demais -->
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-16 md:pb-24 relative z-10">
+        <!-- AJUSTE: mb-8 md:mb-12 adiciona margem extra para empurrar o bloco de conteúdo para cima, sobrepondo a imagem -->
+        <div class="flex flex-col md:flex-row items-end gap-8 w-full mb-4 md:mb-8">
+            <!-- Imagem Redonda Principal -->
+            <div class="w-32 h-32 md:w-48 md:h-48 rounded-full border-4 border-gray-900/50 shadow-2xl overflow-hidden flex-shrink-0 bg-gray-800 backdrop-blur-sm transform translate-y-4 md:translate-y-0">
+                {% if artist.images and artist.images|length > 0 %}
+                    <img src="{{ artist.images[0].url }}" alt="{{ artist.name }}" class="w-full h-full object-cover">
+                {% else %}
+                    <div class="w-full h-full flex items-center justify-center text-5xl text-gray-500 font-bold">
+                        {{ artist.name[0] }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Informações do Artista -->
+            <div class="flex-grow mb-2">
+                <h1 class="text-5xl md:text-7xl font-bold text-white mb-4 drop-shadow-2xl font-poppins tracking-tight leading-none">{{ artist.name }}</h1>
+                
+                <div class="flex flex-wrap items-center gap-3 md:gap-4 text-sm md:text-base">
+                    <!-- Botão Spotify -->
+                    {% if artist.external_urls and artist.external_urls.spotify %}
+                    <a href="{{ artist.external_urls.spotify }}" target="_blank" class="flex items-center gap-2 bg-[#1DB954] hover:bg-[#1ed760] text-white px-5 py-2 rounded-full font-bold shadow-lg transition-all hover:scale-105 transform">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141 4.32-1.32 9.9-0.6 13.561 1.621.42.181.6.779.18 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+                        Spotify
+                    </a>
+                    {% endif %}
+
+                    {% if artist.followers %}
+                    <span class="text-gray-300 font-medium flex items-center gap-1 bg-gray-900/40 px-4 py-2 rounded-full backdrop-blur-md border border-white/10 shadow-sm">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                        {{ "{:,}".format(artist.followers.total).replace(',', '.') }} seguidores
+                    </span>
+                    {% endif %}
+
+                    {% if artist.genres %}
+                        <div class="flex flex-wrap gap-2 mt-2 md:mt-0">
+                            {% for genre in artist.genres[:3] %}
+                                <span class="px-3 py-1 bg-white/5 backdrop-blur-sm rounded-full text-gray-300 border border-white/10 capitalize text-xs hover:bg-white/10 transition-colors cursor-default shadow-sm">
+                                    {{ genre }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reabrimos a tag <main> com as classes originais do _base.html para o restante do conteúdo -->
+<!-- AJUSTE: -mt-12 sobrepõe levemente o conteúdo sobre o final do gradiente, criando continuidade sem cortar a imagem -->
+<main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-12 relative z-20">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        
+        <!-- COLUNA ESQUERDA: TOP TRACKS -->
+        <div class="lg:col-span-1 space-y-8">
+            <div class="bg-gray-800/80 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 shadow-xl">
+                <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <span class="w-1 h-6 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]"></span>
+                    Populares
+                </h2>
+                
+                {% if top_tracks %}
+                    <ul class="space-y-2">
+                        {% for track in top_tracks[:5] %}
+                            <li class="group flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-all cursor-default border border-transparent hover:border-white/5">
+                                <div class="w-6 text-center text-gray-500 font-mono font-bold text-sm group-hover:text-green-400">{{ loop.index }}</div>
+                                <div class="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-900 relative shadow-lg group-hover:shadow-green-500/20 transition-all">
+                                    {% if track.album.images %}
+                                        <img src="{{ track.album.images[-1].url }}" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity">
+                                    {% endif %}
+                                </div>
+                                <div class="min-w-0 flex-grow">
+                                    <div class="text-white font-medium text-sm truncate group-hover:text-green-400 transition-colors">{{ track.name }}</div>
+                                    <div class="text-xs text-gray-400 truncate">{{ track.album.name }}</div>
+                                </div>
+                                <div class="text-xs text-gray-600 font-mono">
+                                    {{ ((track.duration_ms // 60000) | string) }}:{{ '%02d' % ((track.duration_ms // 1000) % 60) }}
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-gray-500 text-sm italic p-4 text-center">Nenhuma música popular disponível.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- COLUNA DIREITA: DISCOGRAFIA -->
+        <div class="lg:col-span-2">
+            <div class="flex items-center justify-between mb-6 sticky top-20 z-30 bg-gray-900/90 backdrop-blur p-4 rounded-xl border border-gray-800 shadow-lg">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+                    <span class="w-1 h-8 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></span>
+                    Discografia
+                </h2>
+                <div class="flex gap-2">
+                    <span class="text-xs text-gray-300 bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-700 font-medium">
+                        {{ albums|length }} Lançamentos
+                    </span>
+                </div>
+            </div>
+
+            {% if albums %}
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                    {% for album in albums %}
+                        <a href="{{ url_for('album_details', album_id=album.id) }}" class="group block bg-gray-800 rounded-xl overflow-hidden hover:ring-2 hover:ring-green-500 transition-all duration-300 transform hover:-translate-y-2 shadow-lg border border-gray-700/50 hover:shadow-green-500/20">
+                            <div class="aspect-square relative overflow-hidden bg-gray-900">
+                                {% if album.images %}
+                                    <img src="{{ album.images[0].url }}" alt="{{ album.name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
+                                    
+                                    <!-- Overlay escuro no hover -->
+                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                        <svg class="w-12 h-12 text-white drop-shadow-lg transform scale-50 group-hover:scale-100 transition-transform duration-300" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    </div>
+                                {% else %}
+                                    <div class="w-full h-full flex items-center justify-center text-gray-600 bg-gray-800 flex-col p-2 text-center">
+                                        <svg class="w-8 h-8 mb-1 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
+                                        <span class="text-[10px]">Sem Capa</span>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="absolute top-2 left-2 flex gap-1">
+                                    {% if album.album_type == 'single' %}
+                                        <span class="bg-blue-600/90 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg border border-white/10">SINGLE</span>
+                                    {% elif album.album_type == 'album' %}
+                                        <span class="bg-green-600/90 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg border border-white/10">ÁLBUM</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-white text-sm font-bold leading-tight line-clamp-2 group-hover:text-green-400 transition-colors mb-1">{{ album.name }}</h3>
+                                <p class="text-gray-500 text-xs font-medium">{{ album.release_date[:4] }}</p>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="bg-gray-800/50 border border-gray-700 border-dashed rounded-xl p-12 text-center">
+                    <svg class="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
+                    <p class="text-gray-400 text-lg">Nenhum álbum encontrado para este artista.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+<!-- O fechamento do </main> original acontece automaticamente no _base.html, mas como abrimos um novo main manual acima, ele será fechado pelo fechamento do block content pelo renderizador, ou podemos adicionar </main> aqui se estivéssemos escrevendo HTML puro. No contexto do Jinja com extends, o que escrevemos dentro do block fica dentro do main original. AO FECHAR o main original no inicio e abrir um novo, precisamos garantir que a estrutura não quebre. O HTML final terá: <main>...</main> (vazio) <div hero>...</div> <main>...conteudo...</main>. Isso é válido. -->
+{% endblock %}

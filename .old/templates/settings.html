@@ -1,0 +1,100 @@
+{% extends "_base.html" %}
+
+{% block title %}Configurações • myCDrecords{% endblock %}
+
+{% block content %}
+<style>
+    .lb-bg-main { background-color: #14181c; }
+    .lb-bg-card { background-color: #191e25; }
+    .lb-input-bg { background-color: #2c3440; border-color: #456; }
+    .lb-input-bg:focus { border-color: #00e054; box-shadow: 0 0 0 1px #00e054; }
+    .lb-green-btn { background-color: #00e054; color: #14181c; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s; }
+    .lb-green-btn:hover { background-color: #fff; }
+</style>
+
+<div class="lb-bg-main min-h-screen -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-8 font-poppins">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold text-white mb-8 border-b border-gray-700 pb-4 uppercase tracking-wider">Configurações da Conta</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            <!-- Menu Lateral -->
+            <div class="md:col-span-1 space-y-2">
+                <div class="block p-3 bg-[#2c3440] rounded text-white font-medium border-l-4 border-[#00e054] shadow-md text-sm uppercase tracking-wide">
+                    Geral & Segurança
+                </div>
+                <a href="{{ url_for('profile', username=current_user.username) }}" class="block p-3 text-[#9ab] hover:bg-[#2c3440] hover:text-white rounded transition-colors text-sm uppercase tracking-wide">
+                    Ver Perfil Público
+                </a>
+            </div>
+
+            <!-- Área de Formulários -->
+            <div class="md:col-span-2 space-y-8">
+                
+                <!-- 1. Editar Informações Básicas -->
+                <div class="lb-bg-card rounded p-6 border border-gray-800 shadow-xl">
+                    <h2 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6 border-b border-gray-700 pb-2">
+                        Informações Pessoais
+                    </h2>
+                    
+                    <form method="POST" action="{{ url_for('settings') }}" enctype="multipart/form-data">
+                        <input type="hidden" name="action" value="update_info">
+                        
+                        <div class="space-y-5">
+                            <!-- Upload de Foto e Banner -->
+                            <div class="flex gap-6">
+                                <div>
+                                    <label class="block text-[#9ab] text-xs font-bold uppercase mb-2">Avatar</label>
+                                    <div class="w-20 h-20 rounded-full bg-[#2c3440] overflow-hidden border border-gray-600 mb-2 relative group cursor-pointer">
+                                        {% if current_user.profile_image %}
+                                            <img src="{{ url_for('static', filename=current_user.profile_image) }}" class="w-full h-full object-cover">
+                                        {% else %}
+                                            <div class="w-full h-full flex items-center justify-center text-gray-500 font-bold text-xl">{{ current_user.username[0]|upper }}</div>
+                                        {% endif %}
+                                        <input type="file" name="profile_image" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                                    </div>
+                                    <p class="text-[10px] text-gray-500">Clique para alterar</p>
+                                </div>
+
+                                <div class="flex-grow">
+                                    <label class="block text-[#9ab] text-xs font-bold uppercase mb-2">Banner do Perfil</label>
+                                    <div class="w-full h-20 rounded bg-[#2c3440] overflow-hidden border border-gray-600 mb-2 relative group cursor-pointer bg-cover bg-center"
+                                         style="background-image: url('{{ url_for('static', filename=current_user.banner_image) if current_user.banner_image else '' }}');">
+                                        <div class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span class="text-xs text-white uppercase font-bold">Alterar Banner</span>
+                                        </div>
+                                        <input type="file" name="banner_image" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                                    </div>
+                                    <p class="text-[10px] text-gray-500">Recomendado: 1200x300px</p>
+                                </div>
+                            </div>
+
+                            <hr class="border-gray-800">
+
+                            <!-- Inputs -->
+                            <div>
+                                <label class="block text-[#9ab] text-xs font-bold uppercase mb-1">Nome de Usuário</label>
+                                <input type="text" name="username" value="{{ current_user.username }}" required class="w-full lb-input-bg rounded p-2.5 text-white outline-none transition-all text-sm">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-[#9ab] text-xs font-bold uppercase mb-1">Email</label>
+                                <input type="email" name="email" value="{{ current_user.email }}" required class="w-full lb-input-bg rounded p-2.5 text-white outline-none transition-all text-sm">
+                            </div>
+
+                            <div>
+                                <label class="block text-[#9ab] text-xs font-bold uppercase mb-1">Bio</label>
+                                <textarea name="bio" rows="3" maxlength="300" placeholder="Fale sobre seus gostos musicais..." class="w-full lb-input-bg rounded p-2.5 text-white outline-none transition-all resize-none text-sm font-serif">{{ current_user.bio or '' }}</textarea>
+                            </div>
+
+                            <div class="pt-2 flex justify-end">
+                                <button type="submit" class="lb-green-btn py-2 px-6 rounded shadow-lg">Salvar Alterações</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

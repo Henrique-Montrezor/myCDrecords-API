@@ -1,0 +1,415 @@
+{% extends "_base.html" %}
+
+{% block title %}{{ album.name }} ({{ album.release_date[:4] }}) • myCDrecords{% endblock %}
+
+{% block content %}
+<!-- ESTILOS LOCAIS PARA O TEMA LETTERBOXD -->
+<style>
+    .lb-container { max-width: 950px; margin: 0 auto; }
+    .lb-poster { box-shadow: 0 0 10px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); transition: border-color 0.2s; }
+    .lb-poster:hover { border-color: #fff; }
+    .lb-title { font-family: 'Poppins', serif; font-weight: 700; letter-spacing: -0.02em; }
+    .lb-meta { color: #9ab; font-size: 0.85rem; }
+    .lb-meta a { color: #bxc; text-decoration: none; }
+    .lb-meta a:hover { color: #fff; }
+    .lb-action-panel { background-color: #2c3440; border-radius: 4px; border: 1px solid #456; }
+    .lb-action-btn { color: #9ab; transition: color 0.2s; }
+    .lb-action-btn:hover { color: #fff; }
+    .lb-action-btn.active-love { color: #ff8000; } /* Laranja do like */
+    .lb-action-btn.active-watch { color: #00e054; } /* Verde do watchlist */
+    .lb-track-row:hover { background-color: rgba(255,255,255,0.05); }
+    
+    /* Backdrop borrado */
+    .backdrop-blur {
+        position: absolute; top: 0; left: 0; right: 0; height: 500px;
+        background-image: url('{{ album.images[0].url if album.images else "" }}');
+        background-size: cover; background-position: center;
+        filter: blur(50px) brightness(1.0) saturate(1.2);
+        mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+        z-index: 0; pointer-events: none; opacity: 0.6;
+    }
+</style>
+
+<!-- Backdrop Fundo -->
+{% if album.images %}
+<div class="backdrop-blur"></div>
+{% endif %}
+
+<div class="lb-container px-4 py-8 relative z-10">
+    
+    <!-- HEADER DO ÁLBUM (Grid: Capa | Info) -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+        
+        <!-- COLUNA 1: CAPA E AÇÕES -->
+        <div class="md:col-span-1 flex flex-col gap-4">
+            <!-- Capa -->
+            <div class="lb-poster rounded overflow-hidden aspect-square bg-black relative group">
+                {% if album.images %}
+                    <img src="{{ album.images[0].url }}" alt="{{ album.name }}" class="w-full h-full object-cover">
+                {% else %}
+                    <div class="w-full h-full flex items-center justify-center text-gray-600 bg-gray-900">Sem Capa</div>
+                {% endif %}
+            </div>
+
+            <!-- Painel de Ações (Estilo Letterboxd) -->
+            {% if current_user.is_authenticated %}
+            <div class="lb-action-panel p-2 flex justify-around items-center text-2xl shadow-lg">
+                
+                <!-- Botão Listen List (Olho/Relógio) -->
+                <button onclick="toggleListenList()" title="Quero Ouvir"
+                        class="lb-action-btn w-full text-center {{ 'active-watch' if in_listen_list else '' }}" id="btn-listen">
+                    <svg class="w-6 h-6 mx-auto" fill="currentColor" viewBox="0 0 24 24">
+                        <!-- Ícone de Relógio estilizado -->
+                        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z"/>
+                    </svg>
+                    <span class="text-[10px] font-bold uppercase tracking-wider block mt-1">Ouvir</span>
+                </button>
+
+                <div class="w-px h-8 bg-gray-600/50"></div>
+
+                <!-- Botão Favorito (Coração) -->
+                <button onclick="toggleFavorite()" title="Favoritar"
+                        class="lb-action-btn w-full text-center {{ 'active-love' if is_favorite else '' }}" id="btn-fav">
+                    <svg class="w-6 h-6 mx-auto" fill="{{ 'currentColor' if is_favorite else 'none' }}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z"></path>
+                    </svg>
+                    <span class="text-[10px] font-bold uppercase tracking-wider block mt-1">Like</span>
+                </button>
+
+                <div class="w-px h-8 bg-gray-600/50"></div>
+
+                <!-- Botão Log/Review (Lápis) -->
+                <a href="#review-section" class="lb-action-btn w-full text-center">
+                    <svg class="w-6 h-6 mx-auto" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                    <span class="text-[10px] font-bold uppercase tracking-wider block mt-1">Review</span>
+                </a>
+            </div>
+            {% endif %}
+
+            <!-- Estatísticas Rápidas -->
+            <div class="text-center text-xs text-gray-500 font-mono space-y-1">
+                <p>{{ reviews|length }} reviews</p>
+                <p>{{ user_lists|length }} listas</p>
+            </div>
+        </div>
+
+        <!-- COLUNA 2: DETALHES E TRACKLIST -->
+        <div class="md:col-span-3 text-gray-300">
+            
+            <!-- Título e Ano -->
+            <h1 class="lb-title text-4xl md:text-5xl text-white mb-1 leading-tight flex items-baseline gap-3">
+                {{ album.name }} 
+                <span class="text-2xl font-normal text-gray-500 font-sans tracking-normal">{{ album.release_date[:4] }}</span>
+            </h1>
+            
+            <!-- Créditos (Artista e Label) -->
+            <div class="mb-6 text-sm">
+                <span class="text-gray-400">Um álbum de</span>
+                {% for artist in album.artists %}
+                    <a href="{{ url_for('artist_details', artist_id=artist.id) }}" class="text-white font-bold hover:text-green-400 hover:underline transition-colors uppercase tracking-wide">{{ artist.name }}</a>{% if not loop.last %}, {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- "Sinopse" Gerada (Mock Description) -->
+            <div class="font-serif text-lg leading-relaxed text-gray-300 mb-8 max-w-2xl">
+                <p>
+                    Lançado oficialmente em {{ album.release_date|replace('-', '/') }} pela gravadora 
+                    <strong class="text-gray-200">{{ album.label or 'Independente' }}</strong>.
+                    
+                    {% if album.total_tracks %}
+                        Esta obra contém {{ album.total_tracks }} faixas 
+                        {% if album.tracks and album.tracks['items'] %}
+                            <!-- CORREÇÃO: Usar ['items'] em vez de .items para evitar conflito com método dict.items() -->
+                            com uma duração total de aproximadamente 
+                            {{ (album.tracks['items'] | sum(attribute='duration_ms') // 60000) }} minutos.
+                        {% endif %}
+                    {% endif %}
+                    
+                    {% if album.genres %}
+                        Os gêneros predominantes incluem <span class="text-white capitalize">{{ album.genres|join(', ') }}</span>.
+                    {% endif %}
+                </p>
+                
+                {% if album.copyrights %}
+                <p class="text-xs text-gray-600 mt-2 font-sans italic">
+                    {{ album.copyrights[0].text }}
+                </p>
+                {% endif %}
+            </div>
+
+            <!-- Abas / Navegação Interna -->
+            <div class="border-b border-gray-700 mb-4 flex gap-6 text-xs font-bold uppercase tracking-widest text-gray-500">
+                <span class="text-green-400 border-b-2 border-green-400 pb-2 cursor-pointer">Faixas</span>
+                <span class="hover:text-white cursor-pointer transition-colors">Detalhes</span>
+                <span class="hover:text-white cursor-pointer transition-colors">Lançamentos</span>
+            </div>
+
+            <!-- Tracklist Estilizada -->
+            <div class="bg-[#191e25] rounded-lg border border-gray-800 overflow-hidden shadow-inner">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-[#2c3440] text-gray-400 uppercase text-[10px] font-bold tracking-wider">
+                        <tr>
+                            <th class="px-4 py-2 text-center w-10">#</th>
+                            <th class="px-4 py-2">Título</th>
+                            <th class="px-4 py-2 text-right w-20">Duração</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-800">
+                        {% if album.tracks and album.tracks['items'] %}
+                            {% for track in album.tracks['items'] %}
+                            <tr class="lb-track-row group transition-colors">
+                                <td class="px-4 py-3 text-center text-gray-600 group-hover:text-green-400 font-mono">{{ track.track_number }}</td>
+                                <td class="px-4 py-3">
+                                    <span class="text-gray-200 group-hover:text-white font-medium">{{ track.name }}</span>
+                                    {% if track.artists|length > 1 %}
+                                        <span class="text-xs text-gray-500 ml-2 block sm:inline">feat. {{ track.artists[1].name }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3 text-right text-gray-500 font-mono">
+                                    {{ (track.duration_ms // 60000) }}:{{ '%02d' % ((track.duration_ms // 1000) % 60) }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="3" class="px-4 py-3 text-center text-gray-500 italic">Faixas indisponíveis</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-4 flex justify-end">
+                <a href="{{ album.external_urls.spotify }}" target="_blank" class="text-xs flex items-center gap-1 text-[#1DB954] hover:text-white transition-colors font-bold uppercase tracking-wider">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141 4.32-1.32 9.9-0.6 13.561 1.621.42.181.6.779.18 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+                    Ouvir no Spotify
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <hr class="border-gray-700/50 mb-12">
+
+    <!-- SEÇÃO DE REVIEWS E ATIVIDADE -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-12" id="review-section">
+        
+        <!-- Reviews (Esquerda - 2/3) -->
+        <div class="md:col-span-2">
+            <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-2">
+                <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest">Reviews Populares</h3>
+                <span class="text-xs text-gray-600">Mostrando {{ reviews|length }}</span>
+            </div>
+
+            {% if current_user.is_authenticated %}
+                <!-- Caixa de Review Rápido -->
+                <div class="bg-[#2c3440] p-4 rounded-lg mb-8 flex gap-4 border border-gray-600">
+                    <div class="flex-shrink-0">
+                        {% if current_user.profile_image %}
+                            <img src="{{ url_for('static', filename=current_user.profile_image) }}" class="w-10 h-10 rounded-full bg-gray-700">
+                        {% else %}
+                            <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center font-bold text-gray-400">{{ current_user.username[0]|upper }}</div>
+                        {% endif %}
+                    </div>
+                    <form id="review-form" class="flex-grow">
+                        <textarea id="review-text" rows="2" class="w-full bg-[#14181c] border border-gray-700 rounded p-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-green-500 transition-colors resize-none" placeholder="Escreva sua opinião..."></textarea>
+                        
+                        <div class="flex justify-between items-center mt-3">
+                            <!-- Rating Stars (Interativo) -->
+                            <div class="flex gap-1 text-gray-600" id="star-input">
+                                {% for i in range(1, 6) %}
+                                <svg class="w-6 h-6 cursor-pointer hover:text-green-400 transition-colors star-btn" data-val="{{ i }}" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                {% endfor %}
+                                <input type="hidden" id="rating-val" value="0">
+                            </div>
+                            
+                            <button type="submit" class="bg-green-600 hover:bg-green-500 text-white text-xs font-bold uppercase px-6 py-2 rounded transition-colors">
+                                Publicar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            {% endif %}
+
+            <div class="space-y-6">
+                {% if reviews %}
+                    {% for review in reviews %}
+                    <div class="flex gap-4 border-b border-gray-800 pb-6 last:border-0">
+                        <a href="{{ url_for('profile', username=review.author.username) }}" class="flex-shrink-0">
+                            {% if review.author.profile_image %}
+                                <img src="{{ url_for('static', filename=review.author.profile_image) }}" class="w-10 h-10 rounded-full object-cover border border-gray-600">
+                            {% else %}
+                                <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center font-bold text-gray-500 border border-gray-600">{{ review.author.username[0]|upper }}</div>
+                            {% endif %}
+                        </a>
+                        <div class="flex-grow">
+                            <div class="flex items-baseline gap-2 mb-1">
+                                <span class="text-xs text-gray-400">Review por</span>
+                                <a href="{{ url_for('profile', username=review.author.username) }}" class="text-sm font-bold text-white hover:text-green-400">{{ review.author.username }}</a>
+                                <div class="flex text-green-400 text-[10px]">
+                                    {% for i in range(review.rating) %}★{% endfor %}
+                                </div>
+                            </div>
+                            {% if review.text %}
+                                <div class="text-sm text-gray-300 font-serif leading-relaxed">
+                                    {{ review.text }}
+                                </div>
+                            {% else %}
+                                <em class="text-xs text-gray-600">Avaliou sem comentário.</em>
+                            {% endif %}
+                            
+                            <div class="mt-2 text-[10px] text-gray-500 flex items-center gap-3">
+                                <span>{{ review.created_at.strftime('%d %b %Y') }}</span>
+                                <a href="#" class="hover:text-white flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                                    Curtir
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-gray-500 text-sm italic text-center py-8">Ninguém avaliou este álbum ainda. Seja o primeiro!</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar (Direita - 1/3) -->
+        <div class="md:col-span-1 space-y-8">
+            
+            <!-- Widget: Onde Ouvir -->
+            <div class="bg-[#191e25] rounded p-4 border border-gray-800">
+                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 border-b border-gray-700 pb-1">Onde Ouvir</h4>
+                <a href="{{ album.external_urls.spotify }}" target="_blank" class="flex items-center justify-between p-2 hover:bg-gray-800 rounded transition-colors group">
+                    <div class="flex items-center gap-2">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg" class="w-6 h-6">
+                        <span class="text-sm font-medium text-white group-hover:text-green-400">Spotify</span>
+                    </div>
+                    <span class="text-xs text-gray-500">Stream</span>
+                </a>
+            </div>
+
+            <!-- Widget: Listas -->
+            {% if user_lists %}
+            <div>
+                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 border-b border-gray-700 pb-1">Aparece nas Listas</h4>
+                <ul class="space-y-2">
+                    {% for lst in user_lists[:3] %}
+                    <li>
+                        <a href="{{ url_for('list_details', list_id=lst.id) }}" class="block p-2 rounded hover:bg-[#2c3440] transition-colors">
+                            <span class="text-sm font-bold text-white block truncate">{{ lst.title }}</span>
+                            <span class="text-[10px] text-gray-500">por {{ current_user.username }}</span>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+// Dados para API
+const albumData = {
+    album_id: "{{ album.id }}",
+    album_title: "{{ album.name }}",
+    album_image: "{{ album.images[0].url if album.images else '' }}",
+    album_artist: "{{ album.artists[0].name }}"
+};
+
+// Toggle Favorito (Coração)
+async function toggleFavorite() {
+    const btn = document.getElementById('btn-fav');
+    try {
+        const res = await fetch('/api/favorite/toggle', { 
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify(albumData) 
+        });
+        const data = await res.json();
+        
+        if(res.ok) {
+            if(data.status === 'added') {
+                btn.classList.add('active-love');
+                btn.querySelector('svg').setAttribute('fill', 'currentColor');
+            } else {
+                btn.classList.remove('active-love');
+                btn.querySelector('svg').setAttribute('fill', 'none');
+            }
+        }
+    } catch(e) { console.error(e); }
+}
+
+// Toggle Listen List (Relógio/Olho)
+async function toggleListenList() {
+    const btn = document.getElementById('btn-listen');
+    try {
+        const res = await fetch('/api/listen_list/toggle', { 
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify(albumData) 
+        });
+        const data = await res.json();
+        
+        if(res.ok) {
+            if(data.status === 'added') {
+                btn.classList.add('active-watch');
+            } else {
+                btn.classList.remove('active-watch');
+            }
+        }
+    } catch(e) { console.error(e); }
+}
+
+// Sistema de Estrelas para Review
+document.addEventListener('DOMContentLoaded', () => {
+    const stars = document.querySelectorAll('.star-btn');
+    const input = document.getElementById('rating-val');
+    
+    stars.forEach(star => {
+        star.addEventListener('click', () => {
+            const val = star.dataset.val;
+            input.value = val;
+            updateStars(val);
+        });
+        
+        star.addEventListener('mouseenter', () => updateStars(star.dataset.val));
+        star.addEventListener('mouseleave', () => updateStars(input.value));
+    });
+    
+    function updateStars(val) {
+        stars.forEach(s => {
+            if(s.dataset.val <= val) s.classList.add('text-green-400');
+            else s.classList.remove('text-green-400');
+        });
+    }
+
+    // Submit Review
+    const form = document.getElementById('review-form');
+    if(form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = document.getElementById('review-text').value;
+            const rating = input.value;
+            
+            if(rating == 0) { alert('Dê uma nota!'); return; }
+            
+            try {
+                const res = await fetch('/api/review/add', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ ...albumData, rating, text })
+                });
+                if(res.ok) window.location.reload();
+            } catch(err) { alert('Erro ao enviar review.'); }
+        });
+    }
+});
+</script>
+{% endblock %}
