@@ -1,8 +1,8 @@
-import { Router } from "express";
-import { getAlbumById, getAlbumInfo, searchAlbums } from "./album.controller";
-
-const router = Router();
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const album_controller_1 = require("./album.controller");
+const router = (0, express_1.Router)();
 /**
  * @swagger
  * /api/albuns/buscar:
@@ -20,9 +20,7 @@ const router = Router();
  *       200:
  *         description: Lista de álbuns
  */
-
-router.get("/buscar", searchAlbums);
-
+router.get("/buscar", album_controller_1.searchAlbums);
 /**
  * @swagger
  * /api/albuns/info:
@@ -40,8 +38,7 @@ router.get("/buscar", searchAlbums);
  *       200:
  *         description: Informações do álbum
  */
-router.get("/info", getAlbumInfo);
-
+router.get("/info", album_controller_1.getAlbumInfo);
 /**
  * @swagger
  * /api/albuns/:id:
@@ -59,6 +56,6 @@ router.get("/info", getAlbumInfo);
  *       200:
  *         description: Informações do álbum pelo ID
  */
-router.get("/:id", getAlbumById);
-
-export default router;
+router.get("/:id", album_controller_1.getAlbumById);
+exports.default = router;
+//# sourceMappingURL=album.routes.js.map

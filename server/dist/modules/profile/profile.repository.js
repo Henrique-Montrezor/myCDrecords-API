@@ -1,0 +1,63 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createOrUpdateProfile = createOrUpdateProfile;
+exports.getProfileByUsername = getProfileByUsername;
+exports.getmyprofile = getmyprofile;
+const init_database_1 = require("../../mysql2/init.database");
+// Function to create a new profile
+async function createOrUpdateProfile(user_id, Profile, avatar_url) {
+    try {
+        const connection = await (0, init_database_1.initDatabase)();
+        // Get username from users table
+        const [userRows] = await connection.query('SELECT username FROM users WHERE id = ?', [user_id]);
+        if (userRows.length === 0) {
+            throw new Error('User not found');
+        }
+        const username = userRows[0].username;
+        // Check if a profile already exists for the given user_id
+        const [existingProfile] = await connection.query('SELECT id FROM profiles WHERE user_id = ?', [Profile.user_id]);
+        // If a profile already exists for the user, update it; otherwise, create a new one
+        if (existingProfile.length > 0) {
+            await connection.query('UPDATE profiles SET username = ?, bio = ?, avatar_url = ? WHERE user_id = ?', [username, Profile.bio, Profile.avatar_url, Profile.user_id]);
+            return { ...Profile, username, id: existingProfile[0].id };
+        }
+        else {
+            // Create a new profile if it doesn't exist
+            await connection.query('INSERT INTO profiles (user_id, username, bio, avatar_url) VALUES (?, ?, ?, ?)', [Profile.user_id, username, Profile.bio, Profile.avatar_url]);
+            const [result] = await connection.query('SELECT LAST_INSERT_ID() as id');
+            return { ...Profile, username, id: result[0].id };
+        }
+    }
+    catch (error) {
+        console.error('Error creating/updating profile:', error);
+        throw error;
+    }
+}
+// Get a user profile by username
+async function getProfileByUsername(UsernameProfile) {
+    try {
+        const connection = await (0, init_database_1.initDatabase)();
+        const [rows] = await connection.query('SELECT * FROM profiles WHERE username = ?', [UsernameProfile.username]);
+        return rows.length > 0 ? { ...UsernameProfile, username: rows[0].username } : null;
+    }
+    catch (error) {
+        console.error('Error fetching profile:', error);
+        throw error;
+    }
+}
+async function getmyprofile(user_id) {
+    try {
+        const connection = await (0, init_database_1.initDatabase)();
+        const [rows] = await connection.query('SELECT * FROM profiles WHERE user_id = ?', [user_id]);
+        return rows.length > 0 ? { ...rows[0] } : null;
+    }
+    catch (error) {
+        console.error('Error fetching profile:', error);
+        throw error;
+    }
+}
+// Deletar perfil
+//export async function deleteProfile(user_id: number)
+// Obter todos os dados do usuário com seu perfil (JOIN)
+//export async function getUserWithProfile(user_id: number)
+//# sourceMappingURL=profile.repository.js.map

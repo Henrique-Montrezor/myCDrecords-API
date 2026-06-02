@@ -35,23 +35,16 @@ export async function getSpotifyAccessToken() {
 }
 
 export async function fetchAlbumFromSpotify(albumId: string) {
-    const cacheKey = `spotify-album-${albumId}`;
-    const cached = cache.get(cacheKey);
+    const query = `id:${albumId}`;
+    const searchResult = await searchSpotify(query, 'album', 1);
+    return searchResult;
 
-    if (cached) return cached;
+}
 
-    try {
-            const headers = await getSpotifyHeaders();
-        const response = await axios.get(`${BASE_URL}/albums/${albumId}`, {
-            headers,
-            timeout: 10000
-        });
-        cache.set(cacheKey, response.data);
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching album from Spotify:", error);
-        throw error;
-    }
+export async function searchSpotifyAlbum(albumName: string, artist?: string, limit = 10) {
+    const query = `album:${albumName}${artist ? ` artist:${artist}` : ''}`;
+    const searchResult = await searchSpotify(query, 'album', limit);
+    return searchResult;
 }
 
 export async function fetchArtistFromSpotify(artistId: string) {
@@ -74,8 +67,8 @@ export async function fetchArtistFromSpotify(artistId: string) {
     }  
 }
 
-export async function searchSpotify(query: string, type: string) {
-    const cacheKey = `spotify-search-${type}-${query}`;
+export async function searchSpotify(query: string, type: string, limit = 10) {
+    const cacheKey = `spotify-search-${type}-${query}-${limit}`;
     const cached = cache.get(cacheKey);
 
     if (cached) return cached;
@@ -87,7 +80,8 @@ export async function searchSpotify(query: string, type: string) {
             timeout: 10000,
             params: {
                 q: query,
-                type
+                type,
+                limit
             }
         });
         cache.set(cacheKey, response.data);
