@@ -1,4 +1,4 @@
-import e, { Router } from "express";
+import { Router } from "express";
 import { logoutUser, RegisterUser } from './user.controller';
 import { searchUsers } from "./user.controller";
 import { loginUser } from "./user.controller";

@@ -14,11 +14,27 @@ export async function createUserTable(req: Request, res: Response) {
                 password VARCHAR(255),
                 is_active BOOLEAN DEFAULT TRUE,
                 email_verified BOOLEAN DEFAULT FALSE,
+                spotify_access_token VARCHAR(500),
+                spotify_refresh_token VARCHAR(500),
+                spotify_token_expires_at TIMESTAMP NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             )
         `);
         console.log('Users table created successfully');
+        
+        // Try to add new columns if they don't exist (for existing tables)
+        try {
+            await connection.query(`ALTER TABLE users ADD COLUMN spotify_access_token VARCHAR(500) DEFAULT NULL`);
+            await connection.query(`ALTER TABLE users ADD COLUMN spotify_refresh_token VARCHAR(500) DEFAULT NULL`);
+            await connection.query(`ALTER TABLE users ADD COLUMN spotify_token_expires_at TIMESTAMP NULL`);
+            console.log('Spotify columns added successfully');
+        } catch (alterError: any) {
+            // Columns might already exist, that's fine
+            if (!alterError.message.includes('Duplicate column')) {
+                console.log('Spotify columns might already exist:', alterError.message);
+            }
+        }
     } catch (error) {
         console.error('Error creating users table:', error);
         throw error;

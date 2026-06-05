@@ -152,3 +152,48 @@ export async function findOAuthUser(provider: string, providerId: string) {
   const [rows] = await connection.query<RowDataPacket[]>(query, [provider, providerId]);
   return rows[0] || null;
 }
+
+// Update Spotify tokens
+export async function updateSpotifyTokens(
+  userId: number,
+  accessToken: string,
+  refreshToken?: string,
+  expiresIn?: number
+) {
+  const connection = await initDatabase();
+  
+  let expiresAt = null;
+  if (expiresIn) {
+    expiresAt = new Date(Date.now() + expiresIn * 1000);
+  }
+  
+  let query = `
+    UPDATE users 
+    SET spotify_access_token = ?, spotify_token_expires_at = ?
+  `;
+  let params: any[] = [accessToken, expiresAt];
+  
+  if (refreshToken) {
+    query += `, spotify_refresh_token = ?`;
+    params.push(refreshToken);
+  }
+  
+  query += ` WHERE id = ?`;
+  params.push(userId);
+  
+  const [result] = await connection.query<any>(query, params);
+  return result;
+}
+
+// Get Spotify tokens
+export async function getSpotifyTokens(userId: number) {
+  const connection = await initDatabase();
+  const query = `
+    SELECT spotify_access_token, spotify_refresh_token, spotify_token_expires_at 
+    FROM users 
+    WHERE id = ?
+  `;
+  
+  const [rows] = await connection.query<RowDataPacket[]>(query, [userId]);
+  return rows[0] || null;
+}

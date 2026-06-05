@@ -10,7 +10,6 @@ interface AlbumCardProps {
 }
 
 export default function AlbumCard({ 
-  id, 
   name, 
   artist, 
   imageUrl, 

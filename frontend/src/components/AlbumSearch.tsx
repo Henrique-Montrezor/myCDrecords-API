@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Loader } from 'lucide-react';
 import apiClient from '../lib/apiClient';
 
@@ -9,6 +10,11 @@ interface SearchResult {
   releaseDate?: string;
   imageUrl?: string;
   disambiguation?: string;
+  source: 'spotify' | 'musicbrainz';
+  type?: string;
+  secondaryTypes?: string[];
+  tags?: string[];
+  genres?: string[];
 }
 
 export default function AlbumSearch() {
@@ -43,15 +49,36 @@ export default function AlbumSearch() {
       });
 
       console.log('Resposta:', response.data);
-      const albums = response.data['release-groups'] || [];
-      
-      const formattedResults: SearchResult[] = albums.map((album: any) => ({
+      const spotifyAlbums = response.data.spotify || [];
+      const musicbrainzPayload = response.data.musicbrainz;
+      const musicbrainzAlbums = Array.isArray(musicbrainzPayload)
+        ? musicbrainzPayload
+        : musicbrainzPayload?.['release-groups'] || [];
+
+      const formattedSpotify = spotifyAlbums.map((album: any) => ({
         id: album.id,
+        source: 'spotify' as const,
+        title: album.name || album.title,
+        artistCredit: album.artistCredit || album.artists?.map((artist: any) => ({ name: artist.name })) || [],
+        releaseDate: album.releaseDate || album.release_date,
+        imageUrl: album.imageUrl || album.images?.[0]?.url,
+        disambiguation: album.disambiguation,
+        type: album.type || album.album_type,
+        genres: album.genres || [],
+        tags: album.tags || []
+      }));
+
+      const formattedMusicBrainz = musicbrainzAlbums.map((album: any) => ({
+        id: album.id,
+        source: 'musicbrainz' as const,
         title: album.title,
         artistCredit: album['artist-credit'],
         releaseDate: album['first-release-date'],
+        imageUrl: `https://coverartarchive.org/release-group/${album.id}/front`,
         disambiguation: album.disambiguation
       }));
+
+      const formattedResults: SearchResult[] = [...formattedSpotify, ...formattedMusicBrainz];
 
       setResults(formattedResults);
       setIsOpen(true);
@@ -69,11 +96,19 @@ export default function AlbumSearch() {
     return artistCredit.map(a => a.name).join(', ');
   };
 
+  const navigate = useNavigate();
+
   const handleResultClick = (album: SearchResult) => {
     console.log('Álbum selecionado:', album);
     setQuery('');
     setIsOpen(false);
     setResults([]);
+
+    if (album.source === 'spotify') {
+      navigate(`/album/${album.id}`);
+    } else {
+      navigate(`/album?nome=${encodeURIComponent(album.title)}`);
+    }
   };
 
   useEffect(() => {
@@ -117,13 +152,44 @@ export default function AlbumSearch() {
                 onClick={() => handleResultClick(album)}
                 className="p-4 hover:bg-gray-800 transition-colors cursor-pointer flex gap-4 items-start"
               >
+                {album.imageUrl ? (
+                  <img
+                    src={album.imageUrl}
+                    alt={album.title}
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                    className="w-12 h-12 rounded object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded bg-gray-800 flex-shrink-0" />
+                )}
+
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-semibold truncate">
-                    {album.title}
-                  </h3>
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <h3 className="text-white font-semibold truncate">
+                      {album.title}
+                    </h3>
+                    {album.type && (
+                      <span className="text-[10px] uppercase tracking-[0.3em] text-green-400 border border-green-500 rounded-full px-2 py-0.5">
+                        {album.type}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-gray-400 text-sm truncate">
                     {getArtistName(album.artistCredit)}
                   </p>
+                  {album.genres && album.genres.length > 0 && (
+                    <p className="text-gray-500 text-xs mt-1 truncate">
+                      Gêneros: {album.genres.slice(0, 3).join(', ')}
+                    </p>
+                  )}
+                  {album.tags && album.tags.length > 0 && (
+                    <p className="text-gray-500 text-xs mt-1 truncate">
+                      Tags: {album.tags.slice(0, 3).join(', ')}
+                    </p>
+                  )}
+                  {album.disambiguation && (
+                    <p className="text-gray-500 text-xs mt-1 truncate">{album.disambiguation}</p>
+                  )}
                   {album.releaseDate && (
                     <p className="text-gray-500 text-xs mt-1">
                       {new Date(album.releaseDate).getFullYear()}

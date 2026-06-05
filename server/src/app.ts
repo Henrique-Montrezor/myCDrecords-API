@@ -25,6 +25,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import adminRoutes from "./modules/admin/admin.routes";
+import spotifyRoutes from "./modules/spotify/spotify.routes";
 
 dotenv.config();
 
@@ -102,6 +103,9 @@ app.use("/api/profile", profileRoutes);
 // Rotas de autenticação
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+
+// Rotas de Spotify
+app.use("/api/spotify", spotifyRoutes);
 
 // Erros
 app.use(errorHandler);

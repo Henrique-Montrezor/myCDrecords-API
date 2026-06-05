@@ -35,10 +35,23 @@ export async function getSpotifyAccessToken() {
 }
 
 export async function fetchAlbumFromSpotify(albumId: string) {
-    const query = `id:${albumId}`;
-    const searchResult = await searchSpotify(query, 'album', 1);
-    return searchResult;
+    const cacheKey = `spotify-album-${albumId}`;
+    const cached = cache.get(cacheKey);
 
+    if (cached) return cached;
+
+    try {
+        const headers = await setSpotifyHeaders();
+        const response = await axios.get(`${BASE_URL}/albums/${albumId}`, {
+            headers,
+            timeout: 10000
+        });
+        cache.set(cacheKey, response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching album from Spotify:", error);
+        throw error;
+    }
 }
 
 export async function searchSpotifyAlbum(albumName: string, artist?: string, limit = 10) {
@@ -54,7 +67,7 @@ export async function fetchArtistFromSpotify(artistId: string) {
     if (cached) return cached;
 
     try {
-        const headers = await getSpotifyHeaders();
+        const headers = await setSpotifyHeaders();
         const response = await axios.get(`${BASE_URL}/artists/${artistId}`, {
             headers,
             timeout: 10000
@@ -74,7 +87,7 @@ export async function searchSpotify(query: string, type: string, limit = 10) {
     if (cached) return cached;
 
     try {
-        const headers = await getSpotifyHeaders();
+        const headers = await setSpotifyHeaders();
         const response = await axios.get(`${BASE_URL}/search`, {
             headers,
             timeout: 10000,
@@ -99,7 +112,7 @@ export async function fetchalbumcover(trackId: string) {
     if (cached) return cached;
 
     try {
-        const headers = await getSpotifyHeaders();
+        const headers = await setSpotifyHeaders();
         const response = await axios.get(`${BASE_URL}/tracks/${trackId}`, {
             headers,
             timeout: 10000,
@@ -113,10 +126,154 @@ export async function fetchalbumcover(trackId: string) {
     }
 }
 
-export async function getSpotifyHeaders() {
+export async function setSpotifyHeaders() {
     const token = await getSpotifyAccessToken();
     return ({
         "Authorization": `Bearer ${token}`,
         "Accept": "application/json"
     });
+}
+
+export async function fetchSpotifyPlaylistById(playlistId: string) {
+    const cacheKey = `spotify-playlist-${playlistId}`;
+    const cached = cache.get(cacheKey);
+
+    if (cached) return cached;
+
+    try {
+        const headers = await setSpotifyHeaders();
+        const response = await axios.get(`${BASE_URL}/playlists/${playlistId}`, { headers });
+        cache.set(cacheKey, response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching playlist from Spotify:", error);
+        throw error;
+    }
+}
+
+export async function fetchUserTopTracks(userId: string, timeRange: string = 'medium_term', limit: number = 20) {
+    const cacheKey = `spotify-top-tracks-${userId}-${timeRange}-${limit}`;
+    const cached = cache.get(cacheKey);
+
+    if (cached) return cached;
+
+    try {
+        const headers = await setSpotifyHeaders();
+        const response = await axios.get(`${BASE_URL}/me/top/tracks`, {
+            headers,
+            params: {
+                time_range: timeRange,
+                limit
+            }     
+        });
+        cache.set(cacheKey, response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching user's top tracks from Spotify:", error);
+        throw error;
+    } 
+}
+
+export async function fetchUserTopArtists(userId: string, timeRange: string = 'medium_term', limit: number = 20) {
+    const cacheKey = `spotify-top-artists-${userId}-${timeRange}-${limit}`;
+    const cached = cache.get(cacheKey);
+
+    if (cached) return cached;
+
+    try {
+        const headers = await setSpotifyHeaders();
+        const response = await axios.get(`${BASE_URL}/me/top/artists`, {
+            headers,
+            params: {
+                time_range: timeRange,
+                limit 
+            }     
+        });
+        cache.set(cacheKey, response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching user's top artists from Spotify:", error);
+        throw error;
+    }
+}
+
+export async function exchangeCodeForToken(code: string) {
+    const cacheKey = `spotify-user-token-${code}`;
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
+    try {       
+            const response = await axios.post('https://accounts.spotify.com/api/token', new URLSearchParams({
+            grant_type: 'authorization_code',
+            code,
+            redirect_uri: process.env.SPOTIFY_REDIRECT_URI || 'http://localhost:3000/api/spotify/callback',
+            client_id: process.env.SPOTIFY_CLIENT_ID || '',
+            client_secret: process.env.SPOTIFY_CLIENT_SECRET || ''
+        }), {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        });
+        cache.set(cacheKey, response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Error exchanging code for Spotify token:", error);
+        throw error;
+    }
+}
+
+// Get Spotify user profile using user's access token
+export async function getSpotifyUserProfile(accessToken: string) {
+    try {
+        const response = await axios.get(`${BASE_URL}/me`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Accept': 'application/json'
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching Spotify user profile:", error);
+        throw error;
+    }
+}
+
+// Fetch user's top tracks using user's access token
+export async function fetchUserTopTracksWithToken(accessToken: string, timeRange: string = 'medium_term', limit: number = 20) {
+    try {
+        const response = await axios.get(`${BASE_URL}/me/top/tracks`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Accept': 'application/json'
+            },
+            params: {
+                time_range: timeRange,
+                limit
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching user's top tracks from Spotify:", error);
+        throw error;
+    }
+}
+
+// Fetch user's top artists using user's access token
+export async function fetchUserTopArtistsWithToken(accessToken: string, timeRange: string = 'medium_term', limit: number = 20) {
+    try {
+        const response = await axios.get(`${BASE_URL}/me/top/artists`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Accept': 'application/json'
+            },
+            params: {
+                time_range: timeRange,
+                limit
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching user's top artists from Spotify:", error);
+        throw error;
+    }
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AlbumSearch from '../components/AlbumSearch';
 import AlbumCarouselNew from '../components/AlbumCarouselNew';
 import apiClient from '../lib/apiClient';
@@ -14,6 +15,7 @@ interface Album {
 export default function Home() {
   const [trendingAlbums, setTrendingAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchTrendingAlbums();
@@ -30,12 +32,12 @@ export default function Home() {
         }
       });
 
-      const albums = (response.data['release-groups'] || []).slice(0, 12).map((album: any) => ({
+      const albums = (response.data.spotify || []).slice(0, 12).map((album: any) => ({
         id: album.id,
-        name: album.title,
-        artist: album['artist-credit']?.[0]?.name || 'Artista Desconhecido',
-        imageUrl: undefined,
-        releaseDate: album['first-release-date']
+        name: album.name,
+        artist: album.artists?.[0]?.name || 'Artista Desconhecido',
+        imageUrl: album.images?.[0]?.url,
+        releaseDate: album.release_date
       }));
 
       setTrendingAlbums(albums);
@@ -81,7 +83,7 @@ export default function Home() {
             <AlbumCarouselNew
               albums={trendingAlbums}
               title="🎵 Novidades e Lançamentos"
-              onAlbumClick={(album) => console.log('Clicou em:', album)}
+              onAlbumClick={(album) => navigate(`/album/${album.id}`)}
             />
 
             {/* Seção de Recomendações */}
