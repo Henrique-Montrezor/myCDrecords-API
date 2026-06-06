@@ -279,3 +279,48 @@ export async function addAdminRoleToUsers(req: Request, res: Response) {
         throw error;
     }
 }
+
+//function to create the Rating Tables
+export async function createRatingTable(req: Request, res: Response) {
+    const connection = await initDatabase();
+    try {
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS ratings (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                album_id VARCHAR(255) NOT NULL,
+                rating INT CHECK (rating >= 1 AND rating <= 5),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        `);
+        console.log('Ratings table created successfully');
+    } catch (error) {
+        console.error('Error creating ratings table:', error);
+        throw error;
+    }
+}
+
+//function to create the Reviews tables
+export async function createReviewTables(req: Request, res: Response) {
+    const connection = await initDatabase();
+    try {
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS reviews (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                ratings_id INT NOT NULL,
+                text TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (ratings_id) REFERENCES ratings(id) ON DELETE CASCADE
+            )
+        `);
+        console.log('Reviews table created successfully');
+    } catch (error) {
+        console.error('Error creating reviews table:', error);
+        throw error;
+    }
+};

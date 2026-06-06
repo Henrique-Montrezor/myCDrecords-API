@@ -17,7 +17,9 @@ import {
   createOAuthProvidersTable,
   createBannedUsersTable,
   addAdminRoleToUsers,
-  createAdminTable
+  createAdminTable,
+  createReviewsTable,
+  createRatingTable
 } from "./mysql2/create.tables";
 import profileRoutes from "./modules/profile/profile.routes";
 import authRoutes from "./modules/auth/auth.routes";
@@ -26,6 +28,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import adminRoutes from "./modules/admin/admin.routes";
 import spotifyRoutes from "./modules/spotify/spotify.routes";
+import reviewsRoutes from "./modules/reviews/reviews.routes";
 
 dotenv.config();
 
@@ -65,6 +68,8 @@ const initializeApp = async () => {
     await createOAuthProvidersTable({} as express.Request, {} as express.Response);
     await createBannedUsersTable({} as express.Request, {} as express.Response);
     await createAdminTable({} as express.Request, {} as express.Response);
+    await createReviewsTable({} as express.Request, {} as express.Response);
+    await createRatingTable({} as express.Request, {} as express.Response);
 
     // Só após a tabela `admins` existir, atribuímos os admins
     await addAdminRoleToUsers({} as express.Request, {} as express.Response);
@@ -106,6 +111,9 @@ app.use("/api/admin", adminRoutes);
 
 // Rotas de Spotify
 app.use("/api/spotify", spotifyRoutes);
+
+// Rotas de rating e reviews
+app.use("/api/reviews", reviewsRoutes);
 
 // Erros
 app.use(errorHandler);
