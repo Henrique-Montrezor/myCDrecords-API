@@ -10,3 +10,8 @@ export interface ReviewResponse {
     text?: string;
     created_at: Date;
 }
+
+export interface RatingDistribution {
+    rating: number;
+    count: number;
+}

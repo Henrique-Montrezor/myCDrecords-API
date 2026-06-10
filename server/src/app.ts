@@ -18,8 +18,7 @@ import {
   createBannedUsersTable,
   addAdminRoleToUsers,
   createAdminTable,
-  createReviewsTable,
-  createRatingTable
+  createReviewsTable
 } from "./mysql2/create.tables";
 import profileRoutes from "./modules/profile/profile.routes";
 import authRoutes from "./modules/auth/auth.routes";
@@ -69,7 +68,6 @@ const initializeApp = async () => {
     await createBannedUsersTable({} as express.Request, {} as express.Response);
     await createAdminTable({} as express.Request, {} as express.Response);
     await createReviewsTable({} as express.Request, {} as express.Response);
-    await createRatingTable({} as express.Request, {} as express.Response);
 
     // Só após a tabela `admins` existir, atribuímos os admins
     await addAdminRoleToUsers({} as express.Request, {} as express.Response);
@@ -112,7 +110,7 @@ app.use("/api/admin", adminRoutes);
 // Rotas de Spotify
 app.use("/api/spotify", spotifyRoutes);
 
-// Rotas de rating e reviews
+// Rotas de reviews
 app.use("/api/reviews", reviewsRoutes);
 
 // Erros
