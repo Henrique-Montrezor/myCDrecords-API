@@ -28,6 +28,7 @@ import dotenv from "dotenv";
 import adminRoutes from "./modules/admin/admin.routes";
 import spotifyRoutes from "./modules/spotify/spotify.routes";
 import reviewsRoutes from "./modules/reviews/reviews.routes";
+import recommendationsRoutes from "./modules/recommendations/recommendations.routes";
 
 dotenv.config();
 
@@ -115,5 +116,9 @@ app.use("/api/reviews", reviewsRoutes);
 
 // Erros
 app.use(errorHandler);
+
+// Recomendacoes
+app.use("/api/recommendations", recommendationsRoutes);
+
 
 export default app;

@@ -21,15 +21,14 @@ export async function getReviewsByAlbumIdController(req: Request, res: Response)
 
 // Post
 export async function postReviewController(req: Request, res: Response) {
-    const userId = req.user?.id; // Assuming user ID is available in the request object
-    console.log(userId);
+    const userId = req.user?.id; 
 
     if (!userId) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { albumId, rating, text } = req.body;
-    console.log(albumId, rating, text);
+    // Extraia as novas propriedades do body
+    const { albumId, albumTitle, albumImage, albumArtist, genre, rating, text } = req.body;
 
     if (!albumId || !rating) {
         return res.status(400).json({ error: 'Missing required fields' });
@@ -45,7 +44,10 @@ export async function postReviewController(req: Request, res: Response) {
             return res.status(409).json({ error: 'User has already reviewed this album' });
         }
 
-        const reviewId = await postReview(userId, albumId, rating, text);
+        // Passe todos os campos para a função do repositório
+        const reviewId = await postReview(
+            userId, albumId, albumTitle, albumImage, albumArtist, genre, rating, text
+        );
         res.status(201).json({ reviewId });
     } catch (error) {
         console.error('Error posting review:', error);

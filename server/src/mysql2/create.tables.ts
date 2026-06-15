@@ -145,6 +145,7 @@ export async function createReviewsTable(req: Request, res: Response) {
                 album_title VARCHAR(500),
                 album_image VARCHAR(500),
                 album_artist VARCHAR(500),
+                album_genre VARCHAR(500),
                 rating INT CHECK (rating >= 1 AND rating <= 5),
                 text TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

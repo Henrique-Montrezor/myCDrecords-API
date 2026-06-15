@@ -27,15 +27,23 @@ export async function getReviewsByAlbumId(albumId: number, page: number) {
 }
 
 // post a review for a album
-export async function postReview(userId: number, albumId: string, rating: number, text: string) {
+export async function postReview(userId: number, 
+    albumId: string, 
+    albumTitle: string, 
+    albumImage: string, 
+    albumArtist: string, 
+    albumGenre: string, // Novo campo
+    rating: number, 
+    text: string
+){
     const connection = await initDatabase();
     
     const query = `
-        INSERT INTO reviews (user_id, album_id, rating, text)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO reviews (user_id, album_id, albumTitle, albumImage, albumArtist, albumGenre, rating, text)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    const [result] = await connection.query<any>(query, [userId, albumId, rating, text]);
+    const [result] = await connection.query<any>(query, [userId, albumId, albumTitle, albumImage, albumArtist, albumGenre, rating, text]);
     return result.insertId;
 }
 
