@@ -1,7 +1,9 @@
 import { Router } from "express";
-import { getAlbumById, getAlbumInfo, searchAlbums } from "./album.controller";
+import { getAlbumById, getAlbumInfo, searchAlbums, getTrendingAlbums } from "./album.controller";
 
 const router = Router();
+
+router.get("/em-alta", getTrendingAlbums); 
 
 /**
  * @swagger
@@ -60,5 +62,6 @@ router.get("/info", getAlbumInfo);
  *         description: Informações do álbum pelo ID
  */
 router.get("/:id", getAlbumById);
+
 
 export default router;

@@ -14,6 +14,7 @@ import {
 } from "./admin.repository";
 import { BanUserPayload } from "./admin.entity";
 
+
 // GET /admin/users - List all users
 export async function listUsers(req: Request, res: Response) {
   try {

@@ -277,3 +277,24 @@ export async function fetchUserTopArtistsWithToken(accessToken: string, timeRang
         throw error;
     }
 }
+
+export async function fetchNewReleases(limit = 12) {
+    const cacheKey = `spotify-new-releases-${limit}`;
+    const cached = cache.get(cacheKey);
+
+    if (cached) return cached;
+
+    try {
+        const headers = await setSpotifyHeaders();
+        const response = await axios.get(`${BASE_URL}/browse/new-releases`, {
+            headers,
+            timeout: 10000,
+            params: { limit }
+        });
+        cache.set(cacheKey, response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching new releases from Spotify:", error);
+        throw error;
+    }
+}

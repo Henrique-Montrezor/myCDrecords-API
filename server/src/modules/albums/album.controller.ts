@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { fetchMusicBrainz } from "../musicbrainz/musicbrainz.service";
-import { fetchAlbumFromSpotify, searchSpotifyAlbum } from "../spotify/spotify.service";
+import { fetchAlbumFromSpotify, searchSpotifyAlbum, searchSpotify} from "../spotify/spotify.service";
 
 export async function searchAlbums(req: Request, res: Response) {
   const { nome, limite = 10 } = req.query;
@@ -82,3 +82,35 @@ export async function getAlbumById(req: Request, res: Response) {
     res.status(500).json({ message: "Erro ao buscar informações do álbum" });
   }
 };
+
+export async function getTrendingAlbums(req: Request, res: Response) {
+  try {
+    // 1. Descobre o ano em que estamos dinamicamente
+    const currentYear = new Date().getFullYear();
+    
+    // 2. Faz uma busca por todos os álbuns deste ano. 
+    // O grande segredo: O Spotify ordena os resultados do "search" por popularidade!
+    const searchData = await searchSpotify(`year:${currentYear}`, 'album', 12);
+    
+    const trendingAlbums = searchData.albums?.items || [];
+    
+    // 3. Formata os dados para o frontend
+    const formattedSpotify = trendingAlbums.map((album: any) => ({
+      id: album.id,
+      source: 'spotify',
+      title: album.name || album.title,
+      artistCredit: album.artists?.map((artist: any) => ({ name: artist.name })) || [],
+      releaseDate: album.release_date,
+      imageUrl: album.images?.[0]?.url,
+      disambiguation: album.disambiguation,
+      type: album.album_type,
+      genres: album.genres || [],
+      styles: album.styles || []
+    }));
+
+    res.json({ spotify: formattedSpotify, musicbrainz: [] });
+  } catch (error) {
+    console.error("Erro ao buscar álbuns em alta globais:", error);
+    res.status(500).json({ message: "Erro ao buscar álbuns em alta" });
+  }
+}
