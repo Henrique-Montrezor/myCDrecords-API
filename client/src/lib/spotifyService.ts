@@ -17,7 +17,6 @@ interface CombinedAlbum {
   spotifyId?: string;
 }
 
-const SPOTIFY_API = 'https://api.spotify.com/v1';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3004';
 
 class SpotifyService {
