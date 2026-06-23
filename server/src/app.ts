@@ -1,5 +1,5 @@
 import express from "express";
-import rateLimit from "express-rate-limit";
+import { createRateLimiter } from "./utils/rateLimiter";
 import artistRoutes from "./modules/artist/artist.routes";
 import albumRoutes from "./modules/albums/album.routes";
 import trackRoutes from "./modules/tracks/track.search.routes";
@@ -18,7 +18,14 @@ import {
   createBannedUsersTable,
   addAdminRoleToUsers,
   createAdminTable,
-  createReviewsTable
+  createReviewsTable,
+  createFollowsTable,
+  createVotesTable,
+  createListsTable,
+  createListItemsTable,
+  createBadgesTable,
+  createUserBadgesTable,
+  seedDefaultBadges
 } from "./mysql2/create.tables";
 import profileRoutes from "./modules/profile/profile.routes";
 import authRoutes from "./modules/auth/auth.routes";
@@ -29,6 +36,9 @@ import adminRoutes from "./modules/admin/admin.routes";
 import spotifyRoutes from "./modules/spotify/spotify.routes";
 import reviewsRoutes from "./modules/reviews/reviews.routes";
 import recommendationsRoutes from "./modules/recommendations/recommendations.routes";
+import socialRoutes from "./modules/social/social.routes";
+import listsRoutes from "./modules/lists/lists.routes";
+import gamificationRoutes from "./modules/gamification/gamification.routes";
 
 dotenv.config();
 
@@ -70,6 +80,19 @@ const initializeApp = async () => {
     await createAdminTable({} as express.Request, {} as express.Response);
     await createReviewsTable({} as express.Request, {} as express.Response);
 
+    // Social: seguidores e votos
+    await createFollowsTable({} as express.Request, {} as express.Response);
+    await createVotesTable({} as express.Request, {} as express.Response);
+
+    // Listas/coleções personalizadas
+    await createListsTable({} as express.Request, {} as express.Response);
+    await createListItemsTable({} as express.Request, {} as express.Response);
+
+    // Gamificação: catálogo de emblemas + conquistas + seed padrão
+    await createBadgesTable({} as express.Request, {} as express.Response);
+    await createUserBadgesTable({} as express.Request, {} as express.Response);
+    await seedDefaultBadges({} as express.Request, {} as express.Response);
+
     // Só após a tabela `admins` existir, atribuímos os admins
     await addAdminRoleToUsers({} as express.Request, {} as express.Response);
     console.log('Database initialization complete');
@@ -82,11 +105,20 @@ const initializeApp = async () => {
 // Inicia a inicialização sem bloquear a definição das rotas
 initializeApp();
 
-// 🔥 Rate limit
-app.use(rateLimit({
+// 🔥 Rate limit global (Redis quando disponível, memória como fallback)
+app.use(createRateLimiter({
   windowMs: 60 * 1000,
-  max: 100
+  max: 100,
+  prefix: "rl:global:"
 }));
+
+// 🔐 Rate limit mais restrito para endpoints de autenticação (anti brute-force)
+const authLimiter = createRateLimiter({
+  windowMs: 60 * 1000,
+  max: 10,
+  prefix: "rl:auth:",
+  message: { error: "Muitas tentativas. Tente novamente em instantes." }
+});
 
 
 // 📚 Swagger
@@ -105,7 +137,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/profile", profileRoutes);
 
 // Rotas de autenticação
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/admin", adminRoutes);
 
 // Rotas de Spotify
@@ -113,6 +145,15 @@ app.use("/api/spotify", spotifyRoutes);
 
 // Rotas de reviews
 app.use("/api/reviews", reviewsRoutes);
+
+// Rotas sociais (seguidores e votos)
+app.use("/api/social", socialRoutes);
+
+// Rotas de listas/coleções
+app.use("/api/lists", listsRoutes);
+
+// Rotas de gamificação (emblemas)
+app.use("/api/gamification", gamificationRoutes);
 
 // Erros
 app.use(errorHandler);
