@@ -1,9 +1,10 @@
 import { initDatabase } from "../../mysql2/init.database";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
+import { withTransaction } from "../../utils/withTransaction";
 
 
 // get reviews for a product with pagination
-export async function getReviewsByAlbumId(albumId: number, page: number) {
+export async function getReviewsByAlbumId(albumId: string, page: number) {
     const connection = await initDatabase();
     const offset = (page - 1) * 10;
 
@@ -39,7 +40,7 @@ export async function postReview(userId: number,
     const connection = await initDatabase();
     
     const query = `
-        INSERT INTO reviews (user_id, album_id, albumTitle, albumImage, albumArtist, albumGenre, rating, text)
+        INSERT INTO reviews (user_id, album_id, album_title, album_image, album_artist, album_genre, rating, text)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
@@ -49,18 +50,23 @@ export async function postReview(userId: number,
 
 // delete a review
 export async function deleteReview(reviewId: number, userId: number) {
-    const connection = await initDatabase();
+    // Apaga comentários atrelados e a review em uma única transação,
+    // garantindo que nenhum dado fique inconsistente em caso de falha.
+    return withTransaction(async (connection) => {
+        // 1. Remove os comentários vinculados à review
+        await connection.query<ResultSetHeader>(
+            `DELETE FROM comments WHERE review_id = ?`,
+            [reviewId]
+        );
 
-    // Delete the review
-    const query = `
-        DELETE FROM reviews 
-        WHERE id = ? AND user_id = ?
-    `;
+        // 2. Remove a review garantindo a propriedade do usuário
+        const [result] = await connection.query<ResultSetHeader>(
+            `DELETE FROM reviews WHERE id = ? AND user_id = ?`,
+            [reviewId, userId]
+        );
 
-    const [result] = await connection.query<ResultSetHeader>(query, [reviewId, userId]);
-
-    return result.affectedRows > 0;
-
+        return result.affectedRows > 0;
+    });
 }
 
 // get all reviews by a user

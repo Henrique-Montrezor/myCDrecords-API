@@ -57,7 +57,7 @@ const router = Router();
  *       500:
  *         description: Erro interno do servidor.
  */
-router.get('/albums/:albumId/reviews', authMiddleware, getReviewsByAlbumIdController);
+router.get('/albums/:albumId/reviews', authMiddleware, asyncHandler(getReviewsByAlbumIdController));
 
 /**
  * @swagger
@@ -129,7 +129,7 @@ router.get('/albums/:albumId/reviews', authMiddleware, getReviewsByAlbumIdContro
  *       500:
  *         description: Erro interno do servidor.
  */
-router.get('/users/:userId/reviews', authMiddleware, getReviewsByUserIdController)
+router.get('/users/:userId/reviews', authMiddleware, asyncHandler(getReviewsByUserIdController))
 
 /**
  * @swagger
@@ -204,7 +204,7 @@ router.post('/post-review', authMiddleware, asyncHandler(postReviewController));
  *       500:
  *         description: Erro interno do servidor.
  */
-router.delete('/:reviewId/delete', authMiddleware, deleteReviewController)
+router.delete('/:reviewId/delete', authMiddleware, asyncHandler(deleteReviewController))
 
 /**
  * @swagger
@@ -252,6 +252,6 @@ router.delete('/:reviewId/delete', authMiddleware, deleteReviewController)
  *       500:
  *         description: Erro interno do servidor.
  */
-router.put('/:reviewId/update', authMiddleware, updateReviewController);
+router.put('/:reviewId/update', authMiddleware, asyncHandler(updateReviewController));
 
 export default router;

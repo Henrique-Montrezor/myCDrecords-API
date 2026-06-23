@@ -1,14 +1,19 @@
 import { getReviewsByAlbumId, postReview, deleteReview, getReviewsByUserId, updateReview, checkReview} from './reviews.repository';
 import { Request, Response } from 'express';
+import { evaluateUserBadges } from '../gamification/gamification.service';
+import {
+    postReviewSchema,
+    updateReviewSchema,
+    reviewIdParamSchema,
+    albumIdParamSchema,
+    userIdParamSchema,
+    paginationQuerySchema,
+} from './reviews.schema';
 
 // Get reviews for a specific album
 export async function getReviewsByAlbumIdController(req: Request, res: Response) {
-    const albumId = parseInt(req.params.albumId);
-    const page = parseInt(req.query.page as string) || 1;
-
-    if (!albumId){
-        return res.json({ error: 'Please provide a AlbumId '})
-    }
+    const { albumId } = albumIdParamSchema.parse(req.params);
+    const { page } = paginationQuerySchema.parse(req.query);
 
     try {
         const reviews = await getReviewsByAlbumId(albumId, page);
@@ -27,16 +32,9 @@ export async function postReviewController(req: Request, res: Response) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Extraia as novas propriedades do body
-    const { albumId, albumTitle, albumImage, albumArtist, genre, rating, text } = req.body;
-
-    if (!albumId || !rating) {
-        return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    if (rating < 1 || rating > 5) {
-        return res.status(400).json({ error: 'Rating must be between 1 and 5' });
-    } 
+    // Valida e normaliza o corpo da requisição
+    const { albumId, albumTitle, albumImage, albumArtist, genre, rating, text } =
+        postReviewSchema.parse(req.body);
 
     try {
         const existingReview = await checkReview(userId, albumId);
@@ -46,8 +44,12 @@ export async function postReviewController(req: Request, res: Response) {
 
         // Passe todos os campos para a função do repositório
         const reviewId = await postReview(
-            userId, albumId, albumTitle, albumImage, albumArtist, genre, rating, text
+            userId, albumId, albumTitle ?? '', albumImage ?? '', albumArtist ?? '', genre ?? '', rating, text ?? ''
         );
+
+        // Avalia e concede emblemas de gamificação (não bloqueia em caso de falha)
+        await evaluateUserBadges(userId);
+
         res.status(201).json({ reviewId });
     } catch (error) {
         console.error('Error posting review:', error);
@@ -56,7 +58,7 @@ export async function postReviewController(req: Request, res: Response) {
 }
 
 export async function deleteReviewController(req: Request, res: Response) {
-    const reviewId = parseInt(req.params.reviewId);
+    const { reviewId } = reviewIdParamSchema.parse(req.params);
 
     // 1. Garante que o usuário está autenticado
     const userId = req.user?.id;
@@ -84,8 +86,8 @@ export async function deleteReviewController(req: Request, res: Response) {
 }
 
 export async function getReviewsByUserIdController(req: Request, res: Response) {
-    const userId = parseInt(req.params.userId);
-    const page = parseInt(req.query.page as string) || 1;
+    const { userId } = userIdParamSchema.parse(req.params);
+    const { page } = paginationQuerySchema.parse(req.query);
 
     try {
         const reviews = await getReviewsByUserId(userId, page);
@@ -97,12 +99,8 @@ export async function getReviewsByUserIdController(req: Request, res: Response) 
 }
 
 export async function updateReviewController(req: Request, res: Response) {
-    const reviewId = parseInt(req.params.reviewId);
-    const { rating, text } = req.body;
-
-    if (!rating) {
-        return res.status(400).json({ error: 'O campo rating é obrigatório' });
-    }
+    const { reviewId } = reviewIdParamSchema.parse(req.params);
+    const { rating, text } = updateReviewSchema.parse(req.body);
 
     const userId = req.user?.id;
     if (!userId) {
@@ -111,7 +109,7 @@ export async function updateReviewController(req: Request, res: Response) {
 
     try {
         // 3 e 4. Tenta atualizar garantindo a propriedade da review na mesma query
-        const success = await updateReview(reviewId, userId, rating, text);
+        const success = await updateReview(reviewId, userId, rating, text ?? '');
         
         if (!success) {
             // Se affectedRows for 0, significa que a review não existe OU não pertence ao usuário
