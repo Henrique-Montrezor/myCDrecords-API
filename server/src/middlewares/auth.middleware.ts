@@ -10,28 +10,40 @@ declare global {
 }
 
 const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  try {
-    // Tenta pegar o Access Token do Header primeiro
-    let token = req.headers.authorization?.split(" ")[1];
-    let secret = process.env.JWT_SECRET || "your-secret-key";
+  const headerToken = req.headers.authorization?.split(" ")[1];
+  const cookieToken = req.cookies?.token;
 
-    // Se não veio pelo Header, pega o Refresh Token do cookie e troca a chave
-    if (!token) {
-      token = req.cookies.token;
-      secret = process.env.JWT_REFRESH_SECRET || "your-refresh-secret";
+  // 1) Tenta o Access Token do header (curta duração: 15m).
+  if (headerToken) {
+    try {
+      const decoded: any = jwt.verify(
+        headerToken,
+        process.env.JWT_SECRET || "your-secret-key"
+      );
+      req.user = { id: decoded.user_id, email: decoded.email };
+      return next();
+    } catch {
+      // Access token ausente/expirado/inválido — cai para o refresh cookie abaixo.
     }
-
-    if (!token) {
-      return res.status(401).json({ message: "Token não fornecido" });
-    }
-
-    const decoded: any = jwt.verify(token, secret);
-
-    req.user = { id: decoded.user_id, email: decoded.email };
-    next();
-  } catch (error) {
-    return res.status(401).json({ message: "Token inválido ou expirado" });
   }
+
+  // 2) Fallback: Refresh Token do cookie httpOnly (longa duração: 7d).
+  // Mantém o usuário autenticado mesmo após o access token expirar, evitando
+  // que ações como "Conectar Spotify" falhem silenciosamente com 401.
+  if (cookieToken) {
+    try {
+      const decoded: any = jwt.verify(
+        cookieToken,
+        process.env.JWT_REFRESH_SECRET || "your-refresh-secret"
+      );
+      req.user = { id: decoded.user_id, email: decoded.email };
+      return next();
+    } catch {
+      return res.status(401).json({ message: "Token inválido ou expirado" });
+    }
+  }
+
+  return res.status(401).json({ message: "Token não fornecido" });
 };
 
 export default authMiddleware;
