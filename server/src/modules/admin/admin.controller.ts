@@ -13,14 +13,14 @@ import {
   getReportsByStatus,
 } from "./admin.repository";
 import { BanUserPayload } from "./admin.entity";
+import { idParamSchema, banUserSchema, adminPaginationQuerySchema } from "./admin.schema";
 
 
 // GET /admin/users - List all users
 export async function listUsers(req: Request, res: Response) {
-  try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
+  const { page, limit } = adminPaginationQuerySchema.parse(req.query);
 
+  try {
     const users = await getAllUsers(page, limit);
     const total = await getTotalUsersCount();
 
@@ -42,17 +42,14 @@ export async function listUsers(req: Request, res: Response) {
 
 // PATCH /admin/users/:id/ban - Ban user
 export async function banUserHandler(req: Request, res: Response) {
+  const { id: userId } = idParamSchema.parse(req.params);
+  const { reason } = banUserSchema.parse(req.body);
+
   try {
-    const userId = parseInt(req.params.id);
     const adminId = req.user?.id;
-    const { reason }: BanUserPayload = req.body;
 
-    if (!userId || !adminId) {
-      return res.status(400).json({ message: "Dados inválidos" });
-    }
-
-    if (!reason) {
-      return res.status(400).json({ message: "Motivo do banimento é obrigatório" });
+    if (!adminId) {
+      return res.status(401).json({ message: "Não autenticado" });
     }
 
     // Check if user is already banned
@@ -76,13 +73,9 @@ export async function banUserHandler(req: Request, res: Response) {
 
 // PATCH /admin/users/:id/unban - Unban user
 export async function unbanUserHandler(req: Request, res: Response) {
+  const { id: userId } = idParamSchema.parse(req.params);
+
   try {
-    const userId = parseInt(req.params.id);
-
-    if (!userId) {
-      return res.status(400).json({ message: "ID do usuário inválido" });
-    }
-
     // Check if user is banned
     const isBanned = await isUserBanned(userId);
     if (!isBanned) {
@@ -104,13 +97,9 @@ export async function unbanUserHandler(req: Request, res: Response) {
 
 // DELETE /admin/reviews/:id - Delete review
 export async function deleteReviewHandler(req: Request, res: Response) {
+  const { id: reviewId } = idParamSchema.parse(req.params);
+
   try {
-    const reviewId = parseInt(req.params.id);
-
-    if (!reviewId) {
-      return res.status(400).json({ message: "ID da review inválido" });
-    }
-
     await deleteReview(reviewId);
 
     res.status(200).json({
@@ -125,13 +114,9 @@ export async function deleteReviewHandler(req: Request, res: Response) {
 
 // DELETE /admin/comments/:id - Delete comment
 export async function deleteCommentHandler(req: Request, res: Response) {
+  const { id: commentId } = idParamSchema.parse(req.params);
+
   try {
-    const commentId = parseInt(req.params.id);
-
-    if (!commentId) {
-      return res.status(400).json({ message: "ID do comentário inválido" });
-    }
-
     await deleteComment(commentId);
 
     res.status(200).json({
@@ -146,11 +131,9 @@ export async function deleteCommentHandler(req: Request, res: Response) {
 
 // GET /admin/reports - Get all reports
 export async function listReports(req: Request, res: Response) {
-  try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
-    const status = req.query.status as string;
+  const { page, limit, status } = adminPaginationQuerySchema.parse(req.query);
 
+  try {
     let reports;
     if (status) {
       reports = await getReportsByStatus(status, page, limit);

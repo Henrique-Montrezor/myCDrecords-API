@@ -1,5 +1,6 @@
 import { initDatabase } from "../../mysql2/init.database";
-import { RowDataPacket } from "mysql2";
+import { RowDataPacket, ResultSetHeader } from "mysql2";
+import { withTransaction } from "../../utils/withTransaction";
 
 // Get all users with pagination
 export async function getAllUsers(page: number = 1, limit: number = 20) {
@@ -114,16 +115,20 @@ export async function getAllReviews(page: number = 1, limit: number = 20) {
 
 // Delete review
 export async function deleteReview(reviewId: number) {
-  const connection = await initDatabase();
-  
-  // Delete associated comments first
-  await connection.query(`DELETE FROM comments WHERE review_id = ?`, [reviewId]);
-  
-  // Delete the review
-  const query = `DELETE FROM reviews WHERE id = ?`;
-  const [result] = await connection.query<any>(query, [reviewId]);
-  
-  return result;
+  // Remove comentários atrelados e a review atomicamente.
+  return withTransaction(async (connection) => {
+    await connection.query<ResultSetHeader>(
+      `DELETE FROM comments WHERE review_id = ?`,
+      [reviewId]
+    );
+
+    const [result] = await connection.query<ResultSetHeader>(
+      `DELETE FROM reviews WHERE id = ?`,
+      [reviewId]
+    );
+
+    return result;
+  });
 }
 
 // Get all comments
