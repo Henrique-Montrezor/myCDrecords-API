@@ -5,14 +5,11 @@ import {
   banUser,
   unbanUser,
   isUserBanned,
-  getAllReviews,
   deleteReview,
-  getAllComments,
   deleteComment,
   getAllReports,
   getReportsByStatus,
 } from "./admin.repository";
-import { BanUserPayload } from "./admin.entity";
 import { idParamSchema, banUserSchema, adminPaginationQuerySchema } from "./admin.schema";
 
 
