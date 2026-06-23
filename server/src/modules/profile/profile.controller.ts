@@ -1,23 +1,18 @@
 import { Request, Response } from "express";
 import { createOrUpdateProfile, getProfileByUsername } from "./profile.repository";
+import { profileUpsertSchema } from "./profile.schema";
 
 // Criar ou atualizar perfil
 export async function createOrUpdateProfileController(req: Request, res: Response) {
+    const user_id = req.user?.id; // get user_id from JWT token
+
+    if (!user_id) {
+        return res.status(401).json({ message: "Usuário não autenticado" });
+    }
+
+    const { bio, avatar_url } = profileUpsertSchema.parse(req.body);
+
     try {
-        const user_id = req.user?.id; // get user_id from JWT token
-
-        if (!user_id) {
-            return res.status(401).json({ message: "Usuário não autenticado" });
-        }
-
-        const { bio, avatar_url } = req.body;
-
-        if (!bio || !avatar_url) {
-            return res.status(400).json({
-                message: "Bio e avatar_url são obrigatórios"
-            });
-        }
-
         await createOrUpdateProfile(user_id, { user_id, bio, avatar_url } as any, avatar_url);
 
         res.status(200).json({
