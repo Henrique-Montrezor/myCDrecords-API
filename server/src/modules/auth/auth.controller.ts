@@ -22,25 +22,20 @@ import {
   EmailVerificationPayload,
   EmailUpdatePayload,
 } from "./auth.entity";
+import {
+  registerSchema,
+  loginSchema,
+  passwordResetRequestSchema,
+  passwordResetSchema,
+  emailVerificationSchema,
+  emailUpdateSchema,
+} from "./auth.schema";
 
 // POST /auth/register
 export async function register(req: Request, res: Response) {
+  const { username, email, password } = registerSchema.parse(req.body);
+
   try {
-    const { username, email, password, confirmPassword }: RegisterRequest = req.body;
-
-    // Validação básica
-    if (!username || !email || !password) {
-      return res.status(400).json({ message: "Dados obrigatórios ausentes" });
-    }
-
-    if (password !== confirmPassword) {
-      return res.status(400).json({ message: "Senhas não correspondem" });
-    }
-
-    if (password.length < 8) {
-      return res.status(400).json({ message: "Senha deve ter pelo menos 8 caracteres" });
-    }
-
     // Register user
     const user = await registerUser({ username, email, password });
 
@@ -79,14 +74,9 @@ export async function register(req: Request, res: Response) {
 
 // POST /auth/login
 export async function login(req: Request, res: Response) {
+  const { email, password } = loginSchema.parse(req.body);
+
   try {
-    const { email, password }: LoginRequest = req.body;
-
-    // Validação básica
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email e senha são obrigatórios" });
-    }
-
     // Find user
     const user = await findByEmail(email);
     if (!user) {
@@ -168,13 +158,9 @@ export async function refresh(req: Request, res: Response) {
 
 // POST /auth/password/request-reset
 export async function requestReset(req: Request, res: Response) {
+  const { email } = passwordResetRequestSchema.parse(req.body);
+
   try {
-    const { email }: PasswordResetRequestPayload = req.body;
-
-    if (!email) {
-      return res.status(400).json({ message: "Email é obrigatório" });
-    }
-
     await requestPasswordReset(email);
 
     // Always return success for security reasons
@@ -189,21 +175,9 @@ export async function requestReset(req: Request, res: Response) {
 
 // POST /auth/password/reset
 export async function reset(req: Request, res: Response) {
+  const { token, password } = passwordResetSchema.parse(req.body);
+
   try {
-    const { token, password, confirmPassword }: PasswordResetPayload = req.body;
-
-    if (!token || !password) {
-      return res.status(400).json({ message: "Token e senha são obrigatórios" });
-    }
-
-    if (password !== confirmPassword) {
-      return res.status(400).json({ message: "Senhas não correspondem" });
-    }
-
-    if (password.length < 8) {
-      return res.status(400).json({ message: "Senha deve ter pelo menos 8 caracteres" });
-    }
-
     await resetPassword(token, password);
 
     res.status(200).json({
@@ -217,13 +191,9 @@ export async function reset(req: Request, res: Response) {
 
 // POST /auth/email/verify
 export async function verify(req: Request, res: Response) {
+  const { token } = emailVerificationSchema.parse(req.body);
+
   try {
-    const { token }: EmailVerificationPayload = req.body;
-
-    if (!token) {
-      return res.status(400).json({ message: "Token é obrigatório" });
-    }
-
     await verifyEmail(token);
 
     res.status(200).json({
@@ -237,16 +207,13 @@ export async function verify(req: Request, res: Response) {
 
 // PATCH /auth/email
 export async function updateEmailAddress(req: Request, res: Response) {
+  const { email } = emailUpdateSchema.parse(req.body);
+
   try {
     const userId = req.user?.id;
-    const { email }: EmailUpdatePayload = req.body;
 
     if (!userId) {
       return res.status(401).json({ message: "Usuário não autenticado" });
-    }
-
-    if (!email) {
-      return res.status(400).json({ message: "Email é obrigatório" });
     }
 
     await updateEmail(userId, email);

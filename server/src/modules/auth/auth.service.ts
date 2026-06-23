@@ -7,13 +7,13 @@ import {
   findVerificationToken,
   markTokenAsUsed,
   updateUserEmail,
-  updateUserPassword,
   markEmailAsVerified,
   storeRefreshToken,
   findRefreshToken,
   invalidateRefreshToken,
 } from "./auth.repository";
 import { createUser, findByEmail, findByUsername } from "../users/user.repository";
+import { withTransaction } from "../../utils/withTransaction";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "your-refresh-secret";
@@ -183,11 +183,17 @@ export async function resetPassword(token: string, newPassword: string) {
   // Hash new password
   const hashedPassword = await hashPassword(newPassword);
 
-  // Update user password
-  await updateUserPassword(decoded.user_id, hashedPassword);
-
-  // Mark token as used
-  await markTokenAsUsed(verificationToken.id);
+  // Atualiza a senha e marca o token como usado de forma atômica
+  await withTransaction(async (connection) => {
+    await connection.query(
+      `UPDATE users SET password = ? WHERE id = ?`,
+      [hashedPassword, decoded.user_id]
+    );
+    await connection.query(
+      `UPDATE verification_tokens SET used = true, used_at = NOW() WHERE id = ?`,
+      [verificationToken.id]
+    );
+  });
 
   return { success: true };
 }
