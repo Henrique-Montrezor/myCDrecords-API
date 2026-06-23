@@ -206,7 +206,7 @@ export async function exchangeCodeForToken(code: string) {
             const response = await axios.post('https://accounts.spotify.com/api/token', new URLSearchParams({
             grant_type: 'authorization_code',
             code,
-            redirect_uri: process.env.SPOTIFY_REDIRECT_URI || 'http://localhost:3000/api/spotify/callback',
+            redirect_uri: process.env.SPOTIFY_REDIRECT_URI || 'http://127.0.0.1:3004/api/spotify/callback',
             client_id: process.env.SPOTIFY_CLIENT_ID || '',
             client_secret: process.env.SPOTIFY_CLIENT_SECRET || ''
         }), {

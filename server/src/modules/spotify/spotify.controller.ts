@@ -2,10 +2,11 @@ import {Response, Request} from 'express';
 import axios from 'axios';
 import NodeCache from 'node-cache';
 import {fetchAlbumFromSpotify, setSpotifyHeaders, searchSpotify, fetchSpotifyPlaylistById, getSpotifyUserProfile, fetchUserTopTracksWithToken, fetchUserTopArtistsWithToken} from './spotify.service';
-import crypto from 'crypto'; // Nativo do Node.js
+import crypto from 'crypto'; 
+import jwt from 'jsonwebtoken';
 import { findOAuthUser, storeOAuthProvider, updateSpotifyTokens, getSpotifyTokens } from '../auth/auth.repository';
 import { createUser, findByEmail, findById } from '../users/user.repository';
-import { generateAccessToken, generateRefreshToken, createTokensPair } from '../auth/auth.service';
+import { createTokensPair } from '../auth/auth.service';
 
 
 const cache = new NodeCache({ stdTTL: 3600 });
@@ -231,7 +232,7 @@ export async function fetchSpotifyPlaylist(req: Request, res: Response) {
 
 export function loginUserSpotify(req: Request, res: Response) {
     const clientId = process.env.SPOTIFY_CLIENT_ID;
-    const redirectUri = process.env.SPOTIFY_REDIRECT_URI || 'http://localhost:3000/api/spotify/callback';
+    const redirectUri = process.env.SPOTIFY_REDIRECT_URI || 'http://127.0.0.1:3004/api/spotify/callback';
     
     // 1. Validação defensiva
     if (!clientId) {
@@ -252,9 +253,19 @@ export function loginUserSpotify(req: Request, res: Response) {
         `&client_id=${encodeURIComponent(clientId)}` +
         `&scope=${encodeURIComponent(scopes)}` +
         `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-        `&state=${encodeURIComponent(state)}`;
+        `&state=${encodeURIComponent(state)}` +
+        // Força a tela de consentimento do Spotify mesmo quando o usuário já
+        // autorizou o app antes (caso contrário o Spotify redireciona direto).
+        `&show_dialog=true`;
 
-    // 5. Redirecionamento
+    // 5. Resposta
+    // Quando chamado via XHR (fetch/axios com Accept: application/json), o token
+    // de sessão chega pelo header Authorization e o frontend faz o redirect.
+    // Isso evita depender de cookies em navegação cross-site (localhost x 127.0.0.1).
+    if (req.headers.accept?.includes('application/json')) {
+        return res.json({ url: authUrl });
+    }
+
     res.redirect(authUrl);
 }
 
@@ -265,12 +276,12 @@ export async function spotifyCallback(req: Request, res: Response) {
 
     const clientId = process.env.SPOTIFY_CLIENT_ID;
     const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-    const redirectUri = process.env.SPOTIFY_REDIRECT_URI || 'http://localhost:3000/api/spotify/callback';
+    const redirectUri = process.env.SPOTIFY_REDIRECT_URI || 'http://127.0.0.1:3004/api/spotify/callback';
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
     // 1. Validação de Segurança (CSRF)
     if (state === null || state !== storedState) {
-        return res.redirect(`${frontendUrl}/auth?error=state_mismatch`);
+        return res.redirect(`${frontendUrl}/dashboard?error=state_mismatch`);
     }
 
     // Limpa o cookie de estado após a validação
@@ -279,11 +290,11 @@ export async function spotifyCallback(req: Request, res: Response) {
     // 2. Validação das variáveis de ambiente e do código recebido
     if (!clientId || !clientSecret) {
         console.error('Configurações do Spotify ausentes no servidor.');
-        return res.redirect(`${frontendUrl}/auth?error=server_config_error`);
+        return res.redirect(`${frontendUrl}/dashboard?error=server_config_error`);
     }
 
     if (!code) {
-        return res.redirect(`${frontendUrl}/auth?error=no_code`);
+        return res.redirect(`${frontendUrl}/dashboard?error=no_code`);
     }
 
     try {
@@ -328,8 +339,32 @@ export async function spotifyCallback(req: Request, res: Response) {
         // 5. Procurar ou criar usuário no banco de dados
         let user;
 
-        // Primeiro, tentar encontrar por OAuth
-        user = await findOAuthUser('spotify', spotifyId);
+        // 5.0. PRIORIDADE: se já existe uma sessão myCDrecords ativa, o Spotify é
+        // apenas uma *conexão* de conta. Vincula os tokens ao usuário logado em
+        // vez de resolver/criar outro usuário pelo e-mail do Spotify (que pode
+        // ser diferente do e-mail de cadastro). Isso evita o caso em que o
+        // callback grava os tokens em um usuário e a sessão lê de outro
+        // (resultando em "conectado com sucesso" mas sem conexão de fato).
+        const sessionToken = req.cookies?.token;
+        if (sessionToken) {
+            try {
+                const decoded: any = jwt.verify(
+                    sessionToken,
+                    process.env.JWT_REFRESH_SECRET || 'your-refresh-secret'
+                );
+                const sessionUser = await findById(decoded.user_id);
+                if (sessionUser) {
+                    user = sessionUser;
+                }
+            } catch {
+                // Sessão inválida/expirada — segue para o fluxo de login por Spotify.
+            }
+        }
+
+        // Em seguida, tentar encontrar por OAuth (somente se não houver sessão).
+        if (!user) {
+            user = await findOAuthUser('spotify', spotifyId);
+        }
 
         if (!user) {
             // Se não existe OAuth link, tentar encontrar por email
@@ -361,14 +396,14 @@ export async function spotifyCallback(req: Request, res: Response) {
                     return res.redirect(`${frontendUrl}/auth?error=user_creation_failed`);
                 }
             }
+        }
 
-            // Agora que temos um user, criar o link OAuth
-            try {
-                await storeOAuthProvider(user.id, 'spotify', spotifyId);
-            } catch (error) {
-                console.error('Erro ao armazenar OAuth provider:', error);
-                // Não falhar aqui, continuar com autenticação
-            }
+        // Garante o vínculo OAuth (idempotente) para o usuário resolvido.
+        try {
+            await storeOAuthProvider(user.id, 'spotify', spotifyId);
+        } catch (error) {
+            console.error('Erro ao armazenar OAuth provider:', error);
+            // Não falhar aqui, continuar com autenticação
         }
 
         // 6. Armazenar tokens do Spotify
@@ -380,8 +415,10 @@ export async function spotifyCallback(req: Request, res: Response) {
                 expires_in
             );
         } catch (error) {
+            // Conectar o Spotify é justamente persistir estes tokens; se falhar,
+            // não faz sentido reportar sucesso. Redireciona com erro explícito.
             console.error('Erro ao armazenar tokens do Spotify:', error);
-            // Não falhar aqui, continuar com autenticação
+            return res.redirect(`${frontendUrl}/dashboard?error=token_store_failed`);
         }
 
         // 7. Gerar tokens JWT para o usuário mycdrecords
@@ -407,11 +444,11 @@ export async function spotifyCallback(req: Request, res: Response) {
             return res.redirect(`${frontendUrl}/dashboard?spotify=success`);
         } catch (error) {
             console.error('Erro ao gerar tokens JWT:', error);
-            return res.redirect(`${frontendUrl}/auth?error=jwt_generation_failed`);
+            return res.redirect(`${frontendUrl}/dashboard?error=jwt_generation_failed`);
         }
 
     } catch (error) {
         console.error('Erro no callback do Spotify:', error);
-        return res.redirect(`${frontendUrl}/auth?error=internal_server_error`);
+        return res.redirect(`${frontendUrl}/dashboard?error=internal_server_error`);
     }
 }
