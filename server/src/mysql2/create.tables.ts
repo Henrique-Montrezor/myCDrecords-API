@@ -303,3 +303,160 @@ export async function createReviewTables(req: Request, res: Response) {
         throw error;
     }
 };
+
+// Function to create the follows table (social: seguir usuários)
+export async function createFollowsTable(req: Request, res: Response) {
+    try {
+        const connection = await initDatabase();
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS follows (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                follower_id INT NOT NULL,
+                following_id INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_follow (follower_id, following_id),
+                CHECK (follower_id <> following_id),
+                FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        `);
+        console.log('Follows table created successfully');
+    } catch (error) {
+        console.error('Error creating follows table:', error);
+        throw error;
+    }
+}
+
+// Function to create the votes table (social: up/downvotes em reviews e comentários)
+export async function createVotesTable(req: Request, res: Response) {
+    try {
+        const connection = await initDatabase();
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS votes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                target_type ENUM('review', 'comment') NOT NULL,
+                target_id INT NOT NULL,
+                value TINYINT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_vote (user_id, target_type, target_id),
+                CHECK (value IN (-1, 1)),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        `);
+        console.log('Votes table created successfully');
+    } catch (error) {
+        console.error('Error creating votes table:', error);
+        throw error;
+    }
+}
+
+// Function to create the lists table (coleções/listas personalizadas)
+export async function createListsTable(req: Request, res: Response) {
+    try {
+        const connection = await initDatabase();
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS lists (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                is_public BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_list_user (user_id),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        `);
+        console.log('Lists table created successfully');
+    } catch (error) {
+        console.error('Error creating lists table:', error);
+        throw error;
+    }
+}
+
+// Function to create the list_items table (álbuns dentro de uma lista)
+export async function createListItemsTable(req: Request, res: Response) {
+    try {
+        const connection = await initDatabase();
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS list_items (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                list_id INT NOT NULL,
+                album_id VARCHAR(255) NOT NULL,
+                album_title VARCHAR(500),
+                album_image VARCHAR(500),
+                album_artist VARCHAR(500),
+                position INT DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_list_album (list_id, album_id),
+                FOREIGN KEY (list_id) REFERENCES lists(id) ON DELETE CASCADE
+            )
+        `);
+        console.log('List items table created successfully');
+    } catch (error) {
+        console.error('Error creating list_items table:', error);
+        throw error;
+    }
+}
+
+// Function to create the badges catalog table (gamificação)
+export async function createBadgesTable(req: Request, res: Response) {
+    try {
+        const connection = await initDatabase();
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS badges (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                code VARCHAR(50) NOT NULL UNIQUE,
+                name VARCHAR(255) NOT NULL,
+                description TEXT,
+                threshold INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        console.log('Badges table created successfully');
+    } catch (error) {
+        console.error('Error creating badges table:', error);
+        throw error;
+    }
+}
+
+// Function to create the user_badges table (emblemas conquistados por usuário)
+export async function createUserBadgesTable(req: Request, res: Response) {
+    try {
+        const connection = await initDatabase();
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS user_badges (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                badge_id INT NOT NULL,
+                awarded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_user_badge (user_id, badge_id),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (badge_id) REFERENCES badges(id) ON DELETE CASCADE
+            )
+        `);
+        console.log('User badges table created successfully');
+    } catch (error) {
+        console.error('Error creating user_badges table:', error);
+        throw error;
+    }
+}
+
+// Seed dos emblemas padrão baseados em quantidade de avaliações
+export async function seedDefaultBadges(req: Request, res: Response) {
+    try {
+        const connection = await initDatabase();
+        await connection.query(`
+            INSERT IGNORE INTO badges (code, name, description, threshold) VALUES
+                ('critico_novato', 'Crítico Novato', 'Publicou 10 avaliações', 10),
+                ('ouvinte_assiduo', 'Ouvinte Assíduo', 'Publicou 50 avaliações', 50),
+                ('lenda_da_critica', 'Lenda da Crítica', 'Publicou 100 avaliações', 100)
+        `);
+        console.log('Default badges seeded successfully');
+    } catch (error) {
+        console.error('Error seeding default badges:', error);
+        throw error;
+    }
+}
