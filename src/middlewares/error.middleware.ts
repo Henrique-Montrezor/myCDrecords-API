@@ -1,9 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
+import { logger } from "../utils/logger";
 
 export function errorHandler(err: any, req: Request, res: Response, next: NextFunction) {
   // Erros de validação do Zod -> 400 com a lista de problemas
   if (err instanceof ZodError) {
+    logger.warn("Falha de validação", {
+      method: req.method,
+      url: req.originalUrl,
+      issues: err.issues,
+    });
     return res.status(400).json({
       error: "Validação falhou",
       issues: err.issues.map((issue) => ({
@@ -13,7 +19,16 @@ export function errorHandler(err: any, req: Request, res: Response, next: NextFu
     });
   }
 
-  res.status(err.status || 500).json({
+  const status = err.status || 500;
+
+  logger.error(err.message || "Erro interno do servidor", {
+    method: req.method,
+    url: req.originalUrl,
+    status,
+    stack: err.stack,
+  });
+
+  res.status(status).json({
     error: err.message || "Erro interno do servidor"
   });
 }

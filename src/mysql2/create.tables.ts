@@ -1,5 +1,6 @@
 import {Request, Response} from 'express';
 import {initDatabase} from "./init.database";
+import { logger } from "../utils/logger";
 
 
 // Function to create the users table
@@ -21,22 +22,22 @@ export async function createUserTable(req: Request, res: Response) {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             )
         `);
-        console.log('Users table created successfully');
+        logger.info('Users table created successfully');
         
         // Try to add new columns if they don't exist (for existing tables)
         try {
             await connection.query(`ALTER TABLE users ADD COLUMN spotify_access_token VARCHAR(500) DEFAULT NULL`);
             await connection.query(`ALTER TABLE users ADD COLUMN spotify_refresh_token VARCHAR(500) DEFAULT NULL`);
             await connection.query(`ALTER TABLE users ADD COLUMN spotify_token_expires_at TIMESTAMP NULL`);
-            console.log('Spotify columns added successfully');
+            logger.info('Spotify columns added successfully');
         } catch (alterError: any) {
             // Columns might already exist, that's fine
             if (!alterError.message.includes('Duplicate column')) {
-                console.log('Spotify columns might already exist:', alterError.message);
+                logger.warn('Spotify columns might already exist', { detail: alterError.message });
             }
         }
     } catch (error) {
-        console.error('Error creating users table:', error);
+        logger.error('Error creating users table', { error });
         throw error;
     }
 }
@@ -58,9 +59,9 @@ export async function createProfileTable(req: Request, res: Response) {
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         `);
-        console.log('Profiles table created successfully'); 
+        logger.info('Profiles table created successfully'); 
     } catch (error) {
-        console.error('Error creating profiles table:', error);
+        logger.error('Error creating profiles table', { error });
         throw error;
     }
 }
@@ -82,9 +83,9 @@ export async function createVerificationTokensTable(req: Request, res: Response)
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         `);
-        console.log('Verification tokens table created successfully');
+        logger.info('Verification tokens table created successfully');
     } catch (error) {
-        console.error('Error creating verification tokens table:', error);
+        logger.error('Error creating verification tokens table', { error });
         throw error;
     }
 }
@@ -104,9 +105,9 @@ export async function createRefreshTokensTable(req: Request, res: Response) {
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         `);
-        console.log('Refresh tokens table created successfully');
+        logger.info('Refresh tokens table created successfully');
     } catch (error) {
-        console.error('Error creating refresh tokens table:', error);
+        logger.error('Error creating refresh tokens table', { error });
         throw error;
     }
 }
@@ -126,9 +127,9 @@ export async function createOAuthProvidersTable(req: Request, res: Response) {
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         `);
-        console.log('OAuth providers table created successfully');
+        logger.info('OAuth providers table created successfully');
     } catch (error) {
-        console.error('Error creating OAuth providers table:', error);
+        logger.error('Error creating OAuth providers table', { error });
         throw error;
     }
 }
@@ -153,9 +154,9 @@ export async function createReviewsTable(req: Request, res: Response) {
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         `);
-        console.log('Reviews table created successfully');
+        logger.info('Reviews table created successfully');
     } catch (error) {
-        console.error('Error creating reviews table:', error);
+        logger.error('Error creating reviews table', { error });
         throw error;
     }
 }
@@ -177,9 +178,9 @@ export async function createCommentsTable(req: Request, res: Response) {
                 FOREIGN KEY (review_id) REFERENCES reviews(id) ON DELETE SET NULL
             )
         `);
-        console.log('Comments table created successfully');
+        logger.info('Comments table created successfully');
     } catch (error) {
-        console.error('Error creating comments table:', error);
+        logger.error('Error creating comments table', { error });
         throw error;
     }
 }
@@ -202,9 +203,9 @@ export async function createReportsTable(req: Request, res: Response) {
                 FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE CASCADE
             )
         `);
-        console.log('Reports table created successfully');
+        logger.info('Reports table created successfully');
     } catch (error) {
-        console.error('Error creating reports table:', error);
+        logger.error('Error creating reports table', { error });
         throw error;
     }
 }
@@ -225,9 +226,9 @@ export async function createBannedUsersTable(req: Request, res: Response) {
                 FOREIGN KEY (banned_by) REFERENCES users(id) ON DELETE SET NULL
             )
         `);
-        console.log('Banned users table created successfully');
+        logger.info('Banned users table created successfully');
     } catch (error) {
-        console.error('Error creating banned users table:', error);
+        logger.error('Error creating banned users table', { error });
         throw error;
     }
 }
@@ -243,9 +244,9 @@ export async function createAdminTable(req: Request, res: Response) {
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         `);
-        console.log('Admins table created successfully');
+        logger.info('Admins table created successfully');
     } catch (error) {
-        console.error('Error creating admins table:', error);
+        logger.error('Error creating admins table', { error });
         throw error;
     }
 }
@@ -258,7 +259,7 @@ export async function addAdminRoleToUsers(req: Request, res: Response) {
         const emailsToMakeAdmin = process.env.ADMIN_EMAILS ? process.env.ADMIN_EMAILS.split(",") : [];
 
         if (emailsToMakeAdmin.length === 0) {
-            console.log('No admin emails specified in environment variables');
+            logger.info('No admin emails specified in environment variables');
             return;
         }
 
@@ -273,10 +274,10 @@ export async function addAdminRoleToUsers(req: Request, res: Response) {
         // Executa a query passando o array de emails para preencher os placeholders (?)
         const [result]: any = await connection.query(query, emailsToMakeAdmin);
         
-        console.log(`Admin role verification complete. Linhas afetadas: ${result.affectedRows}`);
+        logger.info(`Admin role verification complete. Linhas afetadas: ${result.affectedRows}`);
     }
     catch (error) {
-        console.error('Error assigning admin role to users:', error);
+        logger.error('Error assigning admin role to users', { error });
         throw error;
     }
 }
@@ -297,9 +298,9 @@ export async function createReviewTables(req: Request, res: Response) {
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             )
         `);
-        console.log('Reviews table created successfully');
+        logger.info('Reviews table created successfully');
     } catch (error) {
-        console.error('Error creating reviews table:', error);
+        logger.error('Error creating reviews table', { error });
         throw error;
     }
 };
@@ -320,9 +321,9 @@ export async function createFollowsTable(req: Request, res: Response) {
                 FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE
             )
         `);
-        console.log('Follows table created successfully');
+        logger.info('Follows table created successfully');
     } catch (error) {
-        console.error('Error creating follows table:', error);
+        logger.error('Error creating follows table', { error });
         throw error;
     }
 }
@@ -345,9 +346,9 @@ export async function createVotesTable(req: Request, res: Response) {
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         `);
-        console.log('Votes table created successfully');
+        logger.info('Votes table created successfully');
     } catch (error) {
-        console.error('Error creating votes table:', error);
+        logger.error('Error creating votes table', { error });
         throw error;
     }
 }
@@ -369,9 +370,9 @@ export async function createListsTable(req: Request, res: Response) {
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         `);
-        console.log('Lists table created successfully');
+        logger.info('Lists table created successfully');
     } catch (error) {
-        console.error('Error creating lists table:', error);
+        logger.error('Error creating lists table', { error });
         throw error;
     }
 }
@@ -394,9 +395,9 @@ export async function createListItemsTable(req: Request, res: Response) {
                 FOREIGN KEY (list_id) REFERENCES lists(id) ON DELETE CASCADE
             )
         `);
-        console.log('List items table created successfully');
+        logger.info('List items table created successfully');
     } catch (error) {
-        console.error('Error creating list_items table:', error);
+        logger.error('Error creating list_items table', { error });
         throw error;
     }
 }
@@ -415,9 +416,9 @@ export async function createBadgesTable(req: Request, res: Response) {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        console.log('Badges table created successfully');
+        logger.info('Badges table created successfully');
     } catch (error) {
-        console.error('Error creating badges table:', error);
+        logger.error('Error creating badges table', { error });
         throw error;
     }
 }
@@ -437,9 +438,9 @@ export async function createUserBadgesTable(req: Request, res: Response) {
                 FOREIGN KEY (badge_id) REFERENCES badges(id) ON DELETE CASCADE
             )
         `);
-        console.log('User badges table created successfully');
+        logger.info('User badges table created successfully');
     } catch (error) {
-        console.error('Error creating user_badges table:', error);
+        logger.error('Error creating user_badges table', { error });
         throw error;
     }
 }
@@ -454,9 +455,9 @@ export async function seedDefaultBadges(req: Request, res: Response) {
                 ('ouvinte_assiduo', 'Ouvinte Assíduo', 'Publicou 50 avaliações', 50),
                 ('lenda_da_critica', 'Lenda da Crítica', 'Publicou 100 avaliações', 100)
         `);
-        console.log('Default badges seeded successfully');
+        logger.info('Default badges seeded successfully');
     } catch (error) {
-        console.error('Error seeding default badges:', error);
+        logger.error('Error seeding default badges', { error });
         throw error;
     }
 }

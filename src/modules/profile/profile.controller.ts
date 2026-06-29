@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { createOrUpdateProfile, getProfileByUsername } from "./profile.repository";
+import { logger } from "../../utils/logger";
 import { profileUpsertSchema } from "./profile.schema";
 
 // Criar ou atualizar perfil
@@ -20,7 +21,7 @@ export async function createOrUpdateProfileController(req: Request, res: Respons
             user_id
         });
     } catch (error) {
-        console.error('Erro ao atualizar perfil:', error);
+        logger.error('Erro ao atualizar perfil', { error });
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 }
@@ -38,7 +39,7 @@ export async function searchProfileByUsername(req: Request, res: Response) {
 
         res.status(200).json(profile);
     } catch (error) {
-        console.error('Erro ao obter perfil:', error);
+        logger.error('Erro ao obter perfil', { error });
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 }

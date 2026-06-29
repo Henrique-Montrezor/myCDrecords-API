@@ -1,5 +1,6 @@
 import mysql, { Pool } from 'mysql2/promise';
 import dotenv from 'dotenv';
+import { logger } from '../utils/logger';
 
 dotenv.config();
 
@@ -32,7 +33,7 @@ export async function initDatabase(): Promise<Pool> {
         connection.release();
         return currentPool;
     } catch (error) {
-        console.error('Error connecting to the database:', error);
+        logger.error('Error connecting to the database', { error });
         throw error;
     }
 }

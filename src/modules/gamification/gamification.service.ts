@@ -1,4 +1,5 @@
 import { countUserReviews, awardEligibleBadges } from "./gamification.repository";
+import { logger } from "../../utils/logger";
 
 /**
  * Avalia e concede emblemas ao usuário com base na quantidade de avaliações.
@@ -10,7 +11,7 @@ export async function evaluateUserBadges(userId: number): Promise<number> {
         const reviewCount = await countUserReviews(userId);
         return await awardEligibleBadges(userId, reviewCount);
     } catch (error) {
-        console.error("Erro ao avaliar emblemas do usuário:", error);
+        logger.error("Erro ao avaliar emblemas do usuário", { error });
         return 0;
     }
 }

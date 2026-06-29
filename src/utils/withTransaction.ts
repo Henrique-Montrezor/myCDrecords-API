@@ -1,5 +1,6 @@
 import { PoolConnection } from "mysql2/promise";
 import { getPool } from "../mysql2/init.database";
+import { logger } from "./logger";
 
 /**
  * Executa `fn` dentro de uma transação SQL usando uma única conexão do pool.
@@ -19,7 +20,7 @@ export async function withTransaction<T>(
         try {
             await connection.rollback();
         } catch (rollbackError) {
-            console.error("Erro ao executar ROLLBACK:", rollbackError);
+            logger.error("Erro ao executar ROLLBACK", { error: rollbackError });
         }
         throw error;
     } finally {

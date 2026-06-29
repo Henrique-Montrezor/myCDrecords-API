@@ -1,5 +1,6 @@
 import { getReviewsByAlbumId, postReview, deleteReview, getReviewsByUserId, updateReview, checkReview} from './reviews.repository';
 import { Request, Response } from 'express';
+import { logger } from '../../utils/logger';
 import { evaluateUserBadges } from '../gamification/gamification.service';
 import {
     postReviewSchema,
@@ -19,7 +20,7 @@ export async function getReviewsByAlbumIdController(req: Request, res: Response)
         const reviews = await getReviewsByAlbumId(albumId, page);
         res.json(reviews);
     } catch (error) {
-        console.error('Error fetching reviews:', error);
+        logger.error('Error fetching reviews', { error });
         res.status(500).json({ error: 'Internal server error' });
     }
 }
@@ -52,7 +53,7 @@ export async function postReviewController(req: Request, res: Response) {
 
         res.status(201).json({ reviewId });
     } catch (error) {
-        console.error('Error posting review:', error);
+        logger.error('Error posting review', { error });
         res.status(500).json({ error: 'Internal server error' });
     }
 }
@@ -80,7 +81,7 @@ export async function deleteReviewController(req: Request, res: Response) {
         // Status 204 indica sucesso, mas sem conteúdo no corpo da resposta
         res.status(204).send();
     } catch (error) {
-        console.error('Error deleting review:', error);
+        logger.error('Error deleting review', { error });
         res.status(500).json({ error: 'Internal server error' });
     }
 }
@@ -93,7 +94,7 @@ export async function getReviewsByUserIdController(req: Request, res: Response) 
         const reviews = await getReviewsByUserId(userId, page);
         res.json(reviews);
     } catch (error) {
-        console.error('Error getting the review', error);
+        logger.error('Error getting the review', { error });
         res.status(500).json({ error: 'Internal server error'})
     }
 }
@@ -118,7 +119,7 @@ export async function updateReviewController(req: Request, res: Response) {
         
         res.status(200).json('Update review successfully');
     } catch(error) {
-        console.error('Error updating the review', error);
+        logger.error('Error updating the review', { error });
         res.status(500).json({ error: 'Internal server error' });
     }
 }

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { cache } from "../../utils/cache";
+import { logger } from "../../utils/logger";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -29,7 +30,7 @@ export async function getSpotifyAccessToken() {
         cache.set(cacheKey, accessToken, response.data.expires_in - 60);
         return accessToken;
     } catch (error) {
-        console.error("Error fetching Spotify access token:", error);
+        logger.error("Error fetching Spotify access token", { error });
         throw error;
     }
 }
@@ -49,7 +50,7 @@ export async function fetchAlbumFromSpotify(albumId: string) {
         cache.set(cacheKey, response.data);
         return response.data;
     } catch (error) {
-        console.error("Error fetching album from Spotify:", error);
+        logger.error("Error fetching album from Spotify", { error });
         throw error;
     }
 }
@@ -75,7 +76,7 @@ export async function fetchArtistFromSpotify(artistId: string) {
         cache.set(cacheKey, response.data);
         return response.data;
     } catch (error) {
-        console.error("Error fetching artist from Spotify:", error);
+        logger.error("Error fetching artist from Spotify", { error });
         throw error;
     }  
 }
@@ -100,7 +101,7 @@ export async function searchSpotify(query: string, type: string, limit = 10) {
         cache.set(cacheKey, response.data);
         return response.data;
     } catch (error) {
-        console.error("Error searching Spotify:", error);
+        logger.error("Error searching Spotify", { error });
         throw error;
     }
 }
@@ -121,7 +122,7 @@ export async function fetchalbumcover(trackId: string) {
         cache.set(cachekey, albumCover);
         return albumCover;
     } catch (error) {
-        console.error("Error fetching album cover from Spotify:", error);
+        logger.error("Error fetching album cover from Spotify", { error });
         throw error;
     }
 }
@@ -146,7 +147,7 @@ export async function fetchSpotifyPlaylistById(playlistId: string) {
         cache.set(cacheKey, response.data);
         return response.data;
     } catch (error) {
-        console.error("Error fetching playlist from Spotify:", error);
+        logger.error("Error fetching playlist from Spotify", { error });
         throw error;
     }
 }
@@ -169,7 +170,7 @@ export async function fetchUserTopTracks(userId: string, timeRange: string = 'me
         cache.set(cacheKey, response.data);
         return response.data;
     } catch (error) {
-        console.error("Error fetching user's top tracks from Spotify:", error);
+        logger.error("Error fetching user's top tracks from Spotify", { error });
         throw error;
     } 
 }
@@ -192,7 +193,7 @@ export async function fetchUserTopArtists(userId: string, timeRange: string = 'm
         cache.set(cacheKey, response.data);
         return response.data;
     } catch (error) {
-        console.error("Error fetching user's top artists from Spotify:", error);
+        logger.error("Error fetching user's top artists from Spotify", { error });
         throw error;
     }
 }
@@ -217,7 +218,7 @@ export async function exchangeCodeForToken(code: string) {
         cache.set(cacheKey, response.data);
         return response.data;
     } catch (error) {
-        console.error("Error exchanging code for Spotify token:", error);
+        logger.error("Error exchanging code for Spotify token", { error });
         throw error;
     }
 }
@@ -233,7 +234,7 @@ export async function getSpotifyUserProfile(accessToken: string) {
         });
         return response.data;
     } catch (error) {
-        console.error("Error fetching Spotify user profile:", error);
+        logger.error("Error fetching Spotify user profile", { error });
         throw error;
     }
 }
@@ -253,7 +254,7 @@ export async function fetchUserTopTracksWithToken(accessToken: string, timeRange
         });
         return response.data;
     } catch (error) {
-        console.error("Error fetching user's top tracks from Spotify:", error);
+        logger.error("Error fetching user's top tracks from Spotify", { error });
         throw error;
     }
 }
@@ -273,7 +274,7 @@ export async function fetchUserTopArtistsWithToken(accessToken: string, timeRang
         });
         return response.data;
     } catch (error) {
-        console.error("Error fetching user's top artists from Spotify:", error);
+        logger.error("Error fetching user's top artists from Spotify", { error });
         throw error;
     }
 }
@@ -294,7 +295,7 @@ export async function fetchNewReleases(limit = 12) {
         cache.set(cacheKey, response.data);
         return response.data;
     } catch (error) {
-        console.error("Error fetching new releases from Spotify:", error);
+        logger.error("Error fetching new releases from Spotify", { error });
         throw error;
     }
 }

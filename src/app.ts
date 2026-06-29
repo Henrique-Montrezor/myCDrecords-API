@@ -31,6 +31,8 @@ import authRoutes from "./modules/auth/auth.routes";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
+import morgan from "morgan";
+import { logger, stream } from "./utils/logger";
 import adminRoutes from "./modules/admin/admin.routes";
 import spotifyRoutes from "./modules/spotify/spotify.routes";
 import reviewsRoutes from "./modules/reviews/reviews.routes";
@@ -64,6 +66,12 @@ app.use(express.json());
 // Middleware para parsear cookies
 app.use(cookieParser());
 
+// Logging de requisições HTTP (desativado durante os testes)
+if (process.env.NODE_ENV !== "test") {
+  const morganFormat = process.env.NODE_ENV === "production" ? "combined" : "dev";
+  app.use(morgan(morganFormat, { stream }));
+}
+
 // Função para inicializar o banco de dados e criar tabelas em ordem
 const initializeApp = async () => {
   await initDatabase();
@@ -94,9 +102,9 @@ const initializeApp = async () => {
 
     // Só após a tabela `admins` existir, atribuímos os admins
     await addAdminRoleToUsers({} as express.Request, {} as express.Response);
-    console.log('Database initialization complete');
+    logger.info('Database initialization complete');
   } catch (error) {
-    console.error('Failed during database initialization:', error);
+    logger.error('Failed during database initialization', { error });
     process.exit(1);
   }
 };

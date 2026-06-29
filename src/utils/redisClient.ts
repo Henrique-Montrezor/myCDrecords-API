@@ -1,4 +1,5 @@
 import Redis from "ioredis";
+import { logger } from "./logger";
 
 let redisClient: Redis | null = null;
 
@@ -14,7 +15,7 @@ export function getRedisClient(): Redis | null {
 
     const url = process.env.REDIS_URL;
     if (!url) {
-        console.warn(
+        logger.warn(
             "[redis] REDIS_URL não definida — rate limiting usará store em memória (não distribuído)."
         );
         return null;
@@ -26,11 +27,11 @@ export function getRedisClient(): Redis | null {
     });
 
     redisClient.on("error", (err) => {
-        console.error("[redis] Erro de conexão:", err.message);
+        logger.error("[redis] Erro de conexão", { error: err.message });
     });
 
     redisClient.on("connect", () => {
-        console.log("[redis] Conectado.");
+        logger.info("[redis] Conectado.");
     });
 
     return redisClient;

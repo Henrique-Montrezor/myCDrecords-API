@@ -1,6 +1,7 @@
 import { initDatabase } from "../../mysql2/init.database";
 import { UserRegisterParams } from "./user.entity";
 import { RowDataPacket } from "mysql2";
+import { logger } from "../../utils/logger";
 
 export async function createUser(user: UserRegisterParams) {
     const connection = await initDatabase();
@@ -26,7 +27,7 @@ export async function createUser(user: UserRegisterParams) {
 }
 
 export async function findByEmail(email: string) {
-    console.log("findByEmail - email:", email);
+    logger.debug("findByEmail", { email });
     
     const connection = await initDatabase();
 

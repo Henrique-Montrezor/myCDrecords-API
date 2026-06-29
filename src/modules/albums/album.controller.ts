@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { fetchMusicBrainz } from "../musicbrainz/musicbrainz.service";
+import { logger } from "../../utils/logger";
 import { fetchAlbumFromSpotify, searchSpotifyAlbum, searchSpotify} from "../spotify/spotify.service";
 
 export async function searchAlbums(req: Request, res: Response) {
@@ -110,7 +111,7 @@ export async function getTrendingAlbums(req: Request, res: Response) {
 
     res.json({ spotify: formattedSpotify, musicbrainz: [] });
   } catch (error) {
-    console.error("Erro ao buscar álbuns em alta globais:", error);
+    logger.error("Erro ao buscar álbuns em alta globais", { error });
     res.status(500).json({ message: "Erro ao buscar álbuns em alta" });
   }
 }

@@ -1,6 +1,7 @@
 import { RowDataPacket } from "mysql2/typings/mysql/lib/protocol/packets/RowDataPacket";
 import { initDatabase } from "../../mysql2/init.database";
 import { Profile, UsernameProfile } from "./profile.entity";
+import { logger } from "../../utils/logger";
 
 
 // Function to create a new profile
@@ -35,7 +36,7 @@ export async function createOrUpdateProfile(user_id: number, Profile: Profile, a
             return { ...Profile, username, id: result[0].id };
         }
     } catch (error) {
-        console.error('Error creating/updating profile:', error);
+        logger.error('Error creating/updating profile', { error });
         throw error;
     }
 }
@@ -50,7 +51,7 @@ export async function getProfileByUsername(UsernameProfile: UsernameProfile): Pr
 
         return rows.length > 0 ? { ...UsernameProfile, username: rows[0].username } : null;
     } catch (error) {
-        console.error('Error fetching profile:', error);
+        logger.error('Error fetching profile', { error });
         throw error;
     }
 }
@@ -63,7 +64,7 @@ export async function getmyprofile(user_id: number): Promise<Profile | null> {
 
         return rows.length > 0 ? { ...rows[0] } as Profile : null;
     } catch (error) {
-        console.error('Error fetching profile:', error);
+        logger.error('Error fetching profile', { error });
         throw error;
     }
 }

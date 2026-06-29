@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { cache } from "../../utils/cache";
 import { getCollaborativeRecommendations, getPopularRecommendations } from "./recommendations.repository";
+import { logger } from "../../utils/logger";
 
 export async function getRecommendations(req: Request, res: Response) {
     const userId = req.user?.id;
@@ -44,7 +45,7 @@ export async function getRecommendations(req: Request, res: Response) {
 
         res.status(200).json(respostaFinal);
     } catch (error) {
-        console.error("Erro ao buscar recomendações:", error);
+        logger.error("Erro ao buscar recomendações", { error });
         res.status(500).json({ message: "Erro interno do servidor ao gerar recomendações" });
     }
 }

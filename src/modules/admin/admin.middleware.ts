@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { initDatabase } from "../../mysql2/init.database";
+import { logger } from "../../utils/logger";
 
 declare global {
   namespace Express {
@@ -35,7 +36,7 @@ export async function adminMiddleware(req: Request, res: Response, next: NextFun
 
     next();
   } catch (error) {
-    console.error("Erro no middleware de admin:", error);
+    logger.error("Erro no middleware de admin", { error });
     return res.status(500).json({ message: "Erro ao verificar permissões de admin" });
   }
 }

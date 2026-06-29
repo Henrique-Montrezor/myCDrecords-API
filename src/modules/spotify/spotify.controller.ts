@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken';
 import { findOAuthUser, storeOAuthProvider, updateSpotifyTokens, getSpotifyTokens } from '../auth/auth.repository';
 import { createUser, findByEmail, findById } from '../users/user.repository';
 import { createTokensPair } from '../auth/auth.service';
+import { logger } from '../../utils/logger';
 
 
 const cache = new NodeCache({ stdTTL: 3600 });
@@ -66,7 +67,7 @@ export async function getUserSpotifyToken(req: Request, res: Response) {
             connected: true
         });
     } catch (error) {
-        console.error("Error getting user Spotify token:", error);
+        logger.error("Error getting user Spotify token", { error });
         res.status(500).json({ message: "Erro ao obter token do Spotify" });
     }
 }
@@ -88,7 +89,7 @@ export async function searchSpotifyController(req: Request, res: Response) {
         res.status(200).json(results);
     } catch (error) {
         const { status, message } = getSpotifyErrorMessage(error);
-        console.error('Erro ao buscar no Spotify:', error);
+        logger.error('Erro ao buscar no Spotify', { error });
         res.status(status).json({ message });
     }
 }
@@ -116,7 +117,7 @@ export async function getSpotifyAccessToken(req: Request, res: Response) {
     }
 
     catch (error) {
-        console.error("Error fetching Spotify access token:", error);
+        logger.error("Error fetching Spotify access token", { error });
         throw error;
     }
 }
@@ -133,7 +134,7 @@ export async function getSpotifyAlbumById(req: Request, res: Response) {
         res.status(200).json(album);
     } catch (error) {
         const { status, message } = getSpotifyErrorMessage(error);
-        console.error("Error fetching album from Spotify:", error);
+        logger.error("Error fetching album from Spotify", { error });
         res.status(status).json({ message });
     }
 }
@@ -150,7 +151,7 @@ export async function getSpotifyPlaylistById(req: Request, res: Response) {
         res.status(200).json(playlist);
     } catch (error) {
         const { status, message } = getSpotifyErrorMessage(error);
-        console.error("Error fetching playlist from Spotify:", error);
+        logger.error("Error fetching playlist from Spotify", { error });
         res.status(status).json({ message });
      }
 }
@@ -179,7 +180,7 @@ export async function getTopArtists(req: Request, res: Response) {
         res.status(200).json(artists);
     } catch (error) {
         const { status, message } = getSpotifyErrorMessage(error);
-        console.error("Error fetching user's top artists from Spotify:", error);
+        logger.error("Error fetching user's top artists from Spotify", { error });
         res.status(status).json({ message });
     }
 }
@@ -208,7 +209,7 @@ export async function fetchTopTracks(req: Request, res: Response) {
         res.status(200).json(tracks);
     } catch (error) {
         const { status, message } = getSpotifyErrorMessage(error);
-        console.error("Error fetching user's top tracks from Spotify:", error);
+        logger.error("Error fetching user's top tracks from Spotify", { error });
         res.status(status).json({ message });
     }
 }
@@ -225,7 +226,7 @@ export async function fetchSpotifyPlaylist(req: Request, res: Response) {
         res.status(200).json(playlist);
     } catch (error) {
         const { status, message } = getSpotifyErrorMessage(error);
-        console.error("Error fetching playlist from Spotify:", error);
+        logger.error("Error fetching playlist from Spotify", { error });
         res.status(status).json({ message });
     }
 }
@@ -289,7 +290,7 @@ export async function spotifyCallback(req: Request, res: Response) {
 
     // 2. Validação das variáveis de ambiente e do código recebido
     if (!clientId || !clientSecret) {
-        console.error('Configurações do Spotify ausentes no servidor.');
+        logger.error('Configurações do Spotify ausentes no servidor.');
         return res.redirect(`${frontendUrl}/dashboard?error=server_config_error`);
     }
 
@@ -317,7 +318,7 @@ export async function spotifyCallback(req: Request, res: Response) {
         const tokenData = await tokenResponse.json();
 
         if (!tokenResponse.ok) {
-            console.error('Falha ao obter token do Spotify:', tokenData);
+            logger.error('Falha ao obter token do Spotify', { tokenData });
             return res.redirect(`${frontendUrl}/auth?error=token_exchange_failed`);
         }
 
@@ -328,7 +329,7 @@ export async function spotifyCallback(req: Request, res: Response) {
         try {
             spotifyUser = await getSpotifyUserProfile(access_token);
         } catch (error) {
-            console.error('Erro ao buscar perfil do Spotify:', error);
+            logger.error('Erro ao buscar perfil do Spotify', { error });
             return res.redirect(`${frontendUrl}/auth?error=profile_fetch_failed`);
         }
 
@@ -392,7 +393,7 @@ export async function spotifyCallback(req: Request, res: Response) {
                         is_active: true
                     } as any);
                 } catch (error) {
-                    console.error('Erro ao criar usuário:', error);
+                    logger.error('Erro ao criar usuário', { error });
                     return res.redirect(`${frontendUrl}/auth?error=user_creation_failed`);
                 }
             }
@@ -402,7 +403,7 @@ export async function spotifyCallback(req: Request, res: Response) {
         try {
             await storeOAuthProvider(user.id, 'spotify', spotifyId);
         } catch (error) {
-            console.error('Erro ao armazenar OAuth provider:', error);
+            logger.error('Erro ao armazenar OAuth provider', { error });
             // Não falhar aqui, continuar com autenticação
         }
 
@@ -417,7 +418,7 @@ export async function spotifyCallback(req: Request, res: Response) {
         } catch (error) {
             // Conectar o Spotify é justamente persistir estes tokens; se falhar,
             // não faz sentido reportar sucesso. Redireciona com erro explícito.
-            console.error('Erro ao armazenar tokens do Spotify:', error);
+            logger.error('Erro ao armazenar tokens do Spotify', { error });
             return res.redirect(`${frontendUrl}/dashboard?error=token_store_failed`);
         }
 
@@ -443,12 +444,12 @@ export async function spotifyCallback(req: Request, res: Response) {
             // Redirecionar para o dashboard com informação de sucesso
             return res.redirect(`${frontendUrl}/dashboard?spotify=success`);
         } catch (error) {
-            console.error('Erro ao gerar tokens JWT:', error);
+            logger.error('Erro ao gerar tokens JWT', { error });
             return res.redirect(`${frontendUrl}/dashboard?error=jwt_generation_failed`);
         }
 
     } catch (error) {
-        console.error('Erro no callback do Spotify:', error);
+        logger.error('Erro no callback do Spotify', { error });
         return res.redirect(`${frontendUrl}/dashboard?error=internal_server_error`);
     }
 }

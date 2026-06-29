@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { logger } from "../../utils/logger";
 import {
   registerUser,
   createTokensPair,
@@ -67,7 +68,7 @@ export async function register(req: Request, res: Response) {
       expiresIn: tokens.expiresIn,
     });
   } catch (error: any) {
-    console.error("Register error:", error);
+    logger.error("Register error", { error });
     res.status(400).json({ message: error.message || "Erro ao registrar" });
   }
 }
@@ -117,7 +118,7 @@ export async function login(req: Request, res: Response) {
       expiresIn: tokens.expiresIn,
     });
   } catch (error: any) {
-    console.error("Login error:", error);
+    logger.error("Login error", { error });
     res.status(500).json({ message: "Erro ao fazer login" });
   }
 }
@@ -128,7 +129,7 @@ export async function logoutUser(req: Request, res: Response) {
     res.clearCookie("token");
     res.status(200).json({ message: "Logout realizado com sucesso" });
   } catch (error: any) {
-    console.error("Logout error:", error);
+    logger.error("Logout error", { error });
     res.status(500).json({ message: "Erro ao fazer logout" });
   }
 }
@@ -151,7 +152,7 @@ export async function refresh(req: Request, res: Response) {
       expiresIn: result.expiresIn,
     });
   } catch (error: any) {
-    console.error("Refresh error:", error);
+    logger.error("Refresh error", { error });
     res.status(401).json({ message: "Refresh token inválido" });
   }
 }
@@ -168,7 +169,7 @@ export async function requestReset(req: Request, res: Response) {
       message: "Se o email existe em nossa base de dados, você receberá um link de reset",
     });
   } catch (error: any) {
-    console.error("Password reset request error:", error);
+    logger.error("Password reset request error", { error });
     res.status(500).json({ message: "Erro ao processar requisição" });
   }
 }
@@ -184,7 +185,7 @@ export async function reset(req: Request, res: Response) {
       message: "Senha redefinida com sucesso",
     });
   } catch (error: any) {
-    console.error("Password reset error:", error);
+    logger.error("Password reset error", { error });
     res.status(400).json({ message: error.message || "Erro ao redefinir senha" });
   }
 }
@@ -200,7 +201,7 @@ export async function verify(req: Request, res: Response) {
       message: "Email verificado com sucesso",
     });
   } catch (error: any) {
-    console.error("Email verification error:", error);
+    logger.error("Email verification error", { error });
     res.status(400).json({ message: error.message || "Erro ao verificar email" });
   }
 }
@@ -222,7 +223,7 @@ export async function updateEmailAddress(req: Request, res: Response) {
       message: "Email atualizado com sucesso",
     });
   } catch (error: any) {
-    console.error("Update email error:", error);
+    logger.error("Update email error", { error });
     res.status(400).json({ message: error.message || "Erro ao atualizar email" });
   }
 }
@@ -247,7 +248,7 @@ export async function googleOAuth(req: Request, res: Response) {
       // Will redirect to frontend with tokens
     });
   } catch (error: any) {
-    console.error("Google OAuth error:", error);
+    logger.error("Google OAuth error", { error });
     res.status(500).json({ message: "Erro ao processar OAuth Google" });
   }
 }
@@ -272,7 +273,7 @@ export async function spotifyOAuth(req: Request, res: Response) {
       // Will redirect to frontend with tokens
     });
   } catch (error: any) {
-    console.error("Spotify OAuth error:", error);
+    logger.error("Spotify OAuth error", { error });
     res.status(500).json({ message: "Erro ao processar OAuth Spotify" });
   }
 }
@@ -297,7 +298,7 @@ export async function discordOAuth(req: Request, res: Response) {
       // Will redirect to frontend with tokens
     });
   } catch (error: any) {
-    console.error("Discord OAuth error:", error);
+    logger.error("Discord OAuth error", { error });
     res.status(500).json({ message: "Erro ao processar OAuth Discord" });
   }
 }

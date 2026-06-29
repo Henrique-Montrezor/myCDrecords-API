@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { logger } from "../../utils/logger";
 import {
   getAllUsers,
   getTotalUsersCount,
@@ -32,7 +33,7 @@ export async function listUsers(req: Request, res: Response) {
       },
     });
   } catch (error: any) {
-    console.error("List users error:", error);
+    logger.error("List users error", { error });
     res.status(500).json({ message: "Erro ao listar usuários" });
   }
 }
@@ -63,7 +64,7 @@ export async function banUserHandler(req: Request, res: Response) {
       banned: true,
     });
   } catch (error: any) {
-    console.error("Ban user error:", error);
+    logger.error("Ban user error", { error });
     res.status(500).json({ message: "Erro ao banir usuário" });
   }
 }
@@ -87,7 +88,7 @@ export async function unbanUserHandler(req: Request, res: Response) {
       banned: false,
     });
   } catch (error: any) {
-    console.error("Unban user error:", error);
+    logger.error("Unban user error", { error });
     res.status(500).json({ message: "Erro ao desbanir usuário" });
   }
 }
@@ -104,7 +105,7 @@ export async function deleteReviewHandler(req: Request, res: Response) {
       review_id: reviewId,
     });
   } catch (error: any) {
-    console.error("Delete review error:", error);
+    logger.error("Delete review error", { error });
     res.status(500).json({ message: "Erro ao deletar review" });
   }
 }
@@ -121,7 +122,7 @@ export async function deleteCommentHandler(req: Request, res: Response) {
       comment_id: commentId,
     });
   } catch (error: any) {
-    console.error("Delete comment error:", error);
+    logger.error("Delete comment error", { error });
     res.status(500).json({ message: "Erro ao deletar comentário" });
   }
 }
@@ -147,7 +148,7 @@ export async function listReports(req: Request, res: Response) {
       },
     });
   } catch (error: any) {
-    console.error("List reports error:", error);
+    logger.error("List reports error", { error });
     res.status(500).json({ message: "Erro ao listar denúncias" });
   }
 }

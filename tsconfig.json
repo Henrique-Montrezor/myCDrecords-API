@@ -16,8 +16,7 @@
 
     "types": ["node"],
     "sourceMap": true,
-    "ignoreDeprecations": "6.0",
   },
   "include": ["src"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "src/tests/**/*.test.ts", "src/tests/jest.setup.ts"]
 }
