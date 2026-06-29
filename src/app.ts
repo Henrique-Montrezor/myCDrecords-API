@@ -3,7 +3,6 @@ import { createRateLimiter } from "./utils/rateLimiter";
 import artistRoutes from "./modules/artist/artist.routes";
 import albumRoutes from "./modules/albums/album.routes";
 import trackRoutes from "./modules/tracks/track.search.routes";
-import createUser from "./modules/users/user.routes";
 import userRoutes from "./modules/users/user.routes";
 import { errorHandler } from "./middlewares/error.middleware";
 import swaggerUi from "swagger-ui-express";
@@ -130,7 +129,6 @@ app.use("/api/albuns", albumRoutes);
 app.use("/api/musicas", trackRoutes);
 
 // Rotas de usuário
-app.use("/api/user", createUser);
 app.use("/api/user", userRoutes);
 
 // Rotas de perfil

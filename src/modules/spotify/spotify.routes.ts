@@ -177,34 +177,34 @@ router.get('/top-tracks', authMiddleware, fetchTopTracks);
 /**
  * @swagger
  * /api/spotify/user-token:
- * get:
- * summary: Obter token do Spotify do usuário autenticado
- * tags: [Spotify]
- * security:
- * - bearerAuth: []
- * responses:
- * 200:
- * description: Token do Spotify retornado com sucesso
- * 401:
- * description: Usuário não autenticado ou sem Spotify conectado
+ *   get:
+ *     summary: Obter token do Spotify do usuário autenticado
+ *     tags: [Spotify]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Token do Spotify retornado com sucesso
+ *       401:
+ *         description: Usuário não autenticado ou sem Spotify conectado
  */
 router.get('/user-token', authMiddleware, getUserSpotifyToken);
 
 /**
  * @swagger
  * /api/spotify/login-spotify:
- * get:
- * summary: Iniciar processo de login no Spotify
- * tags: [Spotify]
- * security:
- * - bearerAuth: []
- * responses:
- * 200:
- * description: URL de login do Spotify retornada
- * 401:
- * description: Não autenticado
- * 500:
- * description: Erro interno do servidor
+ *   get:
+ *     summary: Iniciar processo de login no Spotify
+ *     tags: [Spotify]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: URL de login do Spotify retornada
+ *       401:
+ *         description: Não autenticado
+ *       500:
+ *         description: Erro interno do servidor
  */
 router.get('/login-spotify', authMiddleware, loginUserSpotify);
 

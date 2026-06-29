@@ -61,7 +61,7 @@ router.get('/albums/:albumId/reviews', authMiddleware, asyncHandler(getReviewsBy
 
 /**
  * @swagger
- * /api/users/:userId/reviews
+ * /api/users/{userId}/reviews:
  *   get:
  *     summary: Lista as reviews do usuario
  *     description: Retorna as reviews feitas pelo user.id selecionado. Requer Autorizacao.
