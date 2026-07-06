@@ -125,9 +125,9 @@ All routes are mounted under `/api`. Explore and try them via the Swagger UI at 
 | `/api/user` | User account management |
 | `/api/profile` | User profiles |
 | `/api/admin` | Admin/moderation actions |
-| `/api/artistas` | Artist search (MusicBrainz) |
+| `/api/artist` | Artist search (MusicBrainz) |
 | `/api/albuns` | Album search (MusicBrainz) |
-| `/api/musicas` | Track search (MusicBrainz) |
+| `/api/musics` | Track search (MusicBrainz) |
 | `/api/spotify` | Spotify-enriched data |
 | `/api/reviews` | Album reviews |
 | `/api/social` | Follows and votes |
