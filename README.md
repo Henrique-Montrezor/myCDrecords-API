@@ -52,8 +52,6 @@ cp .env.example .env
 # then edit .env and fill in your own values
 ```
 
-> ⚠️ Never commit your real `.env` file — it is already listed in `.gitignore`. Use `.env.example` as the template.
-
 ## Environment Variables
 
 Configure these in your `.env` file (see [.env.example](.env.example) for the full template):
@@ -69,20 +67,9 @@ Configure these in your `.env` file (see [.env.example](.env.example) for the fu
 | `DOMAIN` | Base domain of the server |
 | `NODE_ENV` | `development`, `production`, or `test` |
 | `JWT_SECRET` | Secret for signing access tokens |
-| `JWT_REFRESH_SECRET` | Secret for signing refresh tokens |
-| `JWT_RESET_SECRET` | Secret for password-reset tokens |
-| `JWT_VERIFY_SECRET` | Secret for email-verification tokens |
 | `ADMIN_EMAILS` | Comma-separated emails granted admin role |
 | `FRONTEND_URL` | Frontend origin (used for CORS and links) |
-| `FRONTEND_RESET_PASSWORD_URL` | Frontend password-reset page URL |
-| `FRONTEND_VERIFY_EMAIL_URL` | Frontend email-verification page URL |
-| `SMTP_HOST` / `SMTP_PORT` | SMTP server for outgoing email |
-| `SMTP_USER` / `SMTP_PASSWORD` | SMTP credentials |
-| `SMTP_FROM` | "From" address for emails |
 | `SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET` | Spotify API credentials |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth (optional) |
-| `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` | Discord OAuth (optional) |
-| `REDIS_URL` | Redis connection URL (optional; enables distributed rate limiting) |
 
 ## Running Locally
 
@@ -117,8 +104,6 @@ docker build -t mycdrecords-server .
 # Run the container (map the container's port 3000 to a host port)
 docker run --env-file .env -p 3000:3000 mycdrecords-server
 ```
-
-> Note: `dockercompose.yml` exists in the repo but is currently empty — there is no Compose setup yet. You'll need a reachable MySQL (and optionally Redis) instance for the container to connect to.
 
 ## Running Tests
 
@@ -158,7 +143,7 @@ src/
   server.ts          # HTTP server bootstrap
   docs/              # Swagger configuration
   middlewares/       # Auth and error-handling middleware
-  modules/           # Feature modules (controllers, routes, repositories, schemas)
+  modules/           # Feature modules (auth, user, profile, albuns)
   mysql2/            # Database connection and table creation
   tests/             # Unit and integration tests
   utils/             # Logger, cache, rate limiter, Redis client, helpers
