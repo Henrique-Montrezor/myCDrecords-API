@@ -3,9 +3,9 @@ import { RedisStore } from "rate-limit-redis";
 import { getRedisClient } from "./redisClient";
 
 /**
- * Cria um rate limiter que usa o Redis como store quando disponível
- * (suportando escala horizontal com contador compartilhado entre instâncias),
- * com fallback automático para o store em memória.
+ * Creates a rate limiter that uses Redis as a store when available
+ * (supporting horizontal scaling with a shared counter across instances),
+ * with automatic fallback to in-memory store.
  */
 export function createRateLimiter(options: Partial<Options> & { prefix?: string }) {
     const { prefix, ...rateLimitOptions } = options;

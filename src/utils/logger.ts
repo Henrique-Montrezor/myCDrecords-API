@@ -9,15 +9,15 @@ const isTest = process.env.NODE_ENV === "test";
 
 const logLevel = process.env.LOG_LEVEL || (isProduction ? "info" : "debug");
 
-// Diretório onde os arquivos de log serão salvos
+// directory for log files
 const logDir = path.resolve(process.cwd(), "logs");
 
-// Garante que o diretório de logs exista (apenas fora do ambiente de testes)
+// Ensure the log directory exists (only outside the test environment)
 if (!isTest && !fs.existsSync(logDir)) {
   fs.mkdirSync(logDir, { recursive: true });
 }
 
-// Formato legível para o console em desenvolvimento
+// Readable format for the console in development
 const consoleFormat = combine(
   colorize(),
   timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
@@ -31,7 +31,7 @@ const consoleFormat = combine(
   })
 );
 
-// Formato estruturado (JSON) para arquivos e produção
+// structured format for log files in production
 const fileFormat = combine(
   timestamp(),
   errors({ stack: true }),
@@ -45,7 +45,7 @@ const transports: winston.transport[] = [
   }),
 ];
 
-// Em ambientes que não são de teste, persistimos os logs em arquivos
+// In environments that are not test, persist logs to files
 if (!isTest) {
   transports.push(
     new winston.transports.File({
@@ -66,7 +66,7 @@ export const logger = winston.createLogger({
   transports,
 });
 
-// Stream usado pelo morgan para encaminhar logs de requisições HTTP ao winston
+// Stream used by morgan to forward HTTP request logs to winston
 export const stream = {
   write: (message: string) => {
     logger.info(message.trim());

@@ -4,9 +4,9 @@ import { logger } from "./logger";
 let redisClient: Redis | null = null;
 
 /**
- * Retorna um cliente Redis singleton se REDIS_URL estiver definida.
- * Caso contrário retorna null, permitindo que o rate limiter use o store
- * em memória como fallback (sem derrubar a aplicação).
+ * Returns a singleton Redis client if REDIS_URL is defined.
+ * Otherwise, returns null, allowing the rate limiter to use the in-memory store
+ * as a fallback (without crashing the application).
  */
 export function getRedisClient(): Redis | null {
     if (redisClient) {
@@ -16,7 +16,8 @@ export function getRedisClient(): Redis | null {
     const url = process.env.REDIS_URL;
     if (!url) {
         logger.warn(
-            "[redis] REDIS_URL não definida — rate limiting usará store em memória (não distribuído)."
+            "[redis] REDIS_URL not defined — rate limiting will use in-memory store (not distributed)."
+
         );
         return null;
     }
@@ -27,11 +28,11 @@ export function getRedisClient(): Redis | null {
     });
 
     redisClient.on("error", (err) => {
-        logger.error("[redis] Erro de conexão", { error: err.message });
+        logger.error("[redis] Connection error", { error: err.message });
     });
 
     redisClient.on("connect", () => {
-        logger.info("[redis] Conectado.");
+        logger.info("[redis] Connected.");
     });
 
     return redisClient;

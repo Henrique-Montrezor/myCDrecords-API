@@ -7,11 +7,11 @@ dotenv.config();
 const PORT = process.env.PORT || 3004;
 
 app.listen(PORT, () => {
-  logger.info(`🚀 Servidor rodando em http://localhost:${PORT}`);
-  logger.info(`📚 Docs em http://localhost:${PORT}/docs`);
+  logger.info(`🚀 Server running at http://localhost:${PORT}`);
+  logger.info(`📚 Docs available at http://localhost:${PORT}/docs`);
 });
 
-// Captura erros não tratados para facilitar o diagnóstico em produção
+// capture unhandled promise rejections and uncaught exceptions to prevent the server from crashing silently
 process.on("unhandledRejection", (reason) => {
   logger.error("Unhandled Promise Rejection", { reason });
 });

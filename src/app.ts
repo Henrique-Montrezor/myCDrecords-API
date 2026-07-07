@@ -43,10 +43,10 @@ import gamificationRoutes from "./modules/gamification/gamification.routes";
 
 dotenv.config();
 
-// Inicializa o Express
+// initialize express app
 const app = express();
 
-// Configurar CORS para permitir cookies
+// Configure CORS to allow cookies
 app.use(cors({
     origin: [
         "http://localhost:5173",      // Vite development server
@@ -55,29 +55,29 @@ app.use(cors({
         "http://127.0.0.1:5500",      // Live Server with IP
         process.env.FRONTEND_URL || "" // Custom frontend URL from env
     ].filter(Boolean), 
-    credentials: true, // Permite o envio de cookies
+    credentials: true, // Allow cookies to be sent
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// Middleware para parsear JSON
+// Middleware to parse JSON
 app.use(express.json());
 
-// Middleware para parsear cookies
+// Middleware to parse cookies
 app.use(cookieParser());
 
-// Logging de requisições HTTP (desativado durante os testes)
+// Logging HTTP requests (disabled during tests)
 if (process.env.NODE_ENV !== "test") {
   const morganFormat = process.env.NODE_ENV === "production" ? "combined" : "dev";
   app.use(morgan(morganFormat, { stream }));
 }
 
-// Função para inicializar o banco de dados e criar tabelas em ordem
+// Function to initialize the database and create tables in order
 const initializeApp = async () => {
   await initDatabase();
 
   try {
-    // Cria tabelas em sequência para evitar condição de corrida
+    // Create tables in sequence to avoid race conditions
     await createUserTable({} as express.Request, {} as express.Response);
     await createProfileTable({} as express.Request, {} as express.Response);
     await createVerificationTokensTable({} as express.Request, {} as express.Response);
@@ -87,20 +87,20 @@ const initializeApp = async () => {
     await createAdminTable({} as express.Request, {} as express.Response);
     await createReviewsTable({} as express.Request, {} as express.Response);
 
-    // Social: seguidores e votos
+    // Social: followers and votes
     await createFollowsTable({} as express.Request, {} as express.Response);
     await createVotesTable({} as express.Request, {} as express.Response);
 
-    // Listas/coleções personalizadas
+    // Custom lists/collections
     await createListsTable({} as express.Request, {} as express.Response);
     await createListItemsTable({} as express.Request, {} as express.Response);
 
-    // Gamificação: catálogo de emblemas + conquistas + seed padrão
+    // Gamification: badges catalog + achievements + default seed
     await createBadgesTable({} as express.Request, {} as express.Response);
     await createUserBadgesTable({} as express.Request, {} as express.Response);
     await seedDefaultBadges({} as express.Request, {} as express.Response);
 
-    // Só após a tabela `admins` existir, atribuímos os admins
+    // Only after the `admins` table exists, we assign the admins
     await addAdminRoleToUsers({} as express.Request, {} as express.Response);
     logger.info('Database initialization complete');
   } catch (error) {
@@ -109,63 +109,62 @@ const initializeApp = async () => {
   }
 };
 
-// Inicia a inicialização sem bloquear a definição das rotas
+// Start initialization without blocking route definitions
 initializeApp();
 
-// 🔥 Rate limit global (Redis quando disponível, memória como fallback)
+// 🔥 Rate limit global (Redis when available, memory as fallback)
 app.use(createRateLimiter({
   windowMs: 60 * 1000,
   max: 100,
   prefix: "rl:global:"
 }));
 
-// 🔐 Rate limit mais restrito para endpoints de autenticação (anti brute-force)
+// 🔐 Rate limit more restrictive for authentication endpoints (anti brute-force)
 const authLimiter = createRateLimiter({
   windowMs: 60 * 1000,
   max: 10,
   prefix: "rl:auth:",
-  message: { error: "Muitas tentativas. Tente novamente em instantes." }
+  message: { error: "Too many attempts. Please try again later." }
 });
 
 
 // 📚 Swagger
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Rotas de artistas, albuns e musicas (MusicBrainz)
-app.use("/api/artistas", artistRoutes);
-app.use("/api/albuns", albumRoutes);
-app.use("/api/musicas", trackRoutes);
+// Routes for artists, albums, and tracks (MusicBrainz)
+app.use("/api/artists", artistRoutes);
+app.use("/api/albums", albumRoutes);
+app.use("/api/tracks", trackRoutes);
 
-// Rotas de usuário
-app.use("/api/user", userRoutes);
+// User routes
+app.use("/api/users", userRoutes);
 
-// Rotas de perfil
+// Profile routes
 app.use("/api/profile", profileRoutes);
 
-// Rotas de autenticação
+// Authentication routes
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/admin", adminRoutes);
 
-// Rotas de Spotify
+// Spotify routes
 app.use("/api/spotify", spotifyRoutes);
 
-// Rotas de reviews
+// Reviews routes
 app.use("/api/reviews", reviewsRoutes);
 
-// Rotas sociais (seguidores e votos)
+// Social routes (followers and votes)
 app.use("/api/social", socialRoutes);
 
-// Rotas de listas/coleções
+// Custom lists/collections routes
 app.use("/api/lists", listsRoutes);
 
-// Rotas de gamificação (emblemas)
+// Gamification routes (badges)
 app.use("/api/gamification", gamificationRoutes);
 
-// Erros
-app.use(errorHandler);
-
-// Recomendacoes
+// Recommendations routes
 app.use("/api/recommendations", recommendationsRoutes);
 
+// Error handling
+app.use(errorHandler);
 
 export default app;
