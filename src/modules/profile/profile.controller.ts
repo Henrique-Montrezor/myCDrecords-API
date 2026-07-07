@@ -17,7 +17,7 @@ export async function createOrUpdateProfileController(req: Request, res: Respons
         await createOrUpdateProfile(user_id, { user_id, bio, avatar_url } as any, avatar_url);
 
         res.status(200).json({
-            message: "Perfil criado ou atualizado com sucesso",
+            message: "Profile created or updated successfully",
             user_id
         });
     } catch (error) {

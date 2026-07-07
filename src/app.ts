@@ -137,7 +137,7 @@ app.use("/api/albums", albumRoutes);
 app.use("/api/tracks", trackRoutes);
 
 // User routes
-app.use("/api/users", userRoutes);
+app.use("/api/user", userRoutes);
 
 // Profile routes
 app.use("/api/profile", profileRoutes);

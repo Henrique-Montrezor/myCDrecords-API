@@ -19,7 +19,7 @@ export const registerSchema = z
     confirmPassword: z.string({ required_error: "Confirmação de senha é obrigatória" }),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Senhas não correspondem",
+    message: "Passwords do not match",
     path: ["confirmPassword"],
   });
 
@@ -42,7 +42,7 @@ export const passwordResetSchema = z
     confirmPassword: z.string({ required_error: "Confirmação de senha é obrigatória" }),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Senhas não correspondem",
+    message: "Passwords do not match",
     path: ["confirmPassword"],
   });
 

@@ -39,11 +39,11 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
       req.user = { id: decoded.user_id, email: decoded.email };
       return next();
     } catch {
-      return res.status(401).json({ message: "Token inválido ou expirado" });
+      return res.status(401).json({ message: "Invalid or expired token" });
     }
   }
 
-  return res.status(401).json({ message: "Token não fornecido" });
+  return res.status(401).json({ message: "Token not provided" });
 };
 
 export default authMiddleware;

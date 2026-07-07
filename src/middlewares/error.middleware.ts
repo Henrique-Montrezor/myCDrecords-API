@@ -11,7 +11,7 @@ export function errorHandler(err: any, req: Request, res: Response, next: NextFu
       issues: err.issues,
     });
     return res.status(400).json({
-      error: "Validação falhou",
+      error: "Validation failed",
       issues: err.issues.map((issue) => ({
         path: issue.path.join("."),
         message: issue.message,
@@ -29,6 +29,6 @@ export function errorHandler(err: any, req: Request, res: Response, next: NextFu
   });
 
   res.status(status).json({
-    error: err.message || "Erro interno do servidor"
+    error: err.message || "Internal server error"
   });
 }
