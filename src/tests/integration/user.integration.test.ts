@@ -1,21 +1,21 @@
 /**
- * Testes de integração para a rota do módulo de usuários (/api/user).
+ * Integration tests for the user module route (/api/user).
  *
- * Atualmente o módulo expõe apenas a busca de usuários por username. O fluxo
- * de registro/login foi consolidado no módulo de autenticação (/api/auth),
- * coberto em register.integration.test.ts.
+ * Currently, the module only exposes user search by username. The registration/login flow
+ * has been consolidated in the authentication module (/api/auth),
+ * covered in register.integration.test.ts.
  *
- * A camada de dados (user.repository) é mockada e a inicialização do
- * banco/tabelas é neutralizada para que o import do app não conecte ao MySQL.
+ * The data layer (user.repository) is mocked and the database/tables initialization
+ * is neutralized so that importing the app does not connect to MySQL.
  */
 
-// Evita conexão real com o MySQL ao importar o app.
+// Avoids real MySQL connection when importing the app.
 jest.mock("../../mysql2/init.database", () => ({
   initDatabase: jest.fn().mockResolvedValue({}),
   getPool: jest.fn().mockReturnValue({}),
 }));
 
-// Todas as funções de criação de tabela viram no-ops resolvidos.
+// All table creation functions become resolved no-ops.
 jest.mock("../../mysql2/create.tables", () => {
   const noop = jest.fn().mockResolvedValue(undefined);
   return new Proxy(
@@ -26,7 +26,7 @@ jest.mock("../../mysql2/create.tables", () => {
   );
 });
 
-// Repositório de usuários mockado para isolar a rota da camada de dados.
+// Mocked user repository to isolate the route from the data layer.
 jest.mock("../../modules/users/user.repository", () => ({
   createUser: jest.fn(),
   findByEmail: jest.fn(),
@@ -42,7 +42,7 @@ import { findByUsername } from "../../modules/users/user.repository";
 const mockedFindByUsername = findByUsername as jest.Mock;
 
 describe("GET /api/user/search-users", () => {
-  it("retorna 404 quando o usuário não é encontrado", async () => {
+  it("returns 404 when the user is not found", async () => {
     mockedFindByUsername.mockResolvedValue(null);
 
     const res = await request(app)
@@ -54,7 +54,7 @@ describe("GET /api/user/search-users", () => {
     expect(mockedFindByUsername).toHaveBeenCalledWith("missing");
   });
 
-  it("retorna 200 com os dados do usuário encontrado", async () => {
+  it("returns 200 with the found user's data", async () => {
     const found = { id: 9, username: "johndoe", email: "john@example.com" };
     mockedFindByUsername.mockResolvedValue(found);
 

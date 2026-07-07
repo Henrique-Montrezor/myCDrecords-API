@@ -13,12 +13,12 @@ describe("error.middleware - errorHandler", () => {
   const req = {} as Request;
   const next = jest.fn() as NextFunction;
 
-  it("transforma ZodError em 400 com a lista de issues", () => {
-    const schema = z.object({ email: z.string().email("Email inválido") });
+  it("turns ZodError into 400 with the list of issues", () => {
+    const schema = z.object({ email: z.string().email("Invalid email") });
     let zodError: ZodError;
     try {
       schema.parse({ email: "invalid" });
-      throw new Error("schema deveria ter lançado");
+      throw new Error("schema should have thrown");
     } catch (err) {
       zodError = err as ZodError;
     }
@@ -29,19 +29,19 @@ describe("error.middleware - errorHandler", () => {
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
-        error: "Validação falhou",
+        error: "Validation failed",
         issues: expect.arrayContaining([
           expect.objectContaining({
             path: "email",
-            message: "Email inválido",
+            message: "Invalid email",
           }),
         ]),
       })
     );
   });
 
-  it("respeita o status customizado e a mensagem do erro", () => {
-    const customError: any = new Error("Recurso não encontrado");
+  it("respects the custom status and message of the error", () => {
+    const customError: any = new Error("Resource not found");
     customError.status = 404;
 
     const res = buildRes();
@@ -49,17 +49,17 @@ describe("error.middleware - errorHandler", () => {
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({
-      error: "Recurso não encontrado",
+      error: "Resource not found",
     });
   });
 
-  it("usa 500 e mensagem padrão quando o erro não tem status nem mensagem", () => {
+  it("uses 500 and default message when the error has no status or message", () => {
     const res = buildRes();
     errorHandler({}, req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
-      error: "Erro interno do servidor",
+      error: "Internal server error",
     });
   });
 });

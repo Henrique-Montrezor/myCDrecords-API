@@ -1,18 +1,18 @@
 /**
- * Testes de integração para uma rota protegida por JWT:
+ * integration test for protected route: /api/profile/create-or-update-profile
  * POST /api/profile/create-or-update-profile.
  *
- * Verifica que o auth.middleware bloqueia requisições sem token (401) e
- * permite o acesso quando um access token válido é enviado no header.
+ * Verifies that the auth.middleware blocks requests without a token (401) and
+ * allows access when a valid access token is sent in the header.
  */
 
-// Evita conexão real com o MySQL ao importar o app.
+// Avoids real MySQL connection when importing the app.
 jest.mock("../../mysql2/init.database", () => ({
   initDatabase: jest.fn().mockResolvedValue({}),
   getPool: jest.fn().mockReturnValue({}),
 }));
 
-// Todas as funções de criação de tabela viram no-ops resolvidos.
+// All table creation functions become resolved no-ops.
 jest.mock("../../mysql2/create.tables", () => {
   const noop = jest.fn().mockResolvedValue(undefined);
   return new Proxy(
@@ -23,7 +23,7 @@ jest.mock("../../mysql2/create.tables", () => {
   );
 });
 
-// Repositório de perfil mockado para isolar a rota da camada de dados.
+// Mocked profile repository to isolate the route from the data layer.
 jest.mock("../../modules/profile/profile.repository", () => ({
   createOrUpdateProfile: jest.fn().mockResolvedValue(undefined),
   getProfileByUsername: jest.fn(),
@@ -45,51 +45,51 @@ function validAccessToken(userId = 99, email = "profile@example.com") {
 }
 
 const validProfile = {
-  bio: "Colecionador de CDs raros",
+  bio: "Collector of rare CDs",
   avatar_url: "https://example.com/avatar.jpg",
 };
 
-describe("POST /api/profile/create-or-update-profile (rota protegida)", () => {
-  it("retorna 401 quando nenhum token é fornecido", async () => {
+describe("POST /api/profile/create-or-update-profile (protected route)", () => {
+  it("returns 401 when no token is provided", async () => {
     const res = await request(app)
       .post("/api/profile/create-or-update-profile")
       .send(validProfile);
 
     expect(res.status).toBe(401);
-    expect(res.body).toEqual({ message: "Token não fornecido" });
+    expect(res.body).toEqual({ message: "Token not provided" });
     expect(mockedCreateOrUpdateProfile).not.toHaveBeenCalled();
   });
 
-  it("retorna 401 quando o token do header é inválido", async () => {
+  it("returns 401 when the token in the header is invalid", async () => {
     const res = await request(app)
       .post("/api/profile/create-or-update-profile")
-      .set("Authorization", "Bearer token.invalido.aqui")
+      .set("Authorization", "Bearer invalid.token.here")
       .send(validProfile);
 
     expect(res.status).toBe(401);
     expect(mockedCreateOrUpdateProfile).not.toHaveBeenCalled();
   });
 
-  it("permite o acesso e retorna 200 com um access token válido", async () => {
+  it("allows access and returns 200 with a valid access token", async () => {
     const res = await request(app)
       .post("/api/profile/create-or-update-profile")
       .set("Authorization", `Bearer ${validAccessToken()}`)
       .send(validProfile);
 
     expect(res.status).toBe(200);
-    expect(res.body.message).toBe("Perfil criado ou atualizado com sucesso");
+    expect(res.body.message).toBe("Profile created or updated successfully");
     expect(res.body.user_id).toBe(99);
     expect(mockedCreateOrUpdateProfile).toHaveBeenCalledTimes(1);
   });
 
-  it("retorna 400 quando o corpo é inválido mesmo autenticado", async () => {
+  it("returns 400 when the body is invalid even if authenticated", async () => {
     const res = await request(app)
       .post("/api/profile/create-or-update-profile")
       .set("Authorization", `Bearer ${validAccessToken()}`)
-      .send({ bio: "", avatar_url: "não-é-url" });
+      .send({ bio: "", avatar_url: "not-a-url" });
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toBe("Validação falhou");
+    expect(res.body.error).toBe("Validation failed");
     expect(mockedCreateOrUpdateProfile).not.toHaveBeenCalled();
   });
 });

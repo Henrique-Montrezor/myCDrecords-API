@@ -1,18 +1,18 @@
 /**
- * Testes de integração para POST /api/auth/register.
+ * integration test for POST /api/auth/register.
  *
- * O `app` executa initDatabase() e a criação de tabelas no momento do import,
- * portanto a camada de banco e a criação de tabelas são mockadas para que a
- * importação não tente conectar a um MySQL real (evita process.exit(1)).
+ * The `app` executes initDatabase() and table creation upon import,
+ * so the database layer and table creation are mocked to prevent
+ * connecting to a real MySQL (avoids process.exit(1)).
  */
 
-// Evita conexão real com o MySQL ao importar o app.
+// Avoids real MySQL connection when importing the app.
 jest.mock("../../mysql2/init.database", () => ({
   initDatabase: jest.fn().mockResolvedValue({}),
   getPool: jest.fn().mockReturnValue({}),
 }));
 
-// Todas as funções de criação de tabela viram no-ops resolvidos.
+// All table creation functions become resolved no-ops.
 jest.mock("../../mysql2/create.tables", () => {
   const noop = jest.fn().mockResolvedValue(undefined);
   return new Proxy(
@@ -23,7 +23,7 @@ jest.mock("../../mysql2/create.tables", () => {
   );
 });
 
-// Camada de serviço mockada para o caminho de sucesso do registro.
+// Mocked service layer for the successful registration path.
 jest.mock("../../modules/auth/auth.service", () => {
   const actual = jest.requireActual("../../modules/auth/auth.service");
   return {
@@ -51,13 +51,13 @@ describe("POST /api/auth/register", () => {
     confirmPassword: "password123",
   };
 
-  it("retorna 400 e a lista de issues quando o email é inválido", async () => {
+  it("returns 400 and the list of issues when the email is invalid", async () => {
     const res = await request(app)
       .post("/api/auth/register")
       .send({ ...validBody, email: "not-an-email" });
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toBe("Validação falhou");
+    expect(res.body.error).toBe("Validation failed");
     expect(res.body.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ path: "email" }),
@@ -66,7 +66,7 @@ describe("POST /api/auth/register", () => {
     expect(mockedRegisterUser).not.toHaveBeenCalled();
   });
 
-  it("retorna 400 quando a senha é muito curta", async () => {
+  it("returns 400 when the password is too short", async () => {
     const res = await request(app)
       .post("/api/auth/register")
       .send({ ...validBody, password: "123", confirmPassword: "123" });
@@ -79,10 +79,10 @@ describe("POST /api/auth/register", () => {
     );
   });
 
-  it("retorna 400 quando password e confirmPassword não correspondem", async () => {
+  it("returns 400 when password and confirmPassword do not match", async () => {
     const res = await request(app)
       .post("/api/auth/register")
-      .send({ ...validBody, confirmPassword: "outraSenha123" });
+      .send({ ...validBody, confirmPassword: "anotherPassword123" });
 
     expect(res.status).toBe(400);
     expect(res.body.issues).toEqual(
@@ -92,14 +92,14 @@ describe("POST /api/auth/register", () => {
     );
   });
 
-  it("retorna 400 quando campos obrigatórios estão ausentes", async () => {
+  it("returns 400 when required fields are missing", async () => {
     const res = await request(app).post("/api/auth/register").send({});
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toBe("Validação falhou");
+    expect(res.body.error).toBe("Validation failed");
   });
 
-  it("cria o usuário e retorna 201 com dados válidos", async () => {
+  it("creates the user and returns 201 with valid data", async () => {
     mockedRegisterUser.mockResolvedValue({
       id: 1,
       username: validBody.username,

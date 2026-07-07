@@ -11,12 +11,12 @@ describe("auth.schema - registerSchema", () => {
     confirmPassword: "password123",
   };
 
-  it("aceita dados válidos", () => {
+  it("accepts valid data", () => {
     const result = registerSchema.safeParse(validInput);
     expect(result.success).toBe(true);
   });
 
-  it("faz trim do username e do email", () => {
+  it("trims the username and email", () => {
     const parsed = registerSchema.parse({
       ...validInput,
       username: "  johndoe  ",
@@ -26,7 +26,7 @@ describe("auth.schema - registerSchema", () => {
     expect(parsed.email).toBe("john@example.com");
   });
 
-  it("rejeita username com menos de 3 caracteres", () => {
+  it("rejects username with less than 3 characters", () => {
     const result = registerSchema.safeParse({ ...validInput, username: "ab" });
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -34,7 +34,7 @@ describe("auth.schema - registerSchema", () => {
     }
   });
 
-  it("rejeita email inválido", () => {
+  it("rejects invalid email", () => {
     const result = registerSchema.safeParse({
       ...validInput,
       email: "not-an-email",
@@ -45,7 +45,7 @@ describe("auth.schema - registerSchema", () => {
     }
   });
 
-  it("rejeita senha com menos de 8 caracteres", () => {
+  it("rejects password with less than 8 characters", () => {
     const result = registerSchema.safeParse({
       ...validInput,
       password: "123",
@@ -57,7 +57,7 @@ describe("auth.schema - registerSchema", () => {
     }
   });
 
-  it("rejeita quando password e confirmPassword não correspondem", () => {
+  it("rejects when password and confirmPassword do not match", () => {
     const result = registerSchema.safeParse({
       ...validInput,
       confirmPassword: "different123",
@@ -65,18 +65,18 @@ describe("auth.schema - registerSchema", () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0].path).toContain("confirmPassword");
-      expect(result.error.issues[0].message).toBe("Senhas não correspondem");
+      expect(result.error.issues[0].message).toBe("Passwords do not match");
     }
   });
 
-  it("rejeita quando campos obrigatórios estão ausentes", () => {
+  it("rejects when required fields are missing", () => {
     const result = registerSchema.safeParse({});
     expect(result.success).toBe(false);
   });
 });
 
 describe("auth.schema - loginSchema", () => {
-  it("aceita credenciais válidas", () => {
+  it("accepts valid credentials", () => {
     const result = loginSchema.safeParse({
       email: "john@example.com",
       password: "anything",
@@ -84,7 +84,7 @@ describe("auth.schema - loginSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejeita email inválido", () => {
+  it("rejects invalid email", () => {
     const result = loginSchema.safeParse({
       email: "invalid",
       password: "anything",
@@ -92,7 +92,7 @@ describe("auth.schema - loginSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejeita senha vazia", () => {
+  it("rejects empty password", () => {
     const result = loginSchema.safeParse({
       email: "john@example.com",
       password: "",

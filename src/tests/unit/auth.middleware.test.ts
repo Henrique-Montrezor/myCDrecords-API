@@ -21,7 +21,7 @@ describe("auth.middleware", () => {
   const userId = 7;
   const email = "auth@example.com";
 
-  it("retorna 401 quando nenhum token é fornecido", () => {
+  it("returns 401 when no token is provided", () => {
     const req = buildReq();
     const res = buildRes();
     const next = jest.fn() as NextFunction;
@@ -29,11 +29,11 @@ describe("auth.middleware", () => {
     authMiddleware(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith({ message: "Token não fornecido" });
+    expect(res.json).toHaveBeenCalledWith({ message: "Token not provided" });
     expect(next).not.toHaveBeenCalled();
   });
 
-  it("autentica com um access token válido no header Authorization", () => {
+  it("authenticates with a valid access token in the Authorization header", () => {
     const token = jwt.sign(
       { user_id: userId, email },
       process.env.JWT_SECRET as string
@@ -51,7 +51,7 @@ describe("auth.middleware", () => {
     expect(res.status).not.toHaveBeenCalled();
   });
 
-  it("faz fallback para o refresh token no cookie quando o header é inválido", () => {
+  it("falls back to the refresh token in the cookie when the header is invalid", () => {
     const cookieToken = jwt.sign(
       { user_id: userId, email },
       process.env.JWT_REFRESH_SECRET as string
@@ -69,7 +69,7 @@ describe("auth.middleware", () => {
     expect(req.user).toEqual({ id: userId, email });
   });
 
-  it("retorna 401 quando o cookie token é inválido e não há header", () => {
+  it("returns 401 when the cookie token is invalid and no header is present", () => {
     const req = buildReq({
       cookies: { token: "invalid.cookie.token" },
     });
@@ -80,12 +80,12 @@ describe("auth.middleware", () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
-      message: "Token inválido ou expirado",
+      message: "Invalid or expired token",
     });
     expect(next).not.toHaveBeenCalled();
   });
 
-  it("retorna 401 quando o access token está expirado e não há cookie", () => {
+  it("returns 401 when the access token is expired and no cookie is present", () => {
     const expired = jwt.sign(
       { user_id: userId, email },
       process.env.JWT_SECRET as string,
