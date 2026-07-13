@@ -23,7 +23,7 @@ export async function listUsers(req: Request, res: Response) {
     const total = await getTotalUsersCount();
 
     res.status(200).json({
-      message: "Usuários listados com sucesso",
+      message: "Users listed successfully",
       data: users,
       pagination: {
         page,
@@ -34,7 +34,7 @@ export async function listUsers(req: Request, res: Response) {
     });
   } catch (error: any) {
     logger.error("List users error", { error });
-    res.status(500).json({ message: "Erro ao listar usuários" });
+    res.status(500).json({ message: "Error listing users" });
   }
 }
 
@@ -47,25 +47,25 @@ export async function banUserHandler(req: Request, res: Response) {
     const adminId = req.user?.id;
 
     if (!adminId) {
-      return res.status(401).json({ message: "Não autenticado" });
+      return res.status(401).json({ message: "Not authenticated" });
     }
 
     // Check if user is already banned
     const isBanned = await isUserBanned(userId);
     if (isBanned) {
-      return res.status(400).json({ message: "Usuário já está banido" });
+      return res.status(400).json({ message: "User is already banned" });
     }
 
     await banUser(userId, adminId, reason);
 
     res.status(200).json({
-      message: "Usuário banido com sucesso",
+      message: "User banned successfully",
       user_id: userId,
       banned: true,
     });
   } catch (error: any) {
     logger.error("Ban user error", { error });
-    res.status(500).json({ message: "Erro ao banir usuário" });
+    res.status(500).json({ message: "Error banning user" });
   }
 }
 
@@ -77,19 +77,19 @@ export async function unbanUserHandler(req: Request, res: Response) {
     // Check if user is banned
     const isBanned = await isUserBanned(userId);
     if (!isBanned) {
-      return res.status(400).json({ message: "Usuário não está banido" });
+      return res.status(400).json({ message: "User is not banned" });
     }
 
     await unbanUser(userId);
 
     res.status(200).json({
-      message: "Usuário desbanido com sucesso",
+      message: "User unbanned successfully",
       user_id: userId,
       banned: false,
     });
   } catch (error: any) {
     logger.error("Unban user error", { error });
-    res.status(500).json({ message: "Erro ao desbanir usuário" });
+    res.status(500).json({ message: "Error unbanning user" });
   }
 }
 
@@ -101,12 +101,12 @@ export async function deleteReviewHandler(req: Request, res: Response) {
     await deleteReview(reviewId);
 
     res.status(200).json({
-      message: "Review deletada com sucesso",
+      message: "Review deleted successfully",
       review_id: reviewId,
     });
   } catch (error: any) {
     logger.error("Delete review error", { error });
-    res.status(500).json({ message: "Erro ao deletar review" });
+    res.status(500).json({ message: "Error deleting review" });
   }
 }
 
@@ -118,12 +118,12 @@ export async function deleteCommentHandler(req: Request, res: Response) {
     await deleteComment(commentId);
 
     res.status(200).json({
-      message: "Comentário deletado com sucesso",
+      message: "Comment deleted successfully",
       comment_id: commentId,
     });
   } catch (error: any) {
     logger.error("Delete comment error", { error });
-    res.status(500).json({ message: "Erro ao deletar comentário" });
+    res.status(500).json({ message: "Error deleting comment" });
   }
 }
 
@@ -140,7 +140,7 @@ export async function listReports(req: Request, res: Response) {
     }
 
     res.status(200).json({
-      message: "Denúncias listadas com sucesso",
+      message: "Reports listed successfully",
       data: reports,
       pagination: {
         page,
@@ -149,6 +149,6 @@ export async function listReports(req: Request, res: Response) {
     });
   } catch (error: any) {
     logger.error("List reports error", { error });
-    res.status(500).json({ message: "Erro ao listar denúncias" });
+    res.status(500).json({ message: "Error listing reports" });
   }
 }

@@ -33,7 +33,7 @@ export async function postReviewController(req: Request, res: Response) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Valida e normaliza o corpo da requisição
+    // Validate and normalize the request body
     const { albumId, albumTitle, albumImage, albumArtist, genre, rating, text } =
         postReviewSchema.parse(req.body);
 
@@ -43,12 +43,12 @@ export async function postReviewController(req: Request, res: Response) {
             return res.status(409).json({ error: 'User has already reviewed this album' });
         }
 
-        // Passe todos os campos para a função do repositório
+        // Pass all fields to the repository function
         const reviewId = await postReview(
             userId, albumId, albumTitle ?? '', albumImage ?? '', albumArtist ?? '', genre ?? '', rating, text ?? ''
         );
 
-        // Avalia e concede emblemas de gamificação (não bloqueia em caso de falha)
+        // Evaluate and grant gamification badges (does not block on failure)
         await evaluateUserBadges(userId);
 
         res.status(201).json({ reviewId });
@@ -61,24 +61,24 @@ export async function postReviewController(req: Request, res: Response) {
 export async function deleteReviewController(req: Request, res: Response) {
     const { reviewId } = reviewIdParamSchema.parse(req.params);
 
-    // 1. Garante que o usuário está autenticado
+    // 1. Ensure the user is authenticated
     const userId = req.user?.id;
     if (!userId) {
-        return res.status(401).json({ error: 'Usuário não autenticado' });
+        return res.status(401).json({ error: 'User not authenticated' });
     }
 
     try {
-        // 2. Passa o reviewId e o userId para o repositório
+        // 2. Pass the reviewId and userId to the repository
         const success = await deleteReview(reviewId, userId);
         
-        // 3. Se affectedRows foi 0 (success = false), significa que a review não existe ou não é dele
+        // 3. If affectedRows was 0 (success = false), the review does not exist or is not theirs
         if (!success) {
             return res.status(404).json({ 
-                error: 'Review não encontrada ou você não tem permissão para deletá-la' 
+                error: 'Review not found or you do not have permission to delete it' 
             });
         }
 
-        // Status 204 indica sucesso, mas sem conteúdo no corpo da resposta
+        // Status 204 indicates success, but with no content in the response body
         res.status(204).send();
     } catch (error) {
         logger.error('Error deleting review', { error });
@@ -105,16 +105,16 @@ export async function updateReviewController(req: Request, res: Response) {
 
     const userId = req.user?.id;
     if (!userId) {
-        return res.status(401).json({ error: 'Usuário não autenticado' });
+        return res.status(401).json({ error: 'User not authenticated' });
     }
 
     try {
-        // 3 e 4. Tenta atualizar garantindo a propriedade da review na mesma query
+        // 3 and 4. Try to update ensuring review ownership in the same query
         const success = await updateReview(reviewId, userId, rating, text ?? '');
         
         if (!success) {
-            // Se affectedRows for 0, significa que a review não existe OU não pertence ao usuário
-            return res.status(404).json({ error: 'Review não encontrada ou acesso negado' });
+            // If affectedRows is 0, the review does not exist OR does not belong to the user
+            return res.status(404).json({ error: 'Review not found or access denied' });
         }
         
         res.status(200).json('Update review successfully');

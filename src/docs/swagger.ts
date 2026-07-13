@@ -11,17 +11,17 @@ const options: swaggerJsdoc.Options = {
     info: {
       title: "MyCDRecords API",
       version: "0.0.1",
-      description: "API para buscar artistas, álbuns e músicas via MusicBrainz",
+      description: "Social network for music lovers",
     },
     servers: [
       {
         url: `http://localhost:${PORT}`,
-        description: "Servidor Local"
+        description: "Local Server"
       },
     ],
     components: {
       securitySchemes: {
-        BearerAuth: { // Foi definido como BearerAuth nas suas rotas
+        BearerAuth: { // bearerAuth is the name of the security scheme
           type: "http",
           scheme: "bearer",
           bearerFormat: "JWT",
@@ -34,7 +34,7 @@ const options: swaggerJsdoc.Options = {
       },
     ],
   },
-  // O caminho abaixo instrui o swagger-jsdoc a ler todos os ficheiros .ts dentro de src/modules/
+  // The path below instructs swagger-jsdoc to read all .ts files within src/modules/
   apis: ["./src/modules/**/*.ts", "./src/modules/**/*.routes.ts"],
 };
 

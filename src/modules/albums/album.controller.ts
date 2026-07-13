@@ -47,14 +47,14 @@ export async function searchAlbums(req: Request, res: Response) {
 
     res.json({ spotify: formattedSpotify, musicbrainz: formattedMusicBrainz });
   } catch (error) {
-    res.status(500).json({ message: "Erro ao buscar álbuns" });
+    res.status(500).json({ message: "Error fetching albums" });
   }
 };
 
 export async function getAlbumInfo(req: Request, res: Response) {
   const queryName = (req.query.nome as string) || (req.params.name as string);
 
-  if (!queryName) return res.status(400).json({ message: "nome é obrigatório" });
+  if (!queryName) return res.status(400).json({ message: "name is required" });
 
   const musicbrainzData = await fetchMusicBrainz("release-group/", {
     query: `release:${queryName} AND primarytype:album`,
@@ -67,35 +67,35 @@ export async function getAlbumInfo(req: Request, res: Response) {
     const albumData = spotifySearch.albums?.items?.[0] ?? null;
     res.json({ spotify: albumData, musicbrainz: musicbrainzData });
   } catch (error) {
-    res.status(500).json({ message: "Erro ao buscar informações do álbum" });
+    res.status(500).json({ message: "Error fetching album information" });
   }
 };
 
 export async function getAlbumById(req: Request, res: Response) {
   const albumId = req.params.id;
 
-  if (!albumId) return res.status(400).json({ message: "id é obrigatório" });
+  if (!albumId) return res.status(400).json({ message: "id is required" });
 
   try {
     const albumData = await fetchAlbumFromSpotify(albumId);
     res.json(albumData);
   } catch (error) {
-    res.status(500).json({ message: "Erro ao buscar informações do álbum" });
+    res.status(500).json({ message: "Error fetching album information" });
   }
 };
 
 export async function getTrendingAlbums(req: Request, res: Response) {
   try {
-    // 1. Descobre o ano em que estamos dinamicamente
+    // 1. Determine the current year dynamically
     const currentYear = new Date().getFullYear();
     
-    // 2. Faz uma busca por todos os álbuns deste ano. 
-    // O grande segredo: O Spotify ordena os resultados do "search" por popularidade!
+    // 2. Search for all albums from this year.
+    // The big secret: Spotify sorts the "search" results by popularity!
     const searchData = await searchSpotify(`year:${currentYear}`, 'album', 12);
     
     const trendingAlbums = searchData.albums?.items || [];
     
-    // 3. Formata os dados para o frontend
+    // 3. Format the data for the frontend
     const formattedSpotify = trendingAlbums.map((album: any) => ({
       id: album.id,
       source: 'spotify',
@@ -111,7 +111,7 @@ export async function getTrendingAlbums(req: Request, res: Response) {
 
     res.json({ spotify: formattedSpotify, musicbrainz: [] });
   } catch (error) {
-    logger.error("Erro ao buscar álbuns em alta globais", { error });
-    res.status(500).json({ message: "Erro ao buscar álbuns em alta" });
+    logger.error("Error fetching global trending albums", { error });
+    res.status(500).json({ message: "Error fetching trending albums" });
   }
 }

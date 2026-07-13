@@ -3,9 +3,9 @@ import { ZodError } from "zod";
 import { logger } from "../utils/logger";
 
 export function errorHandler(err: any, req: Request, res: Response, next: NextFunction) {
-  // Erros de validação do Zod -> 400 com a lista de problemas
+  // Zod validation errors -> 400 with the list of issues
   if (err instanceof ZodError) {
-    logger.warn("Falha de validação", {
+    logger.warn("Validation failure", {
       method: req.method,
       url: req.originalUrl,
       issues: err.issues,
@@ -21,7 +21,7 @@ export function errorHandler(err: any, req: Request, res: Response, next: NextFu
 
   const status = err.status || 500;
 
-  logger.error(err.message || "Erro interno do servidor", {
+  logger.error(err.message || "Internal server error", {
     method: req.method,
     url: req.originalUrl,
     status,

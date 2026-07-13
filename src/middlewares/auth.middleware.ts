@@ -13,7 +13,7 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const headerToken = req.headers.authorization?.split(" ")[1];
   const cookieToken = req.cookies?.token;
 
-  // 1) Tenta o Access Token do header (curta duração: 15m).
+  // 1) Try the Access Token from the header (short-lived: 15m).
   if (headerToken) {
     try {
       const decoded: any = jwt.verify(
@@ -23,13 +23,13 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
       req.user = { id: decoded.user_id, email: decoded.email };
       return next();
     } catch {
-      // Access token ausente/expirado/inválido — cai para o refresh cookie abaixo.
+      // Access token missing/expired/invalid — falls back to the refresh cookie below.
     }
   }
 
-  // 2) Fallback: Refresh Token do cookie httpOnly (longa duração: 7d).
-  // Mantém o usuário autenticado mesmo após o access token expirar, evitando
-  // que ações como "Conectar Spotify" falhem silenciosamente com 401.
+  // 2) Fallback: Refresh Token from the httpOnly cookie (long-lived: 7d).
+  // Keeps the user authenticated even after the access token expires, preventing
+  // actions like "Connect Spotify" from silently failing with 401.
   if (cookieToken) {
     try {
       const decoded: any = jwt.verify(

@@ -2,9 +2,9 @@ import { z } from "zod";
 
 export const userIdParamSchema = z.object({
     userId: z.coerce
-        .number({ invalid_type_error: "userId inválido" })
-        .int("userId inválido")
-        .positive("userId inválido"),
+        .number({ invalid_type_error: "Invalid userId" })
+        .int("Invalid userId")
+        .positive("Invalid userId"),
 });
 
 export const paginationQuerySchema = z.object({
@@ -13,16 +13,16 @@ export const paginationQuerySchema = z.object({
 
 export const voteSchema = z.object({
     targetType: z.enum(["review", "comment"], {
-        required_error: "targetType é obrigatório",
-        invalid_type_error: "targetType deve ser 'review' ou 'comment'",
+        required_error: "targetType is required",
+        invalid_type_error: "targetType must be 'review' or 'comment'",
     }),
     targetId: z.coerce
-        .number({ required_error: "targetId é obrigatório", invalid_type_error: "targetId inválido" })
-        .int("targetId inválido")
-        .positive("targetId inválido"),
+        .number({ required_error: "targetId is required", invalid_type_error: "Invalid targetId" })
+        .int("Invalid targetId")
+        .positive("Invalid targetId"),
     value: z.coerce
-        .number({ required_error: "value é obrigatório", invalid_type_error: "value inválido" })
-        .refine((v) => v === 1 || v === -1, "value deve ser 1 (upvote) ou -1 (downvote)"),
+        .number({ required_error: "value is required", invalid_type_error: "Invalid value" })
+        .refine((v) => v === 1 || v === -1, "value must be 1 (upvote) or -1 (downvote)"),
 });
 
 export const voteTargetParamSchema = z.object({

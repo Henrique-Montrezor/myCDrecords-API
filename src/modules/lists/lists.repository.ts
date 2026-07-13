@@ -9,7 +9,7 @@ export interface ListItemInput {
     position?: number;
 }
 
-// Cria uma nova lista
+// Creates a new list
 export async function createList(
     userId: number,
     title: string,
@@ -24,7 +24,7 @@ export async function createList(
     return result.insertId;
 }
 
-// Lista as listas de um usuário (opcionalmente só as públicas) com contagem de itens
+// Lists a user's lists (optionally only the public ones) with item count
 export async function getListsByUser(userId: number, onlyPublic: boolean) {
     const connection = await initDatabase();
     const visibility = onlyPublic ? "AND l.is_public = TRUE" : "";
@@ -46,7 +46,7 @@ export async function getListsByUser(userId: number, onlyPublic: boolean) {
     return rows || [];
 }
 
-// Busca uma lista pelo ID
+// Fetches a list by ID
 export async function getListById(listId: number) {
     const connection = await initDatabase();
     const [rows] = await connection.query<RowDataPacket[]>(
@@ -57,7 +57,7 @@ export async function getListById(listId: number) {
     return rows[0] || null;
 }
 
-// Itens de uma lista
+// Items of a list
 export async function getListItems(listId: number) {
     const connection = await initDatabase();
     const [rows] = await connection.query<RowDataPacket[]>(
@@ -70,7 +70,7 @@ export async function getListItems(listId: number) {
     return rows || [];
 }
 
-// Atualiza uma lista garantindo a propriedade
+// Updates a list ensuring ownership
 export async function updateList(
     listId: number,
     userId: number,
@@ -105,7 +105,7 @@ export async function updateList(
     return result.affectedRows > 0;
 }
 
-// Remove uma lista (os itens são removidos via ON DELETE CASCADE)
+// Removes a list (items are removed via ON DELETE CASCADE)
 export async function deleteList(listId: number, userId: number) {
     const connection = await initDatabase();
     const [result] = await connection.query<ResultSetHeader>(
@@ -115,7 +115,7 @@ export async function deleteList(listId: number, userId: number) {
     return result.affectedRows > 0;
 }
 
-// Adiciona um álbum à lista (idempotente por UNIQUE list_id+album_id)
+// Adds an album to the list (idempotent via UNIQUE list_id+album_id)
 export async function addListItem(listId: number, item: ListItemInput) {
     const connection = await initDatabase();
     const [result] = await connection.query<ResultSetHeader>(
@@ -134,7 +134,7 @@ export async function addListItem(listId: number, item: ListItemInput) {
     return result.affectedRows > 0;
 }
 
-// Remove um álbum da lista
+// Removes an album from the list
 export async function removeListItem(listId: number, albumId: string) {
     const connection = await initDatabase();
     const [result] = await connection.query<ResultSetHeader>(
@@ -144,7 +144,7 @@ export async function removeListItem(listId: number, albumId: string) {
     return result.affectedRows > 0;
 }
 
-// Retorna o dono de uma lista (ou null)
+// Returns the owner of a list (or null)
 export async function getListOwner(listId: number): Promise<number | null> {
     const connection = await initDatabase();
     const [rows] = await connection.query<RowDataPacket[]>(

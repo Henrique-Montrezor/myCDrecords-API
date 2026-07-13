@@ -5,7 +5,7 @@ import { searchSpotify } from "../spotify/spotify.service";
 export async function searchTracks(req: Request, res: Response) {
   const queryName = (req.query.nome || req.query.name) as string;
 
-  if (!queryName) return res.status(400).json({ message: "nome é obrigatório" });
+  if (!queryName) return res.status(400).json({ message: "name is required" });
 
   const musicbrainzData = await fetchMusicBrainz("recording/", {
     query: `recording:"${queryName}"`,

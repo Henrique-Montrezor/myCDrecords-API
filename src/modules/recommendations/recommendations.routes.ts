@@ -9,10 +9,10 @@ const router = Router();
  * @swagger
  * /api/recommendations:
  *   get:
- *     summary: Obter recomendações personalizadas para o usuário
- *     description: Retorna uma lista de álbuns recomendados baseada em filtragem colaborativa (o que usuários similares gostam) ou os populares gerais caso o usuário não tenha histórico.
+ *     summary: Get personalized recommendations for the user
+ *     description: Returns a list of recommended albums based on collaborative filtering (what similar users like) or general popular ones if the user has no history.
  *     tags:
- *       - Recomendações
+ *       - Recommendations
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -22,10 +22,10 @@ const router = Router();
  *         schema:
  *           type: integer
  *           default: 10
- *         description: Quantidade máxima de recomendações a serem retornadas.
+ *         description: Maximum number of recommendations to return.
  *     responses:
  *       200:
- *         description: Lista de recomendações gerada com sucesso.
+ *         description: List of recommendations generated successfully.
  *         content:
  *           application/json:
  *             schema:
@@ -62,9 +62,9 @@ const router = Router();
  *                         format: float
  *                         example: 4.8
  *       401:
- *         description: Não autorizado. O token de autenticação está ausente, inválido ou expirado.
+ *         description: Unauthorized. The authentication token is missing, invalid, or expired.
  *       500:
- *         description: Erro interno do servidor.
+ *         description: Internal server error.
  */
 router.get("/", authMiddleware, asyncHandler(getRecommendations));
 

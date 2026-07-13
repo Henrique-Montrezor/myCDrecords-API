@@ -61,7 +61,7 @@ export function verifyToken(token: string, secret: string = JWT_SECRET): any {
   try {
     return jwt.verify(token, secret);
   } catch (error) {
-    throw new Error("Token inválido ou expirado");
+    throw new Error("Invalid or expired token");
   }
 }
 
@@ -80,16 +80,16 @@ export async function comparePassword(
 
 // Register user
 export async function registerUser(data: RegisterRequest) {
-  // Validar se email já existe
+  // Validate whether the email already exists
   const existingEmail = await findByEmail(data.email);
   if (existingEmail) {
-    throw new Error("Email já registrado");
+    throw new Error("Email already registered");
   }
 
-  // Validar se username já existe
+  // Validate whether the username already exists
   const existingUsername = await findByUsername(data.username);
   if (existingUsername) {
-    throw new Error("Username já existe");
+    throw new Error("Username already exists");
   }
 
   // Hash password
@@ -130,7 +130,7 @@ export async function refreshAccessToken(refreshToken: string) {
   // Find refresh token in database
   const storedToken = await findRefreshToken(refreshToken);
   if (!storedToken) {
-    throw new Error("Refresh token inválido");
+    throw new Error("Invalid refresh token");
   }
 
   // Get user from database to get email
@@ -171,19 +171,19 @@ export async function resetPassword(token: string, newPassword: string) {
   const decoded = verifyToken(token, JWT_RESET_SECRET);
 
   if (decoded.type !== "password_reset") {
-    throw new Error("Token inválido para reset de senha");
+    throw new Error("Invalid token for password reset");
   }
 
   // Find verification token
   const verificationToken = await findVerificationToken(token);
   if (!verificationToken) {
-    throw new Error("Token de reset expirado ou já utilizado");
+    throw new Error("Reset token expired or already used");
   }
 
   // Hash new password
   const hashedPassword = await hashPassword(newPassword);
 
-  // Atualiza a senha e marca o token como usado de forma atômica
+  // Updates the password and marks the token as used atomically
   await withTransaction(async (connection) => {
     await connection.query(
       `UPDATE users SET password = ? WHERE id = ?`,
@@ -204,13 +204,13 @@ export async function verifyEmail(token: string) {
   const decoded = verifyToken(token, JWT_VERIFY_SECRET);
 
   if (decoded.type !== "email_verify") {
-    throw new Error("Token inválido para verificação de email");
+    throw new Error("Invalid token for email verification");
   }
 
   // Find verification token
   const verificationToken = await findVerificationToken(token);
   if (!verificationToken) {
-    throw new Error("Token de verificação expirado ou já utilizado");
+    throw new Error("Verification token expired or already used");
   }
 
   // Mark email as verified
@@ -227,7 +227,7 @@ export async function updateEmail(userId: number, newEmail: string) {
   // Check if new email is already in use
   const existingEmail = await findByEmail(newEmail);
   if (existingEmail && existingEmail.id !== userId) {
-    throw new Error("Este email já está em uso");
+    throw new Error("This email is already in use");
   }
 
   // Update email

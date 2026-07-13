@@ -58,7 +58,7 @@ export async function register(req: Request, res: Response) {
 
     // Return access token
     res.status(201).json({
-      message: "Usuário registrado com sucesso",
+      message: "User registered successfully",
       user: {
         id: user.id,
         username: user.username,
@@ -69,7 +69,7 @@ export async function register(req: Request, res: Response) {
     });
   } catch (error: any) {
     logger.error("Register error", { error });
-    res.status(400).json({ message: error.message || "Erro ao registrar" });
+    res.status(400).json({ message: error.message || "Error registering" });
   }
 }
 
@@ -81,18 +81,18 @@ export async function login(req: Request, res: Response) {
     // Find user
     const user = await findByEmail(email);
     if (!user) {
-      return res.status(401).json({ message: "Credenciais inválidas" });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
     // Compare password
     const passwordMatch = await comparePassword(password, user.password);
     if (!passwordMatch) {
-      return res.status(401).json({ message: "Credenciais inválidas" });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
     // Check if user is active
     if (!user.is_active) {
-      return res.status(403).json({ message: "Usuário inativo" });
+      return res.status(403).json({ message: "Inactive user" });
     }
 
     // Generate tokens
@@ -107,7 +107,7 @@ export async function login(req: Request, res: Response) {
     });
 
     res.status(200).json({
-      message: "Login realizado com sucesso",
+      message: "Login successful",
       user: {
         id: user.id,
         username: user.username,
@@ -119,7 +119,7 @@ export async function login(req: Request, res: Response) {
     });
   } catch (error: any) {
     logger.error("Login error", { error });
-    res.status(500).json({ message: "Erro ao fazer login" });
+    res.status(500).json({ message: "Error logging in" });
   }
 }
 
@@ -127,10 +127,10 @@ export async function login(req: Request, res: Response) {
 export async function logoutUser(req: Request, res: Response) {
   try{
     res.clearCookie("token");
-    res.status(200).json({ message: "Logout realizado com sucesso" });
+    res.status(200).json({ message: "Logout successful" });
   } catch (error: any) {
     logger.error("Logout error", { error });
-    res.status(500).json({ message: "Erro ao fazer logout" });
+    res.status(500).json({ message: "Error logging out" });
   }
 }
 
@@ -140,20 +140,20 @@ export async function refresh(req: Request, res: Response) {
     const refreshToken = req.cookies.token || req.body.refreshToken;
 
     if (!refreshToken) {
-      return res.status(401).json({ message: "Refresh token não fornecido" });
+      return res.status(401).json({ message: "Refresh token not provided" });
     }
 
     // Refresh access token
     const result = await refreshAccessToken(refreshToken);
 
     res.status(200).json({
-      message: "Token renovado com sucesso",
+      message: "Token refreshed successfully",
       accessToken: result.accessToken,
       expiresIn: result.expiresIn,
     });
   } catch (error: any) {
     logger.error("Refresh error", { error });
-    res.status(401).json({ message: "Refresh token inválido" });
+    res.status(401).json({ message: "Invalid refresh token" });
   }
 }
 
@@ -166,11 +166,11 @@ export async function requestReset(req: Request, res: Response) {
 
     // Always return success for security reasons
     res.status(200).json({
-      message: "Se o email existe em nossa base de dados, você receberá um link de reset",
+      message: "If the email exists in our database, you will receive a reset link",
     });
   } catch (error: any) {
     logger.error("Password reset request error", { error });
-    res.status(500).json({ message: "Erro ao processar requisição" });
+    res.status(500).json({ message: "Error processing request" });
   }
 }
 
@@ -182,11 +182,11 @@ export async function reset(req: Request, res: Response) {
     await resetPassword(token, password);
 
     res.status(200).json({
-      message: "Senha redefinida com sucesso",
+      message: "Password reset successfully",
     });
   } catch (error: any) {
     logger.error("Password reset error", { error });
-    res.status(400).json({ message: error.message || "Erro ao redefinir senha" });
+    res.status(400).json({ message: error.message || "Error resetting password" });
   }
 }
 
@@ -198,11 +198,11 @@ export async function verify(req: Request, res: Response) {
     await verifyEmail(token);
 
     res.status(200).json({
-      message: "Email verificado com sucesso",
+      message: "Email verified successfully",
     });
   } catch (error: any) {
     logger.error("Email verification error", { error });
-    res.status(400).json({ message: error.message || "Erro ao verificar email" });
+    res.status(400).json({ message: error.message || "Error verifying email" });
   }
 }
 
@@ -214,17 +214,17 @@ export async function updateEmailAddress(req: Request, res: Response) {
     const userId = req.user?.id;
 
     if (!userId) {
-      return res.status(401).json({ message: "Usuário não autenticado" });
+      return res.status(401).json({ message: "User not authenticated" });
     }
 
     await updateEmail(userId, email);
 
     res.status(200).json({
-      message: "Email atualizado com sucesso",
+      message: "Email updated successfully",
     });
   } catch (error: any) {
     logger.error("Update email error", { error });
-    res.status(400).json({ message: error.message || "Erro ao atualizar email" });
+    res.status(400).json({ message: error.message || "Error updating email" });
   }
 }
 
@@ -234,7 +234,7 @@ export async function googleOAuth(req: Request, res: Response) {
     const { code } = req.query;
 
     if (!code) {
-      return res.status(400).json({ message: "Authorization code ausente" });
+      return res.status(400).json({ message: "Authorization code missing" });
     }
 
     // TODO: Exchange code for tokens with Google
@@ -244,12 +244,12 @@ export async function googleOAuth(req: Request, res: Response) {
     // TODO: Redirect to frontend with tokens
 
     res.status(200).json({
-      message: "OAuth Google iniciado",
+      message: "OAuth Google started",
       // Will redirect to frontend with tokens
     });
   } catch (error: any) {
     logger.error("Google OAuth error", { error });
-    res.status(500).json({ message: "Erro ao processar OAuth Google" });
+    res.status(500).json({ message: "Error processing Google OAuth" });
   }
 }
 
@@ -259,7 +259,7 @@ export async function spotifyOAuth(req: Request, res: Response) {
     const { code } = req.query;
 
     if (!code) {
-      return res.status(400).json({ message: "Authorization code ausente" });
+      return res.status(400).json({ message: "Authorization code missing" });
     }
 
     // TODO: Exchange code for tokens with Spotify
@@ -269,12 +269,12 @@ export async function spotifyOAuth(req: Request, res: Response) {
     // TODO: Redirect to frontend with tokens
 
     res.status(200).json({
-      message: "OAuth Spotify iniciado",
+      message: "OAuth Spotify started",
       // Will redirect to frontend with tokens
     });
   } catch (error: any) {
     logger.error("Spotify OAuth error", { error });
-    res.status(500).json({ message: "Erro ao processar OAuth Spotify" });
+    res.status(500).json({ message: "Error processing Spotify OAuth" });
   }
 }
 
@@ -284,7 +284,7 @@ export async function discordOAuth(req: Request, res: Response) {
     const { code } = req.query;
 
     if (!code) {
-      return res.status(400).json({ message: "Authorization code ausente" });
+      return res.status(400).json({ message: "Authorization code missing" });
     }
 
     // TODO: Exchange code for tokens with Discord
@@ -294,11 +294,11 @@ export async function discordOAuth(req: Request, res: Response) {
     // TODO: Redirect to frontend with tokens
 
     res.status(200).json({
-      message: "OAuth Discord iniciado",
+      message: "OAuth Discord started",
       // Will redirect to frontend with tokens
     });
   } catch (error: any) {
     logger.error("Discord OAuth error", { error });
-    res.status(500).json({ message: "Erro ao processar OAuth Discord" });
+    res.status(500).json({ message: "Error processing Discord OAuth" });
   }
 }

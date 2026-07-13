@@ -9,7 +9,7 @@ const router = Router();
  * /api/user/search-users:
  *   get:
  *     summary: Search for users by username
- *     tags: [Usuários]
+ *     tags: [Users]
  *     parameters:
  *       - in: query
  *         name: username

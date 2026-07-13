@@ -115,7 +115,7 @@ export async function getAllReviews(page: number = 1, limit: number = 20) {
 
 // Delete review
 export async function deleteReview(reviewId: number) {
-  // Remove comentários atrelados e a review atomicamente.
+  // Removes attached comments and the review atomically.
   return withTransaction(async (connection) => {
     await connection.query<ResultSetHeader>(
       `DELETE FROM comments WHERE review_id = ?`,

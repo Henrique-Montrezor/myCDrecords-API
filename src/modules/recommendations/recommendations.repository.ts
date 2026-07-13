@@ -32,11 +32,11 @@ export async function getCollaborativeRecommendations(userId: number, limit: num
     return rows;
 }
 
-// 2. Fallback de Cold Start (Álbuns Populares da Plataforma)
+// 2. Cold Start fallback (Platform's Popular Albums)
 export async function getPopularRecommendations(userId: number, limit: number = 10) {
     const connection = await initDatabase();
     
-    // Busca os álbuns mais bem avaliados por todos, mas esconde os que o usuário já avaliou
+    // Fetches the highest-rated albums by everyone, but hides those the user has already reviewed
     const query = `
         SELECT 
             album_id, 
@@ -50,7 +50,7 @@ export async function getPopularRecommendations(userId: number, limit: number = 
         WHERE rating >= 4
         AND album_id NOT IN (SELECT album_id FROM reviews WHERE user_id = ?)
         GROUP BY album_id, album_title, album_artist, album_image, album_genre
-        HAVING total_avaliacoes >= 2 -- Pelo menos 2 reviews para ser considerado 'popular'
+        HAVING total_avaliacoes >= 2 -- At least 2 reviews to be considered 'popular'
         ORDER BY total_avaliacoes DESC, nota_media DESC
         LIMIT ?;
     `;

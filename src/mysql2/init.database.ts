@@ -6,7 +6,7 @@ dotenv.config();
 
 let pool: Pool | null = null;
 
-// Cria (uma única vez) e retorna o pool de conexões compartilhado.
+// Creates (only once) and returns the shared connection pool.
 function getPool(): Pool {
     if (!pool) {
         pool = mysql.createPool({
@@ -22,13 +22,13 @@ function getPool(): Pool {
     return pool;
 }
 
-// Mantém a assinatura usada por todos os repositórios. O pool expõe a mesma
-// API `.query()` / `.execute()` de uma conexão, portanto nenhum repositório
-// precisa mudar.
+// Keeps the signature used by all repositories. The pool exposes the same
+// `.query()` / `.execute()` API as a connection, so no repository
+// needs to change.
 export async function initDatabase(): Promise<Pool> {
     try {
         const currentPool = getPool();
-        // Valida a conexão na primeira chamada (falha cedo se o banco estiver fora).
+        // Validates the connection on the first call (fails early if the database is down).
         const connection = await currentPool.getConnection();
         connection.release();
         return currentPool;

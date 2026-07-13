@@ -18,7 +18,7 @@ const router = Router();
  * @swagger
  * /api/spotify/search:
  *   get:
- *     summary: Buscar álbuns no Spotify
+ *     summary: Search albums on Spotify
  *     tags: [Spotify]
  *     parameters:
  *       - in: query
@@ -29,7 +29,7 @@ const router = Router();
  *         example: The Beatles
  *     responses:
  *       200:
- *         description: Resultados da busca
+ *         description: Search results
  */
 router.get('/search', searchSpotifyController);
 
@@ -37,7 +37,7 @@ router.get('/search', searchSpotifyController);
  * @swagger
  * /api/spotify/albums/{id}:
  *   get:
- *     summary: Buscar álbum por ID
+ *     summary: Get album by ID
  *     tags: [Spotify]
  *     parameters:
  *       - in: path
@@ -48,7 +48,7 @@ router.get('/search', searchSpotifyController);
  *         example: 3mH6qwIy9crq0I9YQbOuDf
  *     responses:
  *       200:
- *         description: Álbum encontrado
+ *         description: Album found
  */
 router.get('/albums/:id', getSpotifyAlbumById);
 
@@ -56,7 +56,7 @@ router.get('/albums/:id', getSpotifyAlbumById);
  * @swagger
  * /api/spotify/playlists/{id}:
  *   get:
- *     summary: Buscar playlist por ID
+ *     summary: Get playlist by ID
  *     tags: [Spotify]
  *     parameters:
  *       - in: path
@@ -67,7 +67,7 @@ router.get('/albums/:id', getSpotifyAlbumById);
  *         example: 5SpJ0l6821947890123456
  *     responses:
  *       200:
- *         description: Playlist encontrada
+ *         description: Playlist found
  */
 router.get('/playlists/:id', getSpotifyPlaylistById);
 
@@ -75,7 +75,7 @@ router.get('/playlists/:id', getSpotifyPlaylistById);
  * @swagger
  * /api/spotify/playlist/{id}:
  *   get:
- *     summary: Buscar playlist por ID (alias)
+ *     summary: Get playlist by ID (alias)
  *     tags: [Spotify]
  *     parameters:
  *       - in: path
@@ -86,7 +86,7 @@ router.get('/playlists/:id', getSpotifyPlaylistById);
  *         example: 5SpJ0l6821947890123456
  *     responses:
  *       200:
- *         description: Playlist encontrada
+ *         description: Playlist found
  */
 router.get('/playlist/:id', fetchSpotifyPlaylist);
 
@@ -94,7 +94,7 @@ router.get('/playlist/:id', fetchSpotifyPlaylist);
  * @swagger
  * /api/spotify/top-artists:
  *   get:
- *     summary: Buscar top artistas do usuário
+ *     summary: Get the user's top artists
  *     tags: [Spotify]
  *     security:
  *       - bearerAuth: []
@@ -112,9 +112,9 @@ router.get('/playlist/:id', fetchSpotifyPlaylist);
  *           default: 20
  *     responses:
  *       200:
- *         description: Top artistas encontrados
+ *         description: Top artists found
  *       401:
- *         description: Não autenticado
+ *         description: Not authenticated
  */
 router.get('/top-artists', authMiddleware, getTopArtists);
 
@@ -122,7 +122,7 @@ router.get('/top-artists', authMiddleware, getTopArtists);
  * @swagger
  * /api/spotify/top/artists:
  *   get:
- *     summary: Buscar top artistas do usuário (rota alternativa)
+ *     summary: Get the user's top artists (alternative route)
  *     tags: [Spotify]
  *     security:
  *       - bearerAuth: []
@@ -140,9 +140,9 @@ router.get('/top-artists', authMiddleware, getTopArtists);
  *           default: 20
  *     responses:
  *       200:
- *         description: Top artistas encontrados
+ *         description: Top artists found
  *       401:
- *         description: Não autenticado
+ *         description: Not authenticated
  */
 router.get('/top/artists', authMiddleware, getTopArtists);
 
@@ -150,7 +150,7 @@ router.get('/top/artists', authMiddleware, getTopArtists);
  * @swagger
  * /api/spotify/top-tracks:
  *   get:
- *     summary: Buscar top tracks do usuário
+ *     summary: Get the user's top tracks
  *     tags: [Spotify]
  *     security:
  *       - bearerAuth: []
@@ -168,9 +168,9 @@ router.get('/top/artists', authMiddleware, getTopArtists);
  *           default: 20
  *     responses:
  *       200:
- *         description: Top tracks encontrados
+ *         description: Top tracks found
  *       401:
- *         description: Não autenticado
+ *         description: Not authenticated
  */
 router.get('/top-tracks', authMiddleware, fetchTopTracks);
 
@@ -178,15 +178,15 @@ router.get('/top-tracks', authMiddleware, fetchTopTracks);
  * @swagger
  * /api/spotify/user-token:
  *   get:
- *     summary: Obter token do Spotify do usuário autenticado
+ *     summary: Get the Spotify token of the authenticated user
  *     tags: [Spotify]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Token do Spotify retornado com sucesso
+ *         description: Spotify token returned successfully
  *       401:
- *         description: Usuário não autenticado ou sem Spotify conectado
+ *         description: User not authenticated or without Spotify connected
  */
 router.get('/user-token', authMiddleware, getUserSpotifyToken);
 
@@ -194,17 +194,17 @@ router.get('/user-token', authMiddleware, getUserSpotifyToken);
  * @swagger
  * /api/spotify/login-spotify:
  *   get:
- *     summary: Iniciar processo de login no Spotify
+ *     summary: Start the Spotify login process
  *     tags: [Spotify]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: URL de login do Spotify retornada
+ *         description: Spotify login URL returned
  *       401:
- *         description: Não autenticado
+ *         description: Not authenticated
  *       500:
- *         description: Erro interno do servidor
+ *         description: Internal server error
  */
 router.get('/login-spotify', authMiddleware, loginUserSpotify);
 
@@ -212,11 +212,11 @@ router.get('/login-spotify', authMiddleware, loginUserSpotify);
  * @swagger
  * /api/spotify/callback:
  *   get:
- *     summary: Callback do processo de login no Spotify
+ *     summary: Callback of the Spotify login process
  *     tags: [Spotify]
  *     responses:
  *       200:
- *         description: Processo de login concluído com sucesso
+ *         description: Login process completed successfully
  */
 router.get('/callback', spotifyCallback);
 

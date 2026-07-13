@@ -10,9 +10,9 @@ const router = Router();
  * @swagger
  * /api/profile/create-or-update-profile:
  *   post:
- *     summary: Criar ou atualizar o perfil do usuário autenticado
+ *     summary: Create or update the authenticated user's profile
  *     tags:
- *       - Perfil
+ *       - Profile
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -24,15 +24,15 @@ const router = Router();
  *             properties:
  *               bio:
  *                 type: string
- *                 example: "Amante de CDs"
+ *                 example: "CD lover"
  *               avatar_url:
  *                 type: string
  *                 example: "http://example.com/avatar.jpg"
  *     responses:
  *       200:
- *         description: Perfil criado ou atualizado com sucesso
+ *         description: Profile created or updated successfully
  *       401:
- *         description: Usuário não autenticado
+ *         description: User not authenticated
  */
 router.post('/create-or-update-profile', authmiddleware, asyncHandler(createOrUpdateProfileController));
 
@@ -40,9 +40,9 @@ router.post('/create-or-update-profile', authmiddleware, asyncHandler(createOrUp
  * @swagger
  * /api/profile/get-profile/{userId}:
  *   get:
- *     summary: Obter perfil do usuário pelo ID
+ *     summary: Get a user's profile by ID
  *     tags:
- *       - Perfil
+ *       - Profile
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -51,14 +51,14 @@ router.post('/create-or-update-profile', authmiddleware, asyncHandler(createOrUp
  *         required: true
  *         schema:
  *           type: string
- *         description: ID do usuário
+ *         description: User ID
  *     responses:
  *       200:
- *         description: Perfil encontrado
+ *         description: Profile found
  *       401:
- *         description: Usuário não autenticado
+ *         description: User not authenticated
  *       404:
- *         description: Perfil não encontrado
+ *         description: Profile not found
  */
 router.get('/get-profile/:userId', authmiddleware, asyncHandler(searchProfileByUsername));
 

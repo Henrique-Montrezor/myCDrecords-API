@@ -2,11 +2,11 @@ import { z } from "zod";
 
 export const createListSchema = z.object({
     title: z
-        .string({ required_error: "title é obrigatório" })
+        .string({ required_error: "title is required" })
         .trim()
-        .min(1, "title é obrigatório")
-        .max(255, "title muito longo"),
-    description: z.string().trim().max(2000, "description muito longa").optional(),
+        .min(1, "title is required")
+        .max(255, "title too long"),
+    description: z.string().trim().max(2000, "description too long").optional(),
     isPublic: z.boolean().optional().default(true),
 });
 
@@ -17,15 +17,15 @@ export const updateListSchema = z
         isPublic: z.boolean().optional(),
     })
     .refine((data) => Object.keys(data).length > 0, {
-        message: "Informe ao menos um campo para atualizar",
+        message: "Provide at least one field to update",
     });
 
 export const listItemSchema = z.object({
     albumId: z
-        .string({ required_error: "albumId é obrigatório" })
+        .string({ required_error: "albumId is required" })
         .trim()
-        .min(1, "albumId é obrigatório")
-        .max(255, "albumId muito longo"),
+        .min(1, "albumId is required")
+        .max(255, "albumId too long"),
     albumTitle: z.string().trim().max(500).optional(),
     albumImage: z.string().trim().max(500).optional(),
     albumArtist: z.string().trim().max(500).optional(),
@@ -34,9 +34,9 @@ export const listItemSchema = z.object({
 
 export const listIdParamSchema = z.object({
     listId: z.coerce
-        .number({ invalid_type_error: "listId inválido" })
-        .int("listId inválido")
-        .positive("listId inválido"),
+        .number({ invalid_type_error: "Invalid listId" })
+        .int("Invalid listId")
+        .positive("Invalid listId"),
 });
 
 export const listItemParamSchema = z.object({

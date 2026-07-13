@@ -18,14 +18,14 @@ const router = Router();
  * @swagger
  * tags:
  *   - name: Social
- *     description: Seguidores e votos (up/downvotes)
+ *     description: Followers and votes (up/downvotes)
  */
 
 /**
  * @swagger
  * /api/social/feed:
  *   get:
- *     summary: Feed de avaliações dos usuários seguidos
+ *     summary: Feed of reviews from followed users
  *     tags: [Social]
  *     security:
  *       - BearerAuth: []
@@ -37,9 +37,9 @@ const router = Router();
  *           default: 1
  *     responses:
  *       200:
- *         description: Lista de avaliações
+ *         description: List of reviews
  *       401:
- *         description: Não autenticado
+ *         description: Not authenticated
  */
 router.get("/feed", authMiddleware, asyncHandler(feedController));
 
@@ -47,7 +47,7 @@ router.get("/feed", authMiddleware, asyncHandler(feedController));
  * @swagger
  * /api/social/vote:
  *   post:
- *     summary: Registra ou atualiza um voto em uma review ou comentário
+ *     summary: Records or updates a vote on a review or comment
  *     tags: [Social]
  *     security:
  *       - BearerAuth: []
@@ -69,11 +69,11 @@ router.get("/feed", authMiddleware, asyncHandler(feedController));
  *                 enum: [1, -1]
  *     responses:
  *       200:
- *         description: Voto registrado
+ *         description: Vote recorded
  *       401:
- *         description: Não autenticado
+ *         description: Not authenticated
  *   delete:
- *     summary: Remove o voto do usuário em um alvo
+ *     summary: Removes the user's vote on a target
  *     tags: [Social]
  *     security:
  *       - BearerAuth: []
@@ -92,9 +92,9 @@ router.get("/feed", authMiddleware, asyncHandler(feedController));
  *                 type: integer
  *     responses:
  *       200:
- *         description: Voto removido
+ *         description: Vote removed
  *       404:
- *         description: Voto não encontrado
+ *         description: Vote not found
  */
 router.post("/vote", authMiddleware, asyncHandler(voteController));
 router.delete("/vote", authMiddleware, asyncHandler(removeVoteController));
@@ -103,7 +103,7 @@ router.delete("/vote", authMiddleware, asyncHandler(removeVoteController));
  * @swagger
  * /api/social/votes/{targetType}/{targetId}:
  *   get:
- *     summary: Pontuação de votos de um alvo
+ *     summary: Vote score of a target
  *     tags: [Social]
  *     parameters:
  *       - in: path
@@ -119,7 +119,7 @@ router.delete("/vote", authMiddleware, asyncHandler(removeVoteController));
  *           type: integer
  *     responses:
  *       200:
- *         description: Pontuação agregada
+ *         description: Aggregate score
  */
 router.get("/votes/:targetType/:targetId", asyncHandler(voteScoreController));
 
@@ -127,7 +127,7 @@ router.get("/votes/:targetType/:targetId", asyncHandler(voteScoreController));
  * @swagger
  * /api/social/follow/{userId}:
  *   post:
- *     summary: Seguir um usuário
+ *     summary: Follow a user
  *     tags: [Social]
  *     security:
  *       - BearerAuth: []
@@ -139,11 +139,11 @@ router.get("/votes/:targetType/:targetId", asyncHandler(voteScoreController));
  *           type: integer
  *     responses:
  *       201:
- *         description: Usuário seguido
+ *         description: User followed
  *       409:
- *         description: Já segue este usuário
+ *         description: Already following this user
  *   delete:
- *     summary: Deixar de seguir um usuário
+ *     summary: Unfollow a user
  *     tags: [Social]
  *     security:
  *       - BearerAuth: []
@@ -155,9 +155,9 @@ router.get("/votes/:targetType/:targetId", asyncHandler(voteScoreController));
  *           type: integer
  *     responses:
  *       204:
- *         description: Deixou de seguir
+ *         description: Unfollowed
  *       404:
- *         description: Não segue este usuário
+ *         description: Not following this user
  */
 router.post("/follow/:userId", authMiddleware, asyncHandler(followController));
 router.delete("/follow/:userId", authMiddleware, asyncHandler(unfollowController));
@@ -166,7 +166,7 @@ router.delete("/follow/:userId", authMiddleware, asyncHandler(unfollowController
  * @swagger
  * /api/social/{userId}/followers:
  *   get:
- *     summary: Lista os seguidores de um usuário
+ *     summary: Lists a user's followers
  *     tags: [Social]
  *     parameters:
  *       - in: path
@@ -176,7 +176,7 @@ router.delete("/follow/:userId", authMiddleware, asyncHandler(unfollowController
  *           type: integer
  *     responses:
  *       200:
- *         description: Lista de seguidores
+ *         description: List of followers
  */
 router.get("/:userId/followers", asyncHandler(followersController));
 
@@ -184,7 +184,7 @@ router.get("/:userId/followers", asyncHandler(followersController));
  * @swagger
  * /api/social/{userId}/following:
  *   get:
- *     summary: Lista quem o usuário segue
+ *     summary: Lists who the user follows
  *     tags: [Social]
  *     parameters:
  *       - in: path
@@ -194,7 +194,7 @@ router.get("/:userId/followers", asyncHandler(followersController));
  *           type: integer
  *     responses:
  *       200:
- *         description: Lista de seguidos
+ *         description: List of followed users
  */
 router.get("/:userId/following", asyncHandler(followingController));
 

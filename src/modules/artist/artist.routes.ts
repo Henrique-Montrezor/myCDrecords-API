@@ -8,8 +8,8 @@ const router = Router();
  * @swagger
  * /api/artistas/buscar:
  *   get:
- *     summary: Buscar artistas pelo nome
- *     tags: [Artistas]
+ *     summary: Search artists by name
+ *     tags: [Artists]
  *     parameters:
  *       - in: query
  *         name: nome
@@ -25,7 +25,7 @@ const router = Router();
  *         example: 10
  *     responses:
  *       200:
- *         description: Lista de artistas encontrada
+ *         description: List of artists found
  */
 
 router.get("/buscar", searchArtists);
@@ -34,8 +34,8 @@ router.get("/buscar", searchArtists);
  * @swagger
  * /api/artistas/{mbid}:
  *   get:
- *     summary: Obter detalhes de um artista
- *     tags: [Artistas]
+ *     summary: Get details of an artist
+ *     tags: [Artists]
  *     parameters:
  *       - in: path
  *         name: mbid
@@ -50,7 +50,7 @@ router.get("/buscar", searchArtists);
  *         example: true
  *     responses:
  *       200:
- *         description: Detalhes do artista
+ *         description: Artist details
  */
 router.get("/:mbid", getArtist);
 

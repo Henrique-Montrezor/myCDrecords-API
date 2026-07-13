@@ -21,8 +21,8 @@ const router = Router();
  * @swagger
  * /api/auth/register:
  *   post:
- *     summary: Registrar conta
- *     tags: [Autenticação]
+ *     summary: Register account
+ *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
@@ -40,9 +40,9 @@ const router = Router();
  *                 type: string
  *     responses:
  *       201:
- *         description: Usuário registrado com sucesso
+ *         description: User registered successfully
  *       400:
- *         description: Erro na validação
+ *         description: Validation error
  */
 router.post("/register", asyncHandler(register));
 
@@ -51,7 +51,7 @@ router.post("/register", asyncHandler(register));
  * /api/auth/login:
  *   post:
  *     summary: Login
- *     tags: [Autenticação]
+ *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
@@ -65,9 +65,9 @@ router.post("/register", asyncHandler(register));
  *                 type: string
  *     responses:
  *       200:
- *         description: Login realizado com sucesso
+ *         description: Login successful
  *       401:
- *         description: Credenciais inválidas
+ *         description: Invalid credentials
  */
 router.post("/login", asyncHandler(login));
 
@@ -76,14 +76,14 @@ router.post("/login", asyncHandler(login));
  * /api/auth/logout:
  *   post:
  *     summary: Logout
- *     tags: [Autenticação]
+ *     tags: [Authentication]
  *     security:
  *       - BearerAuth: []
  *     responses:
  *       200:
- *         description: Logout realizado com sucesso
+ *         description: Logout successful
  *       401:
- *         description: Não autenticado
+ *         description: Not authenticated
  */
 router.post("/logout", authMiddleware, asyncHandler(logoutUser));
 
@@ -91,8 +91,8 @@ router.post("/logout", authMiddleware, asyncHandler(logoutUser));
  * @swagger
  * /api/auth/refresh:
  *   post:
- *     summary: Renovar token de acesso
- *     tags: [Autenticação]
+ *     summary: Refresh access token
+ *     tags: [Authentication]
  *     requestBody:
  *       content:
  *         application/json:
@@ -103,9 +103,9 @@ router.post("/logout", authMiddleware, asyncHandler(logoutUser));
  *                 type: string
  *     responses:
  *       200:
- *         description: Token renovado com sucesso
+ *         description: Token refreshed successfully
  *       401:
- *         description: Refresh token inválido
+ *         description: Invalid refresh token
  */
 router.post("/refresh", asyncHandler(refresh));
 
@@ -113,8 +113,8 @@ router.post("/refresh", asyncHandler(refresh));
  * @swagger
  * /api/auth/password/request-reset:
  *   post:
- *     summary: Solicitar reset de senha
- *     tags: [Autenticação]
+ *     summary: Request password reset
+ *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
@@ -126,7 +126,7 @@ router.post("/refresh", asyncHandler(refresh));
  *                 type: string
  *     responses:
  *       200:
- *         description: Solicitação processada
+ *         description: Request processed
  */
 router.post("/password/request-reset", asyncHandler(requestReset));
 
@@ -134,8 +134,8 @@ router.post("/password/request-reset", asyncHandler(requestReset));
  * @swagger
  * /api/auth/password/reset:
  *   post:
- *     summary: Redefinir senha
- *     tags: [Autenticação]
+ *     summary: Reset password
+ *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
@@ -151,9 +151,9 @@ router.post("/password/request-reset", asyncHandler(requestReset));
  *                 type: string
  *     responses:
  *       200:
- *         description: Senha redefinida com sucesso
+ *         description: Password reset successfully
  *       400:
- *         description: Token inválido ou expirado
+ *         description: Invalid or expired token
  */
 router.post("/password/reset", asyncHandler(reset));
 
@@ -161,8 +161,8 @@ router.post("/password/reset", asyncHandler(reset));
  * @swagger
  * /api/auth/email/verify:
  *   post:
- *     summary: Verificar email
- *     tags: [Autenticação]
+ *     summary: Verify email
+ *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
@@ -174,9 +174,9 @@ router.post("/password/reset", asyncHandler(reset));
  *                 type: string
  *     responses:
  *       200:
- *         description: Email verificado com sucesso
+ *         description: Email verified successfully
  *       400:
- *         description: Token inválido ou expirado
+ *         description: Invalid or expired token
  */
 router.post("/email/verify", asyncHandler(verify));
 
@@ -184,8 +184,8 @@ router.post("/email/verify", asyncHandler(verify));
  * @swagger
  * /api/auth/email:
  *   patch:
- *     summary: Atualizar email
- *     tags: [Autenticação]
+ *     summary: Update email
+ *     tags: [Authentication]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -199,9 +199,9 @@ router.post("/email/verify", asyncHandler(verify));
  *                 type: string
  *     responses:
  *       200:
- *         description: Email atualizado com sucesso
+ *         description: Email updated successfully
  *       401:
- *         description: Não autenticado
+ *         description: Not authenticated
  */
 router.patch("/email", authMiddleware, asyncHandler(updateEmailAddress));
 
@@ -210,7 +210,7 @@ router.patch("/email", authMiddleware, asyncHandler(updateEmailAddress));
  * /api/auth/oauth/google:
  *   get:
  *     summary: OAuth Google
- *     tags: [Autenticação]
+ *     tags: [Authentication]
  *     parameters:
  *       - in: query
  *         name: code
@@ -219,7 +219,7 @@ router.patch("/email", authMiddleware, asyncHandler(updateEmailAddress));
  *         description: Authorization code from Google
  *     responses:
  *       200:
- *         description: OAuth iniciado
+ *         description: OAuth started
  */
 router.get("/oauth/google", asyncHandler(googleOAuth));
 
@@ -228,7 +228,7 @@ router.get("/oauth/google", asyncHandler(googleOAuth));
  * /api/auth/oauth/spotify:
  *   get:
  *     summary: OAuth Spotify
- *     tags: [Autenticação]
+ *     tags: [Authentication]
  *     parameters:
  *       - in: query
  *         name: code
@@ -237,7 +237,7 @@ router.get("/oauth/google", asyncHandler(googleOAuth));
  *         description: Authorization code from Spotify
  *     responses:
  *       200:
- *         description: OAuth iniciado
+ *         description: OAuth started
  */
 router.get("/oauth/spotify", asyncHandler(spotifyOAuth));
 
@@ -246,7 +246,7 @@ router.get("/oauth/spotify", asyncHandler(spotifyOAuth));
  * /api/auth/oauth/discord:
  *   get:
  *     summary: OAuth Discord
- *     tags: [Autenticação]
+ *     tags: [Authentication]
  *     parameters:
  *       - in: query
  *         name: code
@@ -255,7 +255,7 @@ router.get("/oauth/spotify", asyncHandler(spotifyOAuth));
  *         description: Authorization code from Discord
  *     responses:
  *       200:
- *         description: OAuth iniciado
+ *         description: OAuth started
  */
 router.get("/oauth/discord", asyncHandler(discordOAuth));
 

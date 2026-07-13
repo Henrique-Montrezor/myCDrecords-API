@@ -3,12 +3,12 @@ import { createOrUpdateProfile, getProfileByUsername } from "./profile.repositor
 import { logger } from "../../utils/logger";
 import { profileUpsertSchema } from "./profile.schema";
 
-// Criar ou atualizar perfil
+// Create or update profile
 export async function createOrUpdateProfileController(req: Request, res: Response) {
     const user_id = req.user?.id; // get user_id from JWT token
 
     if (!user_id) {
-        return res.status(401).json({ message: "Usuário não autenticado" });
+        return res.status(401).json({ message: "User not authenticated" });
     }
 
     const { bio, avatar_url } = profileUpsertSchema.parse(req.body);
@@ -21,8 +21,8 @@ export async function createOrUpdateProfileController(req: Request, res: Respons
             user_id
         });
     } catch (error) {
-        logger.error('Erro ao atualizar perfil', { error });
-        res.status(500).json({ message: 'Erro interno do servidor' });
+        logger.error('Error updating profile', { error });
+        res.status(500).json({ message: 'Internal server error' });
     }
 }
 
@@ -34,12 +34,12 @@ export async function searchProfileByUsername(req: Request, res: Response) {
         const profile = await getProfileByUsername({ username });
 
         if (!profile) {
-            return res.status(404).json({ message: "Perfil não encontrado" });
+            return res.status(404).json({ message: "Profile not found" });
         }
 
         res.status(200).json(profile);
     } catch (error) {
-        logger.error('Erro ao obter perfil', { error });
-        res.status(500).json({ message: 'Erro interno do servidor' });
+        logger.error('Error retrieving profile', { error });
+        res.status(500).json({ message: 'Internal server error' });
     }
 }

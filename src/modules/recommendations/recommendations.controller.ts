@@ -7,12 +7,12 @@ export async function getRecommendations(req: Request, res: Response) {
     const userId = req.user?.id;
 
     if (!userId) {
-        return res.status(401).json({ message: "Usuário não autenticado" });
+        return res.status(401).json({ message: "User not authenticated" });
     }
 
     const limit = parseInt(req.query.limit as string) || 10;
     
-    // Usando seu utilitário de cache nativo
+    // Using the native cache utility
     const cacheKey = `recommendations_${userId}_${limit}`;
     const cachedData = cache.get(cacheKey);
 
@@ -24,12 +24,12 @@ export async function getRecommendations(req: Request, res: Response) {
         let recomendacoes = await getCollaborativeRecommendations(userId, limit);
         let tipo = "colaborativa";
 
-        // Lógica de Cold Start
+        // Cold Start logic
         if (recomendacoes.length === 0) {
             recomendacoes = await getPopularRecommendations(userId, limit);
             tipo = "popular";
             
-            // Se a plataforma for nova e não tiver NADA popular, retorna array vazio limpo
+            // If the platform is new and has NOTHING popular, return a clean empty array
             if (recomendacoes.length === 0) {
                 return res.status(200).json({ tipo: "vazio", data: [] });
             }
@@ -40,12 +40,12 @@ export async function getRecommendations(req: Request, res: Response) {
             data: recomendacoes
         };
 
-        // Salva no cache por 1 hora (3600 segundos)
+        // Save in cache for 1 hour (3600 seconds)
         cache.set(cacheKey, respostaFinal, 3600);
 
         res.status(200).json(respostaFinal);
     } catch (error) {
-        logger.error("Erro ao buscar recomendações", { error });
-        res.status(500).json({ message: "Erro interno do servidor ao gerar recomendações" });
+        logger.error("Error fetching recommendations", { error });
+        res.status(500).json({ message: "Internal server error while generating recommendations" });
     }
 }

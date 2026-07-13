@@ -17,16 +17,16 @@ const router = Router();
 /**
  * @swagger
  * tags:
- *   - name: Listas
- *     description: Coleções/listas personalizadas de álbuns
+ *   - name: Lists
+ *     description: Custom album collections/lists
  */
 
 /**
  * @swagger
  * /api/lists:
  *   post:
- *     summary: Cria uma nova lista
- *     tags: [Listas]
+ *     summary: Create a new list
+ *     tags: [Lists]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -45,9 +45,9 @@ const router = Router();
  *                 type: boolean
  *     responses:
  *       201:
- *         description: Lista criada
+ *         description: List created
  *       401:
- *         description: Não autenticado
+ *         description: Not authenticated
  */
 router.post("/", authMiddleware, asyncHandler(createListController));
 
@@ -55,13 +55,13 @@ router.post("/", authMiddleware, asyncHandler(createListController));
  * @swagger
  * /api/lists/me:
  *   get:
- *     summary: Lista as listas do usuário autenticado
- *     tags: [Listas]
+ *     summary: Lists the authenticated user's lists
+ *     tags: [Lists]
  *     security:
  *       - BearerAuth: []
  *     responses:
  *       200:
- *         description: Listas do usuário
+ *         description: User's lists
  */
 router.get("/me", authMiddleware, asyncHandler(myListsController));
 
@@ -69,8 +69,8 @@ router.get("/me", authMiddleware, asyncHandler(myListsController));
  * @swagger
  * /api/lists/user/{userId}:
  *   get:
- *     summary: Lista as listas públicas de um usuário
- *     tags: [Listas]
+ *     summary: Lists a user's public lists
+ *     tags: [Lists]
  *     parameters:
  *       - in: path
  *         name: userId
@@ -79,7 +79,7 @@ router.get("/me", authMiddleware, asyncHandler(myListsController));
  *           type: integer
  *     responses:
  *       200:
- *         description: Listas públicas
+ *         description: Public lists
  */
 router.get("/user/:userId", asyncHandler(userListsController));
 
@@ -87,8 +87,8 @@ router.get("/user/:userId", asyncHandler(userListsController));
  * @swagger
  * /api/lists/{listId}:
  *   get:
- *     summary: Detalha uma lista com seus itens
- *     tags: [Listas]
+ *     summary: Details a list with its items
+ *     tags: [Lists]
  *     parameters:
  *       - in: path
  *         name: listId
@@ -97,14 +97,14 @@ router.get("/user/:userId", asyncHandler(userListsController));
  *           type: integer
  *     responses:
  *       200:
- *         description: Lista com itens
+ *         description: List with items
  *       403:
- *         description: Lista privada
+ *         description: Private list
  *       404:
- *         description: Lista não encontrada
+ *         description: List not found
  *   put:
- *     summary: Atualiza uma lista
- *     tags: [Listas]
+ *     summary: Updates a list
+ *     tags: [Lists]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -128,12 +128,12 @@ router.get("/user/:userId", asyncHandler(userListsController));
  *                 type: boolean
  *     responses:
  *       200:
- *         description: Lista atualizada
+ *         description: List updated
  *       404:
- *         description: Lista não encontrada ou acesso negado
+ *         description: List not found or access denied
  *   delete:
- *     summary: Remove uma lista
- *     tags: [Listas]
+ *     summary: Removes a list
+ *     tags: [Lists]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -144,9 +144,9 @@ router.get("/user/:userId", asyncHandler(userListsController));
  *           type: integer
  *     responses:
  *       204:
- *         description: Lista removida
+ *         description: List removed
  *       404:
- *         description: Lista não encontrada ou acesso negado
+ *         description: List not found or access denied
  */
 router.get("/:listId", asyncHandler(getListController));
 router.put("/:listId", authMiddleware, asyncHandler(updateListController));
@@ -156,8 +156,8 @@ router.delete("/:listId", authMiddleware, asyncHandler(deleteListController));
  * @swagger
  * /api/lists/{listId}/items:
  *   post:
- *     summary: Adiciona um álbum à lista
- *     tags: [Listas]
+ *     summary: Adds an album to the list
+ *     tags: [Lists]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -186,9 +186,9 @@ router.delete("/:listId", authMiddleware, asyncHandler(deleteListController));
  *                 type: integer
  *     responses:
  *       201:
- *         description: Álbum adicionado
+ *         description: Album added
  *       409:
- *         description: Álbum já está na lista
+ *         description: Album is already in the list
  */
 router.post("/:listId/items", authMiddleware, asyncHandler(addListItemController));
 
@@ -196,8 +196,8 @@ router.post("/:listId/items", authMiddleware, asyncHandler(addListItemController
  * @swagger
  * /api/lists/{listId}/items/{albumId}:
  *   delete:
- *     summary: Remove um álbum da lista
- *     tags: [Listas]
+ *     summary: Removes an album from the list
+ *     tags: [Lists]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -213,9 +213,9 @@ router.post("/:listId/items", authMiddleware, asyncHandler(addListItemController
  *           type: string
  *     responses:
  *       204:
- *         description: Álbum removido
+ *         description: Album removed
  *       404:
- *         description: Álbum não encontrado na lista
+ *         description: Album not found in the list
  */
 router.delete("/:listId/items/:albumId", authMiddleware, asyncHandler(removeListItemController));
 

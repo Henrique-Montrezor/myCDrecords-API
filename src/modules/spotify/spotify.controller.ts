@@ -13,7 +13,7 @@ import { logger } from '../../utils/logger';
 const cache = new NodeCache({ stdTTL: 3600 });
 const cacheKey = 'spotify_access_token';
 
-// Helper para extrair mensagem de erro do Axios
+// Helper to extract error message from Axios
 function getSpotifyErrorMessage(error: any): { status: number; message: string } {
     if (axios.isAxiosError(error)) {
         const status = error.response?.status || 500;
@@ -22,29 +22,29 @@ function getSpotifyErrorMessage(error: any): { status: number; message: string }
         if (spotifyError) {
             return {
                 status,
-                message: spotifyError.message || spotifyError.status || 'Erro ao buscar dados do Spotify'
+                message: spotifyError.message || spotifyError.status || 'Error fetching data from Spotify'
             };
         }
         
         if (status === 404) {
-            return { status: 404, message: 'Recurso não encontrado no Spotify' };
+            return { status: 404, message: 'Resource not found on Spotify' };
         }
         if (status === 401 || status === 403) {
-            return { status: 401, message: 'Token do Spotify inválido ou expirado' };
+            return { status: 401, message: 'Invalid or expired Spotify token' };
         }
         if (status === 429) {
-            return { status: 429, message: 'Limite de requisições do Spotify atingido. Tente novamente em alguns instantes.' };
+            return { status: 429, message: 'Spotify request limit reached. Please try again in a few moments.' };
         }
     }
     
-    return { status: 500, message: 'Erro interno do servidor' };
+    return { status: 500, message: 'Internal server error' };
 }
 
 export async function getUserSpotifyToken(req: Request, res: Response) {
     const userId = req.user?.id;
 
     if (!userId) {
-        return res.status(401).json({ message: "Usuário não autenticado" });
+        return res.status(401).json({ message: "User not authenticated" });
     }
 
     try {
@@ -52,12 +52,12 @@ export async function getUserSpotifyToken(req: Request, res: Response) {
         
         if (!spotifyTokens?.spotify_access_token) {
             return res.status(401).json({ 
-                message: "Usuário não tem acesso Spotify conectado",
+                message: "User does not have Spotify access connected",
                 connected: false
             });
         }
 
-        // Verificar se o token expirou
+        // Check if the token has expired
         const expiresAt = new Date(spotifyTokens.spotify_token_expires_at);
         const now = new Date();
         
@@ -68,20 +68,20 @@ export async function getUserSpotifyToken(req: Request, res: Response) {
         });
     } catch (error) {
         logger.error("Error getting user Spotify token", { error });
-        res.status(500).json({ message: "Erro ao obter token do Spotify" });
+        res.status(500).json({ message: "Error getting Spotify token" });
     }
 }
 
 export async function searchSpotifyController(req: Request, res: Response) {
     const token = await setSpotifyHeaders();
     if (!token) {
-        return res.status(500).json({ message: "Não foi possível obter o token de acesso do Spotify" });
+        return res.status(500).json({ message: "Could not obtain the Spotify access token" });
     }
 
     const { query } = req.query;
 
     if (!query) {
-        return res.status(400).json({ message: "Query é obrigatório" });
+        return res.status(400).json({ message: "Query is required" });
     }
 
     try {
@@ -89,7 +89,7 @@ export async function searchSpotifyController(req: Request, res: Response) {
         res.status(200).json(results);
     } catch (error) {
         const { status, message } = getSpotifyErrorMessage(error);
-        logger.error('Erro ao buscar no Spotify', { error });
+        logger.error('Error searching on Spotify', { error });
         res.status(status).json({ message });
     }
 }
@@ -97,7 +97,7 @@ export async function searchSpotifyController(req: Request, res: Response) {
 export async function getSpotifyAccessToken(req: Request, res: Response) {
     const token = await setSpotifyHeaders();
     if (!token) {
-        return res.status(500).json({ message: "Não foi possível obter o token de acesso do Spotify" });
+        return res.status(500).json({ message: "Could not obtain the Spotify access token" });
     }
 
     try {
@@ -126,7 +126,7 @@ export async function getSpotifyAlbumById(req: Request, res: Response) {
     const { id } = req.params;
 
     if (!id) {
-        return res.status(400).json({ message: "ID é obrigatório" });
+        return res.status(400).json({ message: "ID is required" });
     }
 
     try {
@@ -143,7 +143,7 @@ export async function getSpotifyPlaylistById(req: Request, res: Response) {
     const { id } = req.params;
 
     if (!id) {
-        return res.status(400).json({ message: "ID é obrigatório" });
+        return res.status(400).json({ message: "ID is required" });
     }
 
     try {
@@ -161,15 +161,15 @@ export async function getTopArtists(req: Request, res: Response) {
     const { timeRange = 'medium_term', limit = '20' } = req.query;
 
     if (!userId) {
-        return res.status(401).json({ message: "Usuário não autenticado" });
+        return res.status(401).json({ message: "User not authenticated" });
     }
 
     try {
-        // Obter token do Spotify do usuário
+        // Get the user's Spotify token
         const spotifyTokens = await getSpotifyTokens(userId);
         
         if (!spotifyTokens?.spotify_access_token) {
-            return res.status(401).json({ message: "Usuário não tem acesso Spotify conectado" });
+            return res.status(401).json({ message: "User does not have Spotify access connected" });
         }
 
         const artists = await fetchUserTopArtistsWithToken(
@@ -190,15 +190,15 @@ export async function fetchTopTracks(req: Request, res: Response) {
     const { timeRange = 'medium_term', limit = '20' } = req.query;
 
     if (!userId) {
-        return res.status(401).json({ message: "Usuário não autenticado" });
+        return res.status(401).json({ message: "User not authenticated" });
     }
 
     try {
-        // Obter token do Spotify do usuário
+        // Get the user's Spotify token
         const spotifyTokens = await getSpotifyTokens(userId);
         
         if (!spotifyTokens?.spotify_access_token) {
-            return res.status(401).json({ message: "Usuário não tem acesso Spotify conectado" });
+            return res.status(401).json({ message: "User does not have Spotify access connected" });
         }
 
         const tracks = await fetchUserTopTracksWithToken(
@@ -218,7 +218,7 @@ export async function fetchSpotifyPlaylist(req: Request, res: Response) {
     const { id } = req.params;
 
     if (!id) {
-        return res.status(400).json({ message: "ID da playlist é obrigatório" });
+        return res.status(400).json({ message: "Playlist ID is required" });
     }
 
     try {
@@ -235,34 +235,34 @@ export function loginUserSpotify(req: Request, res: Response) {
     const clientId = process.env.SPOTIFY_CLIENT_ID;
     const redirectUri = process.env.SPOTIFY_REDIRECT_URI || 'http://127.0.0.1:3004/api/spotify/callback';
     
-    // 1. Validação defensiva
+    // 1. Defensive validation
     if (!clientId) {
-        return res.status(500).json({ error: 'SPOTIFY_CLIENT_ID não configurado no servidor.' });
+        return res.status(500).json({ error: 'SPOTIFY_CLIENT_ID not configured on the server.' });
     }
 
-    // 2. Gerar o state para segurança (CSRF)
+    // 2. Generate the state for security (CSRF)
     const state = crypto.randomBytes(16).toString('hex');
     
-    // 3. Salvar o state nos cookies para verificar no callback (dura 10 minutos)
+    // 3. Save the state in cookies to verify in the callback (lasts 10 minutes)
     res.cookie('spotify_auth_state', state, { httpOnly: true, maxAge: 600000 });
 
     const scopes = 'user-top-read';
 
-    // 4. Montagem da URL incluindo o state
+    // 4. Build the URL including the state
     const authUrl = `https://accounts.spotify.com/authorize?` + 
         `response_type=code` +
         `&client_id=${encodeURIComponent(clientId)}` +
         `&scope=${encodeURIComponent(scopes)}` +
         `&redirect_uri=${encodeURIComponent(redirectUri)}` +
         `&state=${encodeURIComponent(state)}` +
-        // Força a tela de consentimento do Spotify mesmo quando o usuário já
-        // autorizou o app antes (caso contrário o Spotify redireciona direto).
+        // Force the Spotify consent screen even when the user has already
+        // authorized the app before (otherwise Spotify redirects directly).
         `&show_dialog=true`;
 
-    // 5. Resposta
-    // Quando chamado via XHR (fetch/axios com Accept: application/json), o token
-    // de sessão chega pelo header Authorization e o frontend faz o redirect.
-    // Isso evita depender de cookies em navegação cross-site (localhost x 127.0.0.1).
+    // 5. Response
+    // When called via XHR (fetch/axios with Accept: application/json), the session
+    // token comes through the Authorization header and the frontend does the redirect.
+    // This avoids depending on cookies in cross-site navigation (localhost x 127.0.0.1).
     if (req.headers.accept?.includes('application/json')) {
         return res.json({ url: authUrl });
     }
@@ -280,17 +280,17 @@ export async function spotifyCallback(req: Request, res: Response) {
     const redirectUri = process.env.SPOTIFY_REDIRECT_URI || 'http://127.0.0.1:3004/api/spotify/callback';
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-    // 1. Validação de Segurança (CSRF)
+    // 1. Security validation (CSRF)
     if (state === null || state !== storedState) {
         return res.redirect(`${frontendUrl}/dashboard?error=state_mismatch`);
     }
 
-    // Limpa o cookie de estado após a validação
+    // Clear the state cookie after validation
     res.clearCookie('spotify_auth_state');
 
-    // 2. Validação das variáveis de ambiente e do código recebido
+    // 2. Validation of environment variables and the received code
     if (!clientId || !clientSecret) {
-        logger.error('Configurações do Spotify ausentes no servidor.');
+        logger.error('Spotify configuration missing on the server.');
         return res.redirect(`${frontendUrl}/dashboard?error=server_config_error`);
     }
 
@@ -299,7 +299,7 @@ export async function spotifyCallback(req: Request, res: Response) {
     }
 
     try {
-        // 3. Trocar o código de autorização pelo Access Token
+        // 3. Exchange the authorization code for the Access Token
         const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
 
         const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
@@ -318,18 +318,18 @@ export async function spotifyCallback(req: Request, res: Response) {
         const tokenData = await tokenResponse.json();
 
         if (!tokenResponse.ok) {
-            logger.error('Falha ao obter token do Spotify', { tokenData });
+            logger.error('Failed to obtain Spotify token', { tokenData });
             return res.redirect(`${frontendUrl}/auth?error=token_exchange_failed`);
         }
 
         const { access_token, refresh_token, expires_in } = tokenData;
 
-        // 4. Buscar dados do usuário do Spotify
+        // 4. Fetch the user's data from Spotify
         let spotifyUser;
         try {
             spotifyUser = await getSpotifyUserProfile(access_token);
         } catch (error) {
-            logger.error('Erro ao buscar perfil do Spotify', { error });
+            logger.error('Error fetching Spotify profile', { error });
             return res.redirect(`${frontendUrl}/auth?error=profile_fetch_failed`);
         }
 
@@ -337,15 +337,15 @@ export async function spotifyCallback(req: Request, res: Response) {
         const spotifyEmail = spotifyUser.email;
         const spotifyUsername = spotifyUser.display_name || spotifyUser.id;
 
-        // 5. Procurar ou criar usuário no banco de dados
+        // 5. Find or create the user in the database
         let user;
 
-        // 5.0. PRIORIDADE: se já existe uma sessão myCDrecords ativa, o Spotify é
-        // apenas uma *conexão* de conta. Vincula os tokens ao usuário logado em
-        // vez de resolver/criar outro usuário pelo e-mail do Spotify (que pode
-        // ser diferente do e-mail de cadastro). Isso evita o caso em que o
-        // callback grava os tokens em um usuário e a sessão lê de outro
-        // (resultando em "conectado com sucesso" mas sem conexão de fato).
+        // 5.0. PRIORITY: if an active myCDrecords session already exists, Spotify is
+        // just an account *connection*. Link the tokens to the logged-in user instead
+        // of resolving/creating another user by the Spotify email (which may
+        // differ from the registration email). This avoids the case where the
+        // callback writes the tokens to one user and the session reads from another
+        // (resulting in "connected successfully" but without an actual connection).
         const sessionToken = req.cookies?.token;
         if (sessionToken) {
             try {
@@ -358,24 +358,24 @@ export async function spotifyCallback(req: Request, res: Response) {
                     user = sessionUser;
                 }
             } catch {
-                // Sessão inválida/expirada — segue para o fluxo de login por Spotify.
+                // Invalid/expired session — proceed to the Spotify login flow.
             }
         }
 
-        // Em seguida, tentar encontrar por OAuth (somente se não houver sessão).
+        // Next, try to find via OAuth (only if there is no session).
         if (!user) {
             user = await findOAuthUser('spotify', spotifyId);
         }
 
         if (!user) {
-            // Se não existe OAuth link, tentar encontrar por email
+            // If there is no OAuth link, try to find by email
             if (spotifyEmail) {
                 user = await findByEmail(spotifyEmail);
             }
 
-            // Se não existe usuário com esse email, criar novo
+            // If no user exists with that email, create a new one
             if (!user) {
-                // Gerar username único baseado no Spotify
+                // Generate a unique username based on Spotify
                 let username = spotifyUsername.toLowerCase().replace(/[^a-z0-9_]/g, '_');
                 let uniqueUsername = username;
                 let counter = 1;
@@ -393,21 +393,21 @@ export async function spotifyCallback(req: Request, res: Response) {
                         is_active: true
                     } as any);
                 } catch (error) {
-                    logger.error('Erro ao criar usuário', { error });
+                    logger.error('Error creating user', { error });
                     return res.redirect(`${frontendUrl}/auth?error=user_creation_failed`);
                 }
             }
         }
 
-        // Garante o vínculo OAuth (idempotente) para o usuário resolvido.
+        // Ensure the OAuth link (idempotent) for the resolved user.
         try {
             await storeOAuthProvider(user.id, 'spotify', spotifyId);
         } catch (error) {
-            logger.error('Erro ao armazenar OAuth provider', { error });
-            // Não falhar aqui, continuar com autenticação
+            logger.error('Error storing OAuth provider', { error });
+            // Do not fail here, continue with authentication
         }
 
-        // 6. Armazenar tokens do Spotify
+        // 6. Store the Spotify tokens
         try {
             await updateSpotifyTokens(
                 user.id,
@@ -416,40 +416,40 @@ export async function spotifyCallback(req: Request, res: Response) {
                 expires_in
             );
         } catch (error) {
-            // Conectar o Spotify é justamente persistir estes tokens; se falhar,
-            // não faz sentido reportar sucesso. Redireciona com erro explícito.
-            logger.error('Erro ao armazenar tokens do Spotify', { error });
+            // Connecting Spotify is precisely about persisting these tokens; if it fails,
+            // it makes no sense to report success. Redirect with an explicit error.
+            logger.error('Error storing Spotify tokens', { error });
             return res.redirect(`${frontendUrl}/dashboard?error=token_store_failed`);
         }
 
-        // 7. Gerar tokens JWT para o usuário mycdrecords
+        // 7. Generate JWT tokens for the mycdrecords user
         try {
             const tokensPair = await createTokensPair(user.id, user.email);
 
-            // 8. Retornar tokens de forma segura via cookies e URL
+            // 8. Return tokens securely via cookies and URL
             res.cookie('accessToken', tokensPair.accessToken, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax',
-                maxAge: 15 * 60 * 1000 // 15 minutos
+                maxAge: 15 * 60 * 1000 // 15 minutes
             });
 
             res.cookie('refreshToken', tokensPair.refreshToken, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax',
-                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 dias
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
             });
 
-            // Redirecionar para o dashboard com informação de sucesso
+            // Redirect to the dashboard with success information
             return res.redirect(`${frontendUrl}/dashboard?spotify=success`);
         } catch (error) {
-            logger.error('Erro ao gerar tokens JWT', { error });
+            logger.error('Error generating JWT tokens', { error });
             return res.redirect(`${frontendUrl}/dashboard?error=jwt_generation_failed`);
         }
 
     } catch (error) {
-        logger.error('Erro no callback do Spotify', { error });
+        logger.error('Error in the Spotify callback', { error });
         return res.redirect(`${frontendUrl}/dashboard?error=internal_server_error`);
     }
 }

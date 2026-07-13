@@ -7,8 +7,8 @@ const router = Router();
  * @swagger
  * /api/musicas/buscar:
  *   get:
- *     summary: Buscar músicas
- *     tags: [Músicas]
+ *     summary: Search tracks
+ *     tags: [Tracks]
  *     parameters:
  *       - in: query
  *         name: nome
@@ -18,7 +18,7 @@ const router = Router();
  *         example: Smells Like Teen Spirit
  *     responses:
  *       200:
- *         description: Lista de músicas
+ *         description: List of tracks
  */
 router.get("/buscar", searchTracks);
 

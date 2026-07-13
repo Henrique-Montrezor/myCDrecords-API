@@ -13,7 +13,7 @@ import {
 
 const router = Router();
 
-// Middleware: requer autenticação e permissão de admin
+// Middleware: requires authentication and admin permission
 router.use(authMiddleware);
 router.use(adminMiddleware);
 
@@ -21,7 +21,7 @@ router.use(adminMiddleware);
  * @swagger
  * /api/admin/users:
  *   get:
- *     summary: Listar usuários
+ *     summary: List users
  *     tags: [Admin]
  *     security:
  *       - BearerAuth: []
@@ -38,11 +38,11 @@ router.use(adminMiddleware);
  *           default: 20
  *     responses:
  *       200:
- *         description: Usuários listados com sucesso
+ *         description: Users listed successfully
  *       401:
- *         description: Não autenticado
+ *         description: Not authenticated
  *       403:
- *         description: Acesso negado
+ *         description: Access denied
  */
 router.get("/users", adminMiddleware, asyncHandler(listUsers));
 
@@ -50,7 +50,7 @@ router.get("/users", adminMiddleware, asyncHandler(listUsers));
  * @swagger
  * /api/admin/users/{id}/ban:
  *   patch:
- *     summary: Banir usuário
+ *     summary: Ban user
  *     tags: [Admin]
  *     security:
  *       - BearerAuth: []
@@ -71,11 +71,11 @@ router.get("/users", adminMiddleware, asyncHandler(listUsers));
  *                 type: string
  *     responses:
  *       200:
- *         description: Usuário banido com sucesso
+ *         description: User banned successfully
  *       400:
- *         description: Dados inválidos
+ *         description: Invalid data
  *       403:
- *         description: Acesso negado
+ *         description: Access denied
  */
 router.patch("/users/:id/ban", adminMiddleware, asyncHandler(banUserHandler));
 
@@ -83,7 +83,7 @@ router.patch("/users/:id/ban", adminMiddleware, asyncHandler(banUserHandler));
  * @swagger
  * /api/admin/users/{id}/unban:
  *   patch:
- *     summary: Desbanir usuário
+ *     summary: Unban user
  *     tags: [Admin]
  *     security:
  *       - BearerAuth: []
@@ -95,11 +95,11 @@ router.patch("/users/:id/ban", adminMiddleware, asyncHandler(banUserHandler));
  *         required: true
  *     responses:
  *       200:
- *         description: Usuário desbanido com sucesso
+ *         description: User unbanned successfully
  *       400:
- *         description: Dados inválidos
+ *         description: Invalid data
  *       403:
- *         description: Acesso negado
+ *         description: Access denied
  */
 router.patch("/users/:id/unban", adminMiddleware, asyncHandler(unbanUserHandler));
 
@@ -107,7 +107,7 @@ router.patch("/users/:id/unban", adminMiddleware, asyncHandler(unbanUserHandler)
  * @swagger
  * /api/admin/reviews/{id}:
  *   delete:
- *     summary: Deletar review
+ *     summary: Delete review
  *     tags: [Admin]
  *     security:
  *       - BearerAuth: []
@@ -119,11 +119,11 @@ router.patch("/users/:id/unban", adminMiddleware, asyncHandler(unbanUserHandler)
  *         required: true
  *     responses:
  *       200:
- *         description: Review deletada com sucesso
+ *         description: Review deleted successfully
  *       400:
- *         description: Dados inválidos
+ *         description: Invalid data
  *       403:
- *         description: Acesso negado
+ *         description: Access denied
  */
 router.delete("/reviews/:id", adminMiddleware, asyncHandler(deleteReviewHandler));
 
@@ -131,7 +131,7 @@ router.delete("/reviews/:id", adminMiddleware, asyncHandler(deleteReviewHandler)
  * @swagger
  * /api/admin/comments/{id}:
  *   delete:
- *     summary: Deletar comentário
+ *     summary: Delete comment
  *     tags: [Admin]
  *     security:
  *       - BearerAuth: []
@@ -143,11 +143,11 @@ router.delete("/reviews/:id", adminMiddleware, asyncHandler(deleteReviewHandler)
  *         required: true
  *     responses:
  *       200:
- *         description: Comentário deletado com sucesso
+ *         description: Comment deleted successfully
  *       400:
- *         description: Dados inválidos
+ *         description: Invalid data
  *       403:
- *         description: Acesso negado
+ *         description: Access denied
  */
 router.delete("/comments/:id", adminMiddleware, asyncHandler(deleteCommentHandler));
 
@@ -155,7 +155,7 @@ router.delete("/comments/:id", adminMiddleware, asyncHandler(deleteCommentHandle
  * @swagger
  * /api/admin/reports:
  *   get:
- *     summary: Listar denúncias
+ *     summary: List reports
  *     tags: [Admin]
  *     security:
  *       - BearerAuth: []
@@ -177,11 +177,11 @@ router.delete("/comments/:id", adminMiddleware, asyncHandler(deleteCommentHandle
  *           enum: [open, investigating, resolved, dismissed]
  *     responses:
  *       200:
- *         description: Denúncias listadas com sucesso
+ *         description: Reports listed successfully
  *       401:
- *         description: Não autenticado
+ *         description: Not authenticated
  *       403:
- *         description: Acesso negado
+ *         description: Access denied
  */
 router.get("/reports", adminMiddleware, asyncHandler(listReports));
 

@@ -3,7 +3,7 @@ import { RowDataPacket, ResultSetHeader } from "mysql2";
 
 export type VoteTarget = "review" | "comment";
 
-// Segue um usuário (idempotente)
+// Follows a user (idempotent)
 export async function followUser(followerId: number, followingId: number) {
     const connection = await initDatabase();
     const [result] = await connection.query<ResultSetHeader>(
@@ -13,7 +13,7 @@ export async function followUser(followerId: number, followingId: number) {
     return result.affectedRows > 0;
 }
 
-// Deixa de seguir
+// Unfollows
 export async function unfollowUser(followerId: number, followingId: number) {
     const connection = await initDatabase();
     const [result] = await connection.query<ResultSetHeader>(
@@ -23,7 +23,7 @@ export async function unfollowUser(followerId: number, followingId: number) {
     return result.affectedRows > 0;
 }
 
-// Lista quem segue o usuário
+// Lists who follows the user
 export async function getFollowers(userId: number) {
     const connection = await initDatabase();
     const [rows] = await connection.query<RowDataPacket[]>(
@@ -37,7 +37,7 @@ export async function getFollowers(userId: number) {
     return rows || [];
 }
 
-// Lista quem o usuário segue
+// Lists who the user follows
 export async function getFollowing(userId: number) {
     const connection = await initDatabase();
     const [rows] = await connection.query<RowDataPacket[]>(
@@ -51,7 +51,7 @@ export async function getFollowing(userId: number) {
     return rows || [];
 }
 
-// Contadores de seguidores/seguindo
+// Followers/following counters
 export async function getFollowCounts(userId: number) {
     const connection = await initDatabase();
     const [rows] = await connection.query<RowDataPacket[]>(
@@ -63,7 +63,7 @@ export async function getFollowCounts(userId: number) {
     return rows[0] || { followers: 0, following: 0 };
 }
 
-// Feed de avaliações dos usuários seguidos
+// Feed of reviews from followed users
 export async function getFollowingFeed(userId: number, page: number) {
     const connection = await initDatabase();
     const offset = (page - 1) * 10;
@@ -89,7 +89,7 @@ export async function getFollowingFeed(userId: number, page: number) {
     return rows || [];
 }
 
-// Cria ou atualiza o voto do usuário em um alvo
+// Creates or updates the user's vote on a target
 export async function upsertVote(
     userId: number,
     targetType: VoteTarget,
@@ -105,7 +105,7 @@ export async function upsertVote(
     );
 }
 
-// Remove o voto do usuário
+// Removes the user's vote
 export async function removeVote(userId: number, targetType: VoteTarget, targetId: number) {
     const connection = await initDatabase();
     const [result] = await connection.query<ResultSetHeader>(
@@ -115,7 +115,7 @@ export async function removeVote(userId: number, targetType: VoteTarget, targetI
     return result.affectedRows > 0;
 }
 
-// Pontuação agregada de um alvo
+// Aggregate score of a target
 export async function getVoteScore(targetType: VoteTarget, targetId: number) {
     const connection = await initDatabase();
     const [rows] = await connection.query<RowDataPacket[]>(
@@ -130,7 +130,7 @@ export async function getVoteScore(targetType: VoteTarget, targetId: number) {
     return rows[0] || { score: 0, upvotes: 0, downvotes: 0 };
 }
 
-// Voto do usuário atual em um alvo (ou null)
+// Current user's vote on a target (or null)
 export async function getUserVote(userId: number, targetType: VoteTarget, targetId: number) {
     const connection = await initDatabase();
     const [rows] = await connection.query<RowDataPacket[]>(

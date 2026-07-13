@@ -9,8 +9,8 @@ router.get("/em-alta", getTrendingAlbums);
  * @swagger
  * /api/albuns/buscar:
  *   get:
- *     summary: Buscar álbuns
- *     tags: [Álbuns]
+ *     summary: Search albums
+ *     tags: [Albums]
  *     parameters:
  *       - in: query
  *         name: nome
@@ -20,7 +20,7 @@ router.get("/em-alta", getTrendingAlbums);
  *         example: Nevermind
  *     responses:
  *       200:
- *         description: Lista de álbuns
+ *         description: List of albums
  */
 
 router.get("/buscar", searchAlbums);
@@ -29,8 +29,8 @@ router.get("/buscar", searchAlbums);
  * @swagger
  * /api/albuns/info:
  *   get:
- *     summary: Buscar informações de um álbum
- *     tags: [Álbuns]
+ *     summary: Fetch album information
+ *     tags: [Albums]
  *     parameters:
  *       - in: query
  *         name: nome
@@ -40,7 +40,7 @@ router.get("/buscar", searchAlbums);
  *         example: Nevermind
  *     responses:
  *       200:
- *         description: Informações do álbum
+ *         description: Album information
  */
 router.get("/info", getAlbumInfo);
 
@@ -48,8 +48,8 @@ router.get("/info", getAlbumInfo);
  * @swagger
  * /api/albuns/:id:
  *   get:
- *     summary: Buscar informações de um álbum
- *     tags: [Álbuns]
+ *     summary: Fetch album information
+ *     tags: [Albums]
  *     parameters:
  *       - in: path
  *         name: id
@@ -59,7 +59,7 @@ router.get("/info", getAlbumInfo);
  *         example: 123456789
  *     responses:
  *       200:
- *         description: Informações do álbum pelo ID
+ *         description: Album information by ID
  */
 router.get("/:id", getAlbumById);
 

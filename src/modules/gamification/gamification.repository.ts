@@ -1,7 +1,7 @@
 import { initDatabase } from "../../mysql2/init.database";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
 
-// Conta quantas avaliações o usuário já publicou
+// Counts how many reviews the user has already published
 export async function countUserReviews(userId: number): Promise<number> {
     const connection = await initDatabase();
     const [rows] = await connection.query<RowDataPacket[]>(
@@ -11,8 +11,8 @@ export async function countUserReviews(userId: number): Promise<number> {
     return Number(rows[0]?.total ?? 0);
 }
 
-// Concede ao usuário todos os emblemas cujo limiar foi atingido (idempotente).
-// Retorna a quantidade de emblemas recém-concedidos.
+// Grants the user all badges whose threshold has been reached (idempotent).
+// Returns the number of newly granted badges.
 export async function awardEligibleBadges(userId: number, reviewCount: number): Promise<number> {
     const connection = await initDatabase();
     const [result] = await connection.query<ResultSetHeader>(
@@ -23,7 +23,7 @@ export async function awardEligibleBadges(userId: number, reviewCount: number): 
     return result.affectedRows;
 }
 
-// Emblemas conquistados por um usuário
+// Badges earned by a user
 export async function getUserBadges(userId: number) {
     const connection = await initDatabase();
     const [rows] = await connection.query<RowDataPacket[]>(
@@ -37,7 +37,7 @@ export async function getUserBadges(userId: number) {
     return rows || [];
 }
 
-// Catálogo completo de emblemas
+// Full badge catalog
 export async function getAllBadges() {
     const connection = await initDatabase();
     const [rows] = await connection.query<RowDataPacket[]>(

@@ -2,16 +2,16 @@ import { countUserReviews, awardEligibleBadges } from "./gamification.repository
 import { logger } from "../../utils/logger";
 
 /**
- * Avalia e concede emblemas ao usuário com base na quantidade de avaliações.
- * Deve ser chamada após o usuário publicar uma avaliação. Não lança erro para
- * não interromper o fluxo principal — apenas registra falhas no log.
+ * Evaluates and grants badges to the user based on the number of reviews.
+ * Should be called after the user publishes a review. Does not throw an error
+ * to avoid interrupting the main flow — it only logs failures.
  */
 export async function evaluateUserBadges(userId: number): Promise<number> {
     try {
         const reviewCount = await countUserReviews(userId);
         return await awardEligibleBadges(userId, reviewCount);
     } catch (error) {
-        logger.error("Erro ao avaliar emblemas do usuário", { error });
+        logger.error("Error evaluating user badges", { error });
         return 0;
     }
 }

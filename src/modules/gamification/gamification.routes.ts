@@ -12,19 +12,19 @@ const router = Router();
 /**
  * @swagger
  * tags:
- *   - name: Gamificação
- *     description: Emblemas e conquistas por avaliações
+ *   - name: Gamification
+ *     description: Badges and achievements from reviews
  */
 
 /**
  * @swagger
  * /api/gamification/badges:
  *   get:
- *     summary: Catálogo de emblemas disponíveis
- *     tags: [Gamificação]
+ *     summary: Catalog of available badges
+ *     tags: [Gamification]
  *     responses:
  *       200:
- *         description: Lista de emblemas
+ *         description: List of badges
  */
 router.get("/badges", asyncHandler(listBadgesController));
 
@@ -32,15 +32,15 @@ router.get("/badges", asyncHandler(listBadgesController));
  * @swagger
  * /api/gamification/me/badges:
  *   get:
- *     summary: Emblemas conquistados pelo usuário autenticado
- *     tags: [Gamificação]
+ *     summary: Badges earned by the authenticated user
+ *     tags: [Gamification]
  *     security:
  *       - BearerAuth: []
  *     responses:
  *       200:
- *         description: Emblemas do usuário
+ *         description: User badges
  *       401:
- *         description: Não autenticado
+ *         description: Not authenticated
  */
 router.get("/me/badges", authMiddleware, asyncHandler(myBadgesController));
 
@@ -48,8 +48,8 @@ router.get("/me/badges", authMiddleware, asyncHandler(myBadgesController));
  * @swagger
  * /api/gamification/users/{userId}/badges:
  *   get:
- *     summary: Emblemas conquistados por um usuário
- *     tags: [Gamificação]
+ *     summary: Badges earned by a user
+ *     tags: [Gamification]
  *     parameters:
  *       - in: path
  *         name: userId
@@ -58,7 +58,7 @@ router.get("/me/badges", authMiddleware, asyncHandler(myBadgesController));
  *           type: integer
  *     responses:
  *       200:
- *         description: Emblemas do usuário
+ *         description: User badges
  */
 router.get("/users/:userId/badges", asyncHandler(userBadgesController));
 

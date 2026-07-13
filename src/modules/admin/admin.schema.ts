@@ -2,17 +2,17 @@ import { z } from "zod";
 
 export const idParamSchema = z.object({
   id: z.coerce
-    .number({ invalid_type_error: "ID inválido" })
-    .int("ID inválido")
-    .positive("ID inválido"),
+    .number({ invalid_type_error: "Invalid ID" })
+    .int("Invalid ID")
+    .positive("Invalid ID"),
 });
 
 export const banUserSchema = z.object({
   reason: z
-    .string({ required_error: "Motivo do banimento é obrigatório" })
+    .string({ required_error: "Ban reason is required" })
     .trim()
-    .min(1, "Motivo do banimento é obrigatório")
-    .max(1000, "Motivo muito longo"),
+    .min(1, "Ban reason is required")
+    .max(1000, "Reason too long"),
 });
 
 export const adminPaginationQuerySchema = z.object({

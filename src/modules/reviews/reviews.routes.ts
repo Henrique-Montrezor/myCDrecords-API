@@ -9,8 +9,8 @@ const router = Router();
  * @swagger
  * /api/reviews/albums/{albumId}/reviews:
  *   get:
- *     summary: Lista as avaliações de um álbum específico
- *     description: Retorna uma lista paginada de avaliações (reviews) feitas para um determinado álbum. Requer autenticação.
+ *     summary: Lists the reviews of a specific album
+ *     description: Returns a paginated list of reviews made for a given album. Requires authentication.
  *     tags: 
  *       - Reviews
  *     security:
@@ -21,17 +21,17 @@ const router = Router();
  *         required: true
  *         schema:
  *           type: string
- *           description: ID numérico ou string do álbum.
+ *           description: Numeric or string ID of the album.
  *       - in: query
  *         name: page
  *         required: false
  *         schema:
  *           type: integer
  *           default: 1
- *           description: Número da página para a paginação (traz 10 registros por página).
+ *           description: Page number for pagination (returns 10 records per page).
  *     responses:
  *       200:
- *         description: Lista de avaliações retornada com sucesso.
+ *         description: List of reviews returned successfully.
  *         content:
  *           application/json:
  *             schema:
@@ -47,15 +47,15 @@ const router = Router();
  *                     example: 5
  *                   text:
  *                     type: string
- *                     example: "Um dos melhores álbuns de todos os tempos!"
+ *                     example: "One of the best albums of all time!"
  *                   created_at:
  *                     type: string
  *                     format: date-time
  *                     example: "2023-10-27T14:30:00Z"
  *       401:
- *         description: Não autorizado. O token de autenticação está ausente, inválido ou expirado.
+ *         description: Unauthorized. The authentication token is missing, invalid, or expired.
  *       500:
- *         description: Erro interno do servidor.
+ *         description: Internal server error.
  */
 router.get('/albums/:albumId/reviews', authMiddleware, asyncHandler(getReviewsByAlbumIdController));
 
@@ -63,8 +63,8 @@ router.get('/albums/:albumId/reviews', authMiddleware, asyncHandler(getReviewsBy
  * @swagger
  * /api/users/{userId}/reviews:
  *   get:
- *     summary: Lista as reviews do usuario
- *     description: Retorna as reviews feitas pelo user.id selecionado. Requer Autorizacao.
+ *     summary: Lists the user's reviews
+ *     description: Returns the reviews made by the selected user.id. Requires authorization.
  *     tags: 
  *       - Reviews
  *     security:
@@ -75,17 +75,17 @@ router.get('/albums/:albumId/reviews', authMiddleware, asyncHandler(getReviewsBy
  *         required: true
  *         schema:
  *           type: string
- *           description: ID numérico ou string do usuario.
+ *           description: Numeric or string ID of the user.
  *       - in: query
  *         name: page
  *         required: false
  *         schema:
  *           type: integer
  *           default: 1
- *           description: Número da página para a paginação (traz 10 registros por página).
+ *           description: Page number for pagination (returns 10 records per page).
  *     responses:
  *       200:
- *         description: Lista de avaliações retornada com sucesso.
+ *         description: List of reviews returned successfully.
  *         content:
  *           application/json:
  *             schema:
@@ -101,7 +101,7 @@ router.get('/albums/:albumId/reviews', authMiddleware, asyncHandler(getReviewsBy
  *                     example: 42
  *                   username:
  *                     type: string
- *                     example: "usuario_musical"
+ *                     example: "music_user"
  *                   album_id:
  *                     type: integer
  *                     example: 15
@@ -110,7 +110,7 @@ router.get('/albums/:albumId/reviews', authMiddleware, asyncHandler(getReviewsBy
  *                     example: "Abbey Road"
  *                   album_image:
  *                     type: string
- *                     example: "https://exemplo.com/abbey-road.jpg"
+ *                     example: "https://example.com/abbey-road.jpg"
  *                   album_artist:
  *                     type: string
  *                     example: "The Beatles"
@@ -119,15 +119,15 @@ router.get('/albums/:albumId/reviews', authMiddleware, asyncHandler(getReviewsBy
  *                     example: 5
  *                   text:
  *                     type: string
- *                     example: "Um dos melhores álbuns de todos os tempos!"
+ *                     example: "One of the best albums of all time!"
  *                   created_at:
  *                     type: string
  *                     format: date-time
  *                     example: "2023-10-27T14:30:00Z"
  *       401:
- *         description: Não autorizado. O token de autenticação está ausente, inválido ou expirado.
+ *         description: Unauthorized. The authentication token is missing, invalid, or expired.
  *       500:
- *         description: Erro interno do servidor.
+ *         description: Internal server error.
  */
 router.get('/users/:userId/reviews', authMiddleware, asyncHandler(getReviewsByUserIdController))
 
@@ -135,8 +135,8 @@ router.get('/users/:userId/reviews', authMiddleware, asyncHandler(getReviewsByUs
  * @swagger
  * /api/reviews/post-review:
  *   post:
- *     summary: Cria uma nova avaliação para um álbum
- *     description: Permite que um usuário autenticado publique uma nova avaliação (review) com uma nota de 1 a 5.
+ *     summary: Creates a new review for an album
+ *     description: Allows an authenticated user to publish a new review with a rating from 1 to 5.
  *     tags: 
  *       - Reviews
  *     security:
@@ -155,27 +155,27 @@ router.get('/users/:userId/reviews', authMiddleware, asyncHandler(getReviewsByUs
  *             properties:
  *               albumId:
  *                 type: string
- *                 description: ID do álbum
+ *                 description: Album ID
  *                 example: "3mH6qwIy9crq0I9YQbOuDf"
  *               rating:
  *                 type: integer
- *                 description: Nota da avaliação (deve ser entre 1 e 5)
+ *                 description: Review rating (must be between 1 and 5)
  *                 minimum: 1
  *                 maximum: 5
  *                 example: 5
  *               text:
  *                 type: string
- *                 description: Texto da avaliação (Opcional)
- *                 example: "Um clássico absoluto! Produção impecável."
+ *                 description: Review text (Optional)
+ *                 example: "An absolute classic! Flawless production."
  *     responses:
  *       201:
- *         description: Avaliação criada com sucesso.
+ *         description: Review created successfully.
  *       400:
- *         description: Erro de validação. Pode ocorrer por falta de campos obrigatórios ou nota fora do padrão.
+ *         description: Validation error. May occur due to missing required fields or a rating out of range.
  *       401:
- *         description: Não autorizado. O token de autenticação está ausente ou inválido.
+ *         description: Unauthorized. The authentication token is missing or invalid.
  *       500:
- *         description: Erro interno do servidor.
+ *         description: Internal server error.
  */
 router.post('/post-review', authMiddleware, asyncHandler(postReviewController));
 
@@ -183,8 +183,8 @@ router.post('/post-review', authMiddleware, asyncHandler(postReviewController));
  * @swagger
  * /api/reviews/{reviewId}/delete:
  *   delete:
- *     summary: Deleta uma avaliação pelo ID
- *     description: Permite que um usuário autenticado exclua uma avaliação específica.
+ *     summary: Deletes a review by ID
+ *     description: Allows an authenticated user to delete a specific review.
  *     tags: 
  *       - Reviews
  *     security:
@@ -195,14 +195,14 @@ router.post('/post-review', authMiddleware, asyncHandler(postReviewController));
  *         required: true
  *         schema:
  *           type: integer
- *           description: ID da avaliação a ser excluída.
+ *           description: ID of the review to be deleted.
  *     responses:
  *       204:
- *         description: Avaliação excluída com sucesso. Resposta vazia.
+ *         description: Review deleted successfully. Empty response.
  *       401:
- *         description: Não autorizado. O token de autenticação está ausente ou inválido.
+ *         description: Unauthorized. The authentication token is missing or invalid.
  *       500:
- *         description: Erro interno do servidor.
+ *         description: Internal server error.
  */
 router.delete('/:reviewId/delete', authMiddleware, asyncHandler(deleteReviewController))
 
@@ -210,8 +210,8 @@ router.delete('/:reviewId/delete', authMiddleware, asyncHandler(deleteReviewCont
  * @swagger
  * /api/reviews/{reviewId}/update:
  *   put:
- *     summary: Atualiza uma avaliação pelo ID
- *     description: Permite que um usuário autenticado atualize uma avaliação específica.
+ *     summary: Updates a review by ID
+ *     description: Allows an authenticated user to update a specific review.
  *     tags:
  *       - Reviews
  *     security:
@@ -222,7 +222,7 @@ router.delete('/:reviewId/delete', authMiddleware, asyncHandler(deleteReviewCont
  *         required: true
  *         schema:
  *           type: integer
- *           description: ID da avaliação a ser atualizada.
+ *           description: ID of the review to be updated.
  *     requestBody:
  *       required: true
  *       content:
@@ -232,25 +232,25 @@ router.delete('/:reviewId/delete', authMiddleware, asyncHandler(deleteReviewCont
  *             properties:
  *               rating:
  *                 type: integer
- *                 description: Nota da avaliação (deve ser entre 1 e 5)
+ *                 description: Review rating (must be between 1 and 5)
  *                 minimum: 1
  *                 maximum: 5
  *                 example: 5
  *               text:
  *                 type: string
- *                 description: Texto da avaliação (Opcional)
- *                 example: "Um clássico absoluto! Produção impecável."
+ *                 description: Review text (Optional)
+ *                 example: "An absolute classic! Flawless production."
  *     responses:
  *       200:
- *         description: Avaliação atualizada com sucesso.
+ *         description: Review updated successfully.
  *       400:
- *         description: Erro de validação. Pode ocorrer por nota fora do padrão ou campos inválidos.
+ *         description: Validation error. May occur due to a rating out of range or invalid fields.
  *       401:
- *         description: Não autorizado. O token de autenticação está ausente ou inválido.
+ *         description: Unauthorized. The authentication token is missing or invalid.
  *       404:
- *         description: Avaliação não encontrada.
+ *         description: Review not found.
  *       500:
- *         description: Erro interno do servidor.
+ *         description: Internal server error.
  */
 router.put('/:reviewId/update', authMiddleware, asyncHandler(updateReviewController));
 

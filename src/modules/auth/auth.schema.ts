@@ -3,20 +3,20 @@ import { z } from "zod";
 export const registerSchema = z
   .object({
     username: z
-      .string({ required_error: "Username é obrigatório" })
+      .string({ required_error: "Username is required" })
       .trim()
-      .min(3, "Username deve ter pelo menos 3 caracteres")
-      .max(255, "Username muito longo"),
+      .min(3, "Username must be at least 3 characters")
+      .max(255, "Username too long"),
     email: z
-      .string({ required_error: "Email é obrigatório" })
+      .string({ required_error: "Email is required" })
       .trim()
-      .email("Email inválido")
-      .max(255, "Email muito longo"),
+      .email("Invalid email")
+      .max(255, "Email too long"),
     password: z
-      .string({ required_error: "Senha é obrigatória" })
-      .min(8, "Senha deve ter pelo menos 8 caracteres")
-      .max(128, "Senha muito longa"),
-    confirmPassword: z.string({ required_error: "Confirmação de senha é obrigatória" }),
+      .string({ required_error: "Password is required" })
+      .min(8, "Password must be at least 8 characters")
+      .max(128, "Password too long"),
+    confirmPassword: z.string({ required_error: "Password confirmation is required" }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -24,22 +24,22 @@ export const registerSchema = z
   });
 
 export const loginSchema = z.object({
-  email: z.string({ required_error: "Email é obrigatório" }).trim().email("Email inválido"),
-  password: z.string({ required_error: "Senha é obrigatória" }).min(1, "Senha é obrigatória"),
+  email: z.string({ required_error: "Email is required" }).trim().email("Invalid email"),
+  password: z.string({ required_error: "Password is required" }).min(1, "Password is required"),
 });
 
 export const passwordResetRequestSchema = z.object({
-  email: z.string({ required_error: "Email é obrigatório" }).trim().email("Email inválido"),
+  email: z.string({ required_error: "Email is required" }).trim().email("Invalid email"),
 });
 
 export const passwordResetSchema = z
   .object({
-    token: z.string({ required_error: "Token é obrigatório" }).min(1, "Token é obrigatório"),
+    token: z.string({ required_error: "Token is required" }).min(1, "Token is required"),
     password: z
-      .string({ required_error: "Senha é obrigatória" })
-      .min(8, "Senha deve ter pelo menos 8 caracteres")
-      .max(128, "Senha muito longa"),
-    confirmPassword: z.string({ required_error: "Confirmação de senha é obrigatória" }),
+      .string({ required_error: "Password is required" })
+      .min(8, "Password must be at least 8 characters")
+      .max(128, "Password too long"),
+    confirmPassword: z.string({ required_error: "Password confirmation is required" }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -47,9 +47,9 @@ export const passwordResetSchema = z
   });
 
 export const emailVerificationSchema = z.object({
-  token: z.string({ required_error: "Token é obrigatório" }).min(1, "Token é obrigatório"),
+  token: z.string({ required_error: "Token is required" }).min(1, "Token is required"),
 });
 
 export const emailUpdateSchema = z.object({
-  email: z.string({ required_error: "Email é obrigatório" }).trim().email("Email inválido"),
+  email: z.string({ required_error: "Email is required" }).trim().email("Invalid email"),
 });

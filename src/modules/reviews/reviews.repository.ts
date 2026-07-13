@@ -50,16 +50,16 @@ export async function postReview(userId: number,
 
 // delete a review
 export async function deleteReview(reviewId: number, userId: number) {
-    // Apaga comentários atrelados e a review em uma única transação,
-    // garantindo que nenhum dado fique inconsistente em caso de falha.
+    // Deletes attached comments and the review in a single transaction,
+    // ensuring no data is left inconsistent on failure.
     return withTransaction(async (connection) => {
-        // 1. Remove os comentários vinculados à review
+        // 1. Remove the comments linked to the review
         await connection.query<ResultSetHeader>(
             `DELETE FROM comments WHERE review_id = ?`,
             [reviewId]
         );
 
-        // 2. Remove a review garantindo a propriedade do usuário
+        // 2. Remove the review ensuring the user's ownership
         const [result] = await connection.query<ResultSetHeader>(
             `DELETE FROM reviews WHERE id = ? AND user_id = ?`,
             [reviewId, userId]
@@ -100,7 +100,7 @@ export async function getReviewsByUserId(userId: number, page: number) {
 export async function updateReview(reviewId: number, userId: number, rating: number, text: string) {
     const connection = await initDatabase();
 
-    // O WHERE agora exige que o ID coincida E que o dono seja o userId fornecido
+    // The WHERE now requires the ID to match AND the owner to be the provided userId
     const query = `
         UPDATE reviews
         SET rating = ?, text = ?
@@ -109,7 +109,7 @@ export async function updateReview(reviewId: number, userId: number, rating: num
 
     const [result] = await connection.query<ResultSetHeader>(query, [rating, text, reviewId, userId]);
     
-    // Retorna true se alguma linha foi atualizada, false caso contrário
+    // Returns true if any row was updated, false otherwise
     return result.affectedRows > 0;
 }
 
@@ -124,5 +124,5 @@ export async function checkReview(userId: number, albumId: string): Promise<bool
     `;
 
     const [rows] = await connection.query<RowDataPacket[]>(query, [userId, albumId]);
-    return rows.length > 0; // Agora retorna true se já existir uma review, ativando corretamente o erro 409
+    return rows.length > 0; // Now returns true if a review already exists, correctly triggering the 409 error
 }

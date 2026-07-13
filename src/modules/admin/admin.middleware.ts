@@ -16,28 +16,28 @@ export async function adminMiddleware(req: Request, res: Response, next: NextFun
     const token = req.cookies.token || req.headers.authorization?.split(" ")[1];   
     
     if (!token) {
-      return res.status(401).json({ message: "Token não fornecido" });
+      return res.status(401).json({ message: "Token not provided" });
     }
 
     if (!req.user || !req.user.id) {
-      return res.status(401).json({ message: "Não autenticado" });
+      return res.status(401).json({ message: "Not authenticated" });
     }
 
-    // Conectando e executando a query (assumindo uma biblioteca como mysql2 ou similar)
+    // Connecting and running the query (assuming a library like mysql2 or similar)
     const connection = await initDatabase();
     const query = `SELECT user_id FROM admins WHERE user_id = ?`;
     
     const [rows]: any = await connection.execute(query, [req.user.id]);
 
-    // Se o array de resultados for vazio, o usuário não está na tabela admin
+    // If the results array is empty, the user is not in the admin table
     if (rows.length === 0) {
-      return res.status(403).json({ message: "Acesso negado - privilégios de admin necessários" });
+      return res.status(403).json({ message: "Access denied - admin privileges required" });
     }
 
     next();
   } catch (error) {
-    logger.error("Erro no middleware de admin", { error });
-    return res.status(500).json({ message: "Erro ao verificar permissões de admin" });
+    logger.error("Error in admin middleware", { error });
+    return res.status(500).json({ message: "Error verifying admin permissions" });
   }
 }
 

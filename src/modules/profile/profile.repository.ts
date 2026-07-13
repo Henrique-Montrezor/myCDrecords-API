@@ -71,8 +71,8 @@ export async function getmyprofile(user_id: number): Promise<Profile | null> {
 
 
 
-// Deletar perfil
+// Delete profile
 //export async function deleteProfile(user_id: number)
 
-// Obter todos os dados do usuário com seu perfil (JOIN)
+// Get all user data with their profile (JOIN)
 //export async function getUserWithProfile(user_id: number)

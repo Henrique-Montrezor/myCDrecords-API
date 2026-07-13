@@ -265,16 +265,16 @@ export async function addAdminRoleToUsers(req: Request, res: Response) {
 
         const placeholders = emailsToMakeAdmin.map(() => '?').join(', ');
         
-        // CORREÇÃO: Trocado UPDATE por INSERT IGNORE ... SELECT
+        // FIX: Replaced UPDATE with INSERT IGNORE ... SELECT
         const query = `
             INSERT IGNORE INTO admins (user_id)
             SELECT id FROM users WHERE email IN (${placeholders})
         `;
 
-        // Executa a query passando o array de emails para preencher os placeholders (?)
+        // Runs the query passing the array of emails to fill the placeholders (?)
         const [result]: any = await connection.query(query, emailsToMakeAdmin);
         
-        logger.info(`Admin role verification complete. Linhas afetadas: ${result.affectedRows}`);
+        logger.info(`Admin role verification complete. Affected rows: ${result.affectedRows}`);
     }
     catch (error) {
         logger.error('Error assigning admin role to users', { error });
@@ -305,7 +305,7 @@ export async function createReviewTables(req: Request, res: Response) {
     }
 };
 
-// Function to create the follows table (social: seguir usuários)
+// Function to create the follows table (social: following users)
 export async function createFollowsTable(req: Request, res: Response) {
     try {
         const connection = await initDatabase();
@@ -328,7 +328,7 @@ export async function createFollowsTable(req: Request, res: Response) {
     }
 }
 
-// Function to create the votes table (social: up/downvotes em reviews e comentários)
+// Function to create the votes table (social: up/downvotes on reviews and comments)
 export async function createVotesTable(req: Request, res: Response) {
     try {
         const connection = await initDatabase();
@@ -353,7 +353,7 @@ export async function createVotesTable(req: Request, res: Response) {
     }
 }
 
-// Function to create the lists table (coleções/listas personalizadas)
+// Function to create the lists table (custom collections/lists)
 export async function createListsTable(req: Request, res: Response) {
     try {
         const connection = await initDatabase();
@@ -377,7 +377,7 @@ export async function createListsTable(req: Request, res: Response) {
     }
 }
 
-// Function to create the list_items table (álbuns dentro de uma lista)
+// Function to create the list_items table (albums inside a list)
 export async function createListItemsTable(req: Request, res: Response) {
     try {
         const connection = await initDatabase();
@@ -402,7 +402,7 @@ export async function createListItemsTable(req: Request, res: Response) {
     }
 }
 
-// Function to create the badges catalog table (gamificação)
+// Function to create the badges catalog table (gamification)
 export async function createBadgesTable(req: Request, res: Response) {
     try {
         const connection = await initDatabase();
@@ -423,7 +423,7 @@ export async function createBadgesTable(req: Request, res: Response) {
     }
 }
 
-// Function to create the user_badges table (emblemas conquistados por usuário)
+// Function to create the user_badges table (badges earned by a user)
 export async function createUserBadgesTable(req: Request, res: Response) {
     try {
         const connection = await initDatabase();
@@ -445,15 +445,15 @@ export async function createUserBadgesTable(req: Request, res: Response) {
     }
 }
 
-// Seed dos emblemas padrão baseados em quantidade de avaliações
+// Seed of the default badges based on the number of reviews
 export async function seedDefaultBadges(req: Request, res: Response) {
     try {
         const connection = await initDatabase();
         await connection.query(`
             INSERT IGNORE INTO badges (code, name, description, threshold) VALUES
-                ('critico_novato', 'Crítico Novato', 'Publicou 10 avaliações', 10),
-                ('ouvinte_assiduo', 'Ouvinte Assíduo', 'Publicou 50 avaliações', 50),
-                ('lenda_da_critica', 'Lenda da Crítica', 'Publicou 100 avaliações', 100)
+                ('critico_novato', 'Rookie Critic', 'Published 10 reviews', 10),
+                ('ouvinte_assiduo', 'Avid Listener', 'Published 50 reviews', 50),
+                ('lenda_da_critica', 'Critic Legend', 'Published 100 reviews', 100)
         `);
         logger.info('Default badges seeded successfully');
     } catch (error) {
