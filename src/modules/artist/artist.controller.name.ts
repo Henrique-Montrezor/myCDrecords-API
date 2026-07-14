@@ -2,15 +2,15 @@ import { Request, Response } from "express";
 import { fetchMusicBrainz } from "../musicbrainz/musicbrainz.service";
 
 export async function getArtistByName(req: Request, res: Response) {
-  const { nome } = req.query;
+  const name = req.query.name ?? req.query.nome;
 
-  if (!nome) {
+  if (!name) {
     return res.status(400).json({ error: "Name is required" });
   }
 
   // 1. Search for artist
   const search = await fetchMusicBrainz("artist/", {
-    query: `artist:${nome}`,
+    query: `artist:${name}`,
     limit: 1
   });
 

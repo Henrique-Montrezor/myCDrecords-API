@@ -97,7 +97,7 @@ router.get('/playlist/:id', fetchSpotifyPlaylist);
  *     summary: Get the user's top artists
  *     tags: [Spotify]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: query
  *         name: timeRange
@@ -125,7 +125,7 @@ router.get('/top-artists', authMiddleware, getTopArtists);
  *     summary: Get the user's top artists (alternative route)
  *     tags: [Spotify]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: query
  *         name: timeRange
@@ -153,7 +153,7 @@ router.get('/top/artists', authMiddleware, getTopArtists);
  *     summary: Get the user's top tracks
  *     tags: [Spotify]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: query
  *         name: timeRange
@@ -181,7 +181,7 @@ router.get('/top-tracks', authMiddleware, fetchTopTracks);
  *     summary: Get the Spotify token of the authenticated user
  *     tags: [Spotify]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: Spotify token returned successfully
@@ -197,7 +197,7 @@ router.get('/user-token', authMiddleware, getUserSpotifyToken);
  *     summary: Start the Spotify login process
  *     tags: [Spotify]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: Spotify login URL returned

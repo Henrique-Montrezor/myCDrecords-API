@@ -6,19 +6,19 @@ const router = Router();
 
 /**
  * @swagger
- * /api/artistas/buscar:
+ * /api/artists/search:
  *   get:
  *     summary: Search artists by name
  *     tags: [Artists]
  *     parameters:
  *       - in: query
- *         name: nome
+ *         name: name
  *         required: true
  *         schema:
  *           type: string
  *         example: Nirvana
  *       - in: query
- *         name: limite
+ *         name: limit
  *         schema:
  *           type: integer
  *           maximum: 100
@@ -27,12 +27,32 @@ const router = Router();
  *       200:
  *         description: List of artists found
  */
-
-router.get("/buscar", searchArtists);
+router.get("/search", searchArtists);
 
 /**
  * @swagger
- * /api/artistas/{mbid}:
+ * /api/artists/search-by-name:
+ *   get:
+ *     summary: Search a single artist by name and return its details
+ *     tags: [Artists]
+ *     parameters:
+ *       - in: query
+ *         name: name
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: Nirvana
+ *     responses:
+ *       200:
+ *         description: Artist details
+ *       404:
+ *         description: Artist not found
+ */
+router.get("/search-by-name", getArtistByName);
+
+/**
+ * @swagger
+ * /api/artists/{mbid}:
  *   get:
  *     summary: Get details of an artist
  *     tags: [Artists]
@@ -44,7 +64,7 @@ router.get("/buscar", searchArtists);
  *           type: string
  *         example: 5b11f4ce-a62d-471e-81fc-a69a8278c7da
  *       - in: query
- *         name: incluir_albuns
+ *         name: include_albums
  *         schema:
  *           type: boolean
  *         example: true
@@ -53,7 +73,5 @@ router.get("/buscar", searchArtists);
  *         description: Artist details
  */
 router.get("/:mbid", getArtist);
-
-router.get("/buscar-por-nome", getArtistByName);
 
 export default router;

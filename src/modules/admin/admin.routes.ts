@@ -44,7 +44,7 @@ router.use(adminMiddleware);
  *       403:
  *         description: Access denied
  */
-router.get("/users", adminMiddleware, asyncHandler(listUsers));
+router.get("/users", asyncHandler(listUsers));
 
 /**
  * @swagger
@@ -77,7 +77,7 @@ router.get("/users", adminMiddleware, asyncHandler(listUsers));
  *       403:
  *         description: Access denied
  */
-router.patch("/users/:id/ban", adminMiddleware, asyncHandler(banUserHandler));
+router.patch("/users/:id/ban", asyncHandler(banUserHandler));
 
 /**
  * @swagger
@@ -101,7 +101,7 @@ router.patch("/users/:id/ban", adminMiddleware, asyncHandler(banUserHandler));
  *       403:
  *         description: Access denied
  */
-router.patch("/users/:id/unban", adminMiddleware, asyncHandler(unbanUserHandler));
+router.patch("/users/:id/unban", asyncHandler(unbanUserHandler));
 
 /**
  * @swagger
@@ -125,7 +125,7 @@ router.patch("/users/:id/unban", adminMiddleware, asyncHandler(unbanUserHandler)
  *       403:
  *         description: Access denied
  */
-router.delete("/reviews/:id", adminMiddleware, asyncHandler(deleteReviewHandler));
+router.delete("/reviews/:id", asyncHandler(deleteReviewHandler));
 
 /**
  * @swagger
@@ -149,7 +149,7 @@ router.delete("/reviews/:id", adminMiddleware, asyncHandler(deleteReviewHandler)
  *       403:
  *         description: Access denied
  */
-router.delete("/comments/:id", adminMiddleware, asyncHandler(deleteCommentHandler));
+router.delete("/comments/:id", asyncHandler(deleteCommentHandler));
 
 /**
  * @swagger
@@ -183,6 +183,6 @@ router.delete("/comments/:id", adminMiddleware, asyncHandler(deleteCommentHandle
  *       403:
  *         description: Access denied
  */
-router.get("/reports", adminMiddleware, asyncHandler(listReports));
+router.get("/reports", asyncHandler(listReports));
 
 export default router;

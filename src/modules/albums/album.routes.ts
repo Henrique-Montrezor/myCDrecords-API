@@ -3,17 +3,27 @@ import { getAlbumById, getAlbumInfo, searchAlbums, getTrendingAlbums } from "./a
 
 const router = Router();
 
-router.get("/em-alta", getTrendingAlbums); 
+/**
+ * @swagger
+ * /api/albums/trending:
+ *   get:
+ *     summary: Fetch trending albums of the current year
+ *     tags: [Albums]
+ *     responses:
+ *       200:
+ *         description: List of trending albums
+ */
+router.get("/trending", getTrendingAlbums); 
 
 /**
  * @swagger
- * /api/albuns/buscar:
+ * /api/albums/search:
  *   get:
  *     summary: Search albums
  *     tags: [Albums]
  *     parameters:
  *       - in: query
- *         name: nome
+ *         name: name
  *         required: true
  *         schema:
  *           type: string
@@ -23,17 +33,17 @@ router.get("/em-alta", getTrendingAlbums);
  *         description: List of albums
  */
 
-router.get("/buscar", searchAlbums);
+router.get("/search", searchAlbums);
 
 /**
  * @swagger
- * /api/albuns/info:
+ * /api/albums/info:
  *   get:
  *     summary: Fetch album information
  *     tags: [Albums]
  *     parameters:
  *       - in: query
- *         name: nome
+ *         name: name
  *         required: true
  *         schema:
  *           type: string
@@ -46,7 +56,7 @@ router.get("/info", getAlbumInfo);
 
 /**
  * @swagger
- * /api/albuns/:id:
+ * /api/albums/{id}:
  *   get:
  *     summary: Fetch album information
  *     tags: [Albums]

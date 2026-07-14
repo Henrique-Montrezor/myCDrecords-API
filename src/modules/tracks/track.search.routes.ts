@@ -5,13 +5,13 @@ const router = Router();
 
 /**
  * @swagger
- * /api/musicas/buscar:
+ * /api/tracks/search:
  *   get:
  *     summary: Search tracks
  *     tags: [Tracks]
  *     parameters:
  *       - in: query
- *         name: nome
+ *         name: name
  *         required: true
  *         schema:
  *           type: string
@@ -20,6 +20,6 @@ const router = Router();
  *       200:
  *         description: List of tracks
  */
-router.get("/buscar", searchTracks);
+router.get("/search", searchTracks);
 
 export default router;

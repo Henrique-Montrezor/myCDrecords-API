@@ -4,17 +4,18 @@ import { logger } from "../../utils/logger";
 import { fetchAlbumFromSpotify, searchSpotifyAlbum, searchSpotify} from "../spotify/spotify.service";
 
 export async function searchAlbums(req: Request, res: Response) {
-  const { nome, limite = 10 } = req.query;
+  const name = (req.query.name ?? req.query.nome) as string;
+  const limite = req.query.limit ?? req.query.limite ?? 10;
 
   const musicbrainzData = await fetchMusicBrainz("release-group/", {
-    query: `release:${nome} AND primarytype:album`,
+    query: `release:${name} AND primarytype:album`,
     limit: limite,
     inc: "tags+genres"
   });
 
   try {
     const limitNumber = Number(limite) || 10;
-    const spotifySearch = await searchSpotifyAlbum(nome as string, undefined, limitNumber);
+    const spotifySearch = await searchSpotifyAlbum(name as string, undefined, limitNumber);
     const spotifyAlbums = spotifySearch.albums?.items ?? [];
     const musicbrainzAlbums = musicbrainzData?.["release-groups"] ?? [];
 
@@ -52,7 +53,7 @@ export async function searchAlbums(req: Request, res: Response) {
 };
 
 export async function getAlbumInfo(req: Request, res: Response) {
-  const queryName = (req.query.nome as string) || (req.params.name as string);
+  const queryName = (req.query.name as string) || (req.query.nome as string) || (req.params.name as string);
 
   if (!queryName) return res.status(400).json({ message: "name is required" });
 

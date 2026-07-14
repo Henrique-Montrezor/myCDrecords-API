@@ -1,25 +1,26 @@
 import { Request, Response } from "express";
 import { fetchMusicBrainz } from "../musicbrainz/musicbrainz.service";
 
-// GET /artistas?nome=xxx&limite=10
+// GET /artists/search?name=xxx&limit=10
 export async function searchArtists(req: Request, res: Response) {
-  const { nome, limite = 10 } = req.query;
+  const name = req.query.name ?? req.query.nome;
+  const limit = req.query.limit ?? req.query.limite ?? 10;
 
   const data = await fetchMusicBrainz("artist/", {
-    query: `artist:"${nome}"`,
-    limit: limite
+    query: `artist:"${name}"`,
+    limit
   });
 
   res.json(data);
 }
-// GET /artistas/:mbid
+// GET /artists/:mbid
 export async function getArtist(req: Request, res: Response) {
   const { mbid } = req.params;
-  const { incluir_albuns } = req.query;
+  const includeAlbums = req.query.include_albums ?? req.query.incluir_albuns;
 
   const params: any = {};
 
-  if (incluir_albuns === "true") {
+  if (includeAlbums === "true") {
     params.inc = "release-groups";
   }
 
