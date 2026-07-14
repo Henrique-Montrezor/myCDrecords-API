@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const PORT = process.env.PORT || 3004;
+const URL = process.env.DOMAIN || `http://localhost:${PORT}`;
 
 const options: swaggerJsdoc.Options = {
   definition: {
@@ -15,7 +16,7 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: `http://localhost:${PORT}`,
+        url: URL,
         description: "Local Server"
       },
     ],
