@@ -60,8 +60,41 @@ export async function createProfileTable(req: Request, res: Response) {
             )
         `);
         logger.info('Profiles table created successfully'); 
+
+        try {
+            await connection.query(`ALTER TABLE profiles ADD COLUMN banner_url VARCHAR(255) DEFAULT NULL`);
+        } catch (alterError: any) {
+            if (alterError.code !== 'ER_DUP_FIELDNAME') throw alterError;
+        }
     } catch (error) {
         logger.error('Error creating profiles table', { error });
+        throw error;
+    }
+}
+
+// Function to create the profile favorites table (up to four defining albums per user)
+export async function createProfileFavoritesTable(req: Request, res: Response) {
+    try {
+        const connection = await initDatabase();
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS profile_favorites (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                position TINYINT NOT NULL,
+                album_id VARCHAR(255) NOT NULL,
+                album_title VARCHAR(500),
+                album_image VARCHAR(500),
+                album_artist VARCHAR(500),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_favorite_position (user_id, position),
+                UNIQUE KEY unique_favorite_album (user_id, album_id),
+                CHECK (position BETWEEN 1 AND 4),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        `);
+        logger.info('Profile favorites table created successfully');
+    } catch (error) {
+        logger.error('Error creating profile favorites table', { error });
         throw error;
     }
 }

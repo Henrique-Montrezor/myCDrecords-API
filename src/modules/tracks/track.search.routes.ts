@@ -1,4 +1,5 @@
 import { Router } from "express";
+import asyncHandler from "../../utils/asyncHandler";
 import { searchTracks } from "./track.controller";
 
 const router = Router();
@@ -20,6 +21,6 @@ const router = Router();
  *       200:
  *         description: List of tracks
  */
-router.get("/search", searchTracks);
+router.get("/search", asyncHandler(searchTracks));
 
 export default router;

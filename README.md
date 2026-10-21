@@ -48,9 +48,15 @@ cd myCDrecords-server
 npm install
 
 # 3. Create your environment file from the example
-cp .env.example .env
+Copy-Item .env.example .env
 # then edit .env and fill in your own values
 ```
+
+The API cannot authenticate users until `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`,
+`MYSQL_PASSWORD` and `MYSQL_DATABASE` point to a reachable MySQL instance.
+For local development with a self-signed certificate, keep
+`MYSQL_SSL_REJECT_UNAUTHORIZED=false`. In production, provide a trusted
+`MYSQL_SSL_CA` and use `MYSQL_SSL_REJECT_UNAUTHORIZED=true`.
 
 ## Environment Variables
 
@@ -78,6 +84,14 @@ Development mode (auto-reload with nodemon):
 ```bash
 npm run dev
 ```
+
+Development mode for the API and React client together (run from this folder):
+
+```bash
+npm run all-dev
+```
+
+The API runs on `http://localhost:3004` and the client uses Vite on `http://localhost:5173` (or the next available port).
 
 Production build and start:
 

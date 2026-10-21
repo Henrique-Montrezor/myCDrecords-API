@@ -12,7 +12,7 @@ import {
   findRefreshToken,
   invalidateRefreshToken,
 } from "./auth.repository";
-import { createUser, findByEmail, findByUsername } from "../users/user.repository";
+import { createUser, findByEmail, findByUsername, findByIdForResponse } from "../users/user.repository";
 import { withTransaction } from "../../utils/withTransaction";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
@@ -133,15 +133,20 @@ export async function refreshAccessToken(refreshToken: string) {
     throw new Error("Invalid refresh token");
   }
 
-  // Get user from database to get email
-  // This would need a function to get user by ID - you might need to add this to user.repository
-  // For now, returning the new tokens
-  
-  const accessToken = generateAccessToken(decoded.user_id, "email@example.com");
+  const user = await findByIdForResponse(decoded.user_id);
+  if (!user || !user.is_active) {
+    throw new Error("Invalid refresh token");
+  }
 
   return {
-    accessToken,
+    accessToken: generateAccessToken(user.id, user.email),
     expiresIn: 900, // 15 minutes in seconds
+    user: {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      emailVerified: Boolean(user.email_verified),
+    },
   };
 }
 

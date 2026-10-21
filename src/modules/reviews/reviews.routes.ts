@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { deleteReviewController, getReviewsByAlbumIdController, getReviewsByUserIdController, postReviewController, updateReviewController } from './reviews.controller';
+import { deleteReviewController, getAlbumRatingSummaryController, getMyAlbumReviewController, getReviewsByAlbumIdController, getReviewsByUserIdController, postReviewController, updateReviewController } from './reviews.controller';
 import authMiddleware from '../../middlewares/auth.middleware';
 import asyncHandler from '../../utils/asyncHandler';
 
@@ -58,6 +58,64 @@ const router = Router();
  *         description: Internal server error.
  */
 router.get('/albums/:albumId/reviews', authMiddleware, asyncHandler(getReviewsByAlbumIdController));
+
+/**
+ * @swagger
+ * /api/reviews/albums/{albumId}/summary:
+ *   get:
+ *     summary: Rating average and distribution of an album
+ *     description: Returns `average` (null when there are no reviews), total `count` and the number of reviews per star. Requires authentication.
+ *     tags:
+ *       - Reviews
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: albumId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Rating summary
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 average: { type: number, nullable: true, example: 4.3 }
+ *                 count: { type: integer, example: 12 }
+ *                 distribution:
+ *                   type: object
+ *                   example: { "1": 0, "2": 1, "3": 2, "4": 4, "5": 5 }
+ *       401:
+ *         description: Unauthorized.
+ */
+router.get('/albums/:albumId/summary', authMiddleware, asyncHandler(getAlbumRatingSummaryController));
+
+/**
+ * @swagger
+ * /api/reviews/albums/{albumId}/mine:
+ *   get:
+ *     summary: The authenticated user's review of an album
+ *     description: Returns the review (with `score` and `user_vote`) or `null` when the user has not reviewed the album.
+ *     tags:
+ *       - Reviews
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: albumId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Review or null
+ *       401:
+ *         description: Unauthorized.
+ */
+router.get('/albums/:albumId/mine', authMiddleware, asyncHandler(getMyAlbumReviewController));
 
 /**
  * @swagger

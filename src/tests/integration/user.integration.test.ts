@@ -42,27 +42,12 @@ import { findByUsername } from "../../modules/users/user.repository";
 const mockedFindByUsername = findByUsername as jest.Mock;
 
 describe("GET /api/user/search-users", () => {
-  it("returns 404 when the user is not found", async () => {
-    mockedFindByUsername.mockResolvedValue(null);
-
-    const res = await request(app)
-      .get("/api/user/search-users")
-      .query({ username: "missing" });
-
-    expect(res.status).toBe(404);
-    expect(res.body).toEqual({ message: "User not found" });
-    expect(mockedFindByUsername).toHaveBeenCalledWith("missing");
-  });
-
-  it("returns 200 with the found user's data", async () => {
-    const found = { id: 9, username: "johndoe", email: "john@example.com" };
-    mockedFindByUsername.mockResolvedValue(found);
-
+  it("is not public: it used to return whole user rows (including the password hash)", async () => {
     const res = await request(app)
       .get("/api/user/search-users")
       .query({ username: "johndoe" });
 
-    expect(res.status).toBe(200);
-    expect(res.body).toEqual(found);
+    expect(res.status).toBe(401);
+    expect(mockedFindByUsername).not.toHaveBeenCalled();
   });
 });

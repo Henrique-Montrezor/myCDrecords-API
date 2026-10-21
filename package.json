@@ -5,6 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon src/server.ts",
+    "all-dev": "concurrently -k -n API,CLIENT -c cyan,green \"npm run dev\" \"npm --prefix ../myCDrecords-client run dev\"",
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "jest",
@@ -53,6 +54,7 @@
     "@types/supertest": "^7.2.0",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
+    "concurrently": "^9.1.2",
     "jest": "^30.4.2",
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.11",

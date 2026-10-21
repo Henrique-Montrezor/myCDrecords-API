@@ -23,9 +23,13 @@ function buildSslConfig(): PoolOptions['ssl'] | undefined {
         };
     }
 
+    const configuredRejectUnauthorized = process.env.MYSQL_SSL_REJECT_UNAUTHORIZED;
     return {
-        rejectUnauthorized:
-            String(process.env.MYSQL_SSL_REJECT_UNAUTHORIZED).toLowerCase() !== 'false'
+        // Local/self-signed database certificates are common during development.
+        // Production stays strict unless the operator explicitly opts out.
+        rejectUnauthorized: configuredRejectUnauthorized
+            ? String(configuredRejectUnauthorized).toLowerCase() === 'true'
+            : process.env.NODE_ENV === 'production'
     };
 }
 

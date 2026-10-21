@@ -18,11 +18,7 @@ export async function getArtist(req: Request, res: Response) {
   const { mbid } = req.params;
   const includeAlbums = req.query.include_albums ?? req.query.incluir_albuns;
 
-  const params: any = {};
-
-  if (includeAlbums === "true") {
-    params.inc = "release-groups";
-  }
+  const params: any = { inc: includeAlbums === "true" ? "release-groups+tags" : "tags" };
 
   const data = await fetchMusicBrainz(`artist/${mbid}`, params);
   res.json(data);

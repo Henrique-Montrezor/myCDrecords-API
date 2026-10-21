@@ -150,6 +150,7 @@ export async function refresh(req: Request, res: Response) {
       message: "Token refreshed successfully",
       accessToken: result.accessToken,
       expiresIn: result.expiresIn,
+      user: result.user,
     });
   } catch (error: any) {
     logger.error("Refresh error", { error });

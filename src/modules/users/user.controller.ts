@@ -1,16 +1,15 @@
 import { Request, Response } from "express";
-import { findByEmail, findByUsername } from "./user.repository";
+import { z } from "zod";
+import { findByEmail, findByUsername, searchUsersByUsername } from "./user.repository";
 
-// searchUsers function
+const searchUsersQuery = z.object({
+    username: z.string().trim().min(2, "username must have at least 2 characters").max(50),
+});
+
+// GET /api/user/search-users?username=prefix
 export async function searchUsers(req: Request, res: Response) {
-    const { username } = req.query;
-
-    const search = await findByUsername(username as string);
-    if (!search) {
-        return res.status(404).json({ message: "User not found" });
-    }
-
-    res.status(200).json(search);
+    const { username } = searchUsersQuery.parse(req.query);
+    res.status(200).json(await searchUsersByUsername(username));
 }
 
 // validateEmail function

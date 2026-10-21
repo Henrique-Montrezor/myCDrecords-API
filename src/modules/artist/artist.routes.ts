@@ -1,4 +1,5 @@
 import { Router } from "express";
+import asyncHandler from "../../utils/asyncHandler";
 import { searchArtists, getArtist } from "./artist.controller";
 import { getArtistByName } from "./artist.controller.name";
 
@@ -27,7 +28,7 @@ const router = Router();
  *       200:
  *         description: List of artists found
  */
-router.get("/search", searchArtists);
+router.get("/search", asyncHandler(searchArtists));
 
 /**
  * @swagger
@@ -48,7 +49,7 @@ router.get("/search", searchArtists);
  *       404:
  *         description: Artist not found
  */
-router.get("/search-by-name", getArtistByName);
+router.get("/search-by-name", asyncHandler(getArtistByName));
 
 /**
  * @swagger
@@ -71,7 +72,9 @@ router.get("/search-by-name", getArtistByName);
  *     responses:
  *       200:
  *         description: Artist details
+ *       404:
+ *         description: Artist not found
  */
-router.get("/:mbid", getArtist);
+router.get("/:mbid", asyncHandler(getArtist));
 
 export default router;

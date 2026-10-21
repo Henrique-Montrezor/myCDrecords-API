@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { searchUsers } from "./user.controller";
 import asyncHandler from '../../utils/asyncHandler';
+import authMiddleware from "../../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -8,17 +9,22 @@ const router = Router();
  * @swagger
  * /api/user/search-users:
  *   get:
- *     summary: Search for users by username
+ *     summary: Search users by username prefix
+ *     description: Requires authentication. Returns only `id`, `username` and `avatar_url` (at most 10 results).
  *     tags: [Users]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: query
  *         name: username
+ *         required: true
  *         schema:
  *           type: string
- *         description: The username to search for
+ *           minLength: 2
+ *         description: Username prefix
  *     responses:
  *       200:
- *         description: A list of users matching the search criteria
+ *         description: Matching users
  *         content:
  *           application/json:
  *             schema:
@@ -32,16 +38,15 @@ const router = Router();
  *                   username:
  *                     type: string
  *                     example: johndoe
- *                   email:
+ *                   avatar_url:
  *                     type: string
- *                     example: johndoe@example.com
- *       500:
- *        description: Error searching for users
- *  
- * 
- * 
+ *                     nullable: true
+ *       400:
+ *         description: Invalid query
+ *       401:
+ *         description: Not authenticated
  */
 
-router.get('/search-users', asyncHandler(searchUsers));
+router.get('/search-users', authMiddleware, asyncHandler(searchUsers));
 
 export default router;

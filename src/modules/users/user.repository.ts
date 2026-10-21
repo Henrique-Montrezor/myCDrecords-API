@@ -71,3 +71,19 @@ export async function findByIdForResponse(id: number) {
 
     return rows[0] || null;
 }
+
+// Public search: never returns email or password hash
+export async function searchUsersByUsername(term: string, limit = 10) {
+    const connection = await initDatabase();
+    const escaped = term.replace(/[\\%_]/g, (char) => `\\${char}`);
+    const [rows] = await connection.query<RowDataPacket[]>(
+        `SELECT u.id, u.username, p.avatar_url
+         FROM users u
+         LEFT JOIN profiles p ON p.user_id = u.id
+         WHERE u.username LIKE ? AND u.is_active = 1
+         ORDER BY u.username = ? DESC, u.username ASC
+         LIMIT ?`,
+        [`${escaped}%`, term, limit]
+    );
+    return rows;
+}

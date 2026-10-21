@@ -58,7 +58,8 @@ router.get("/info", getAlbumInfo);
  * @swagger
  * /api/albums/{id}:
  *   get:
- *     summary: Fetch album information
+ *     summary: Fetch album details with tracklist
+ *     description: Accepts a Spotify album ID or a MusicBrainz release-group MBID and always returns the same shape.
  *     tags: [Albums]
  *     parameters:
  *       - in: path
@@ -66,10 +67,40 @@ router.get("/info", getAlbumInfo);
  *         required: true
  *         schema:
  *           type: string
- *         example: 123456789
+ *         example: 2UJcKiJxNryhL050F5Z1Fk
  *     responses:
  *       200:
- *         description: Album information by ID
+ *         description: Album details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id: { type: string }
+ *                 source: { type: string, enum: [spotify, musicbrainz] }
+ *                 title: { type: string }
+ *                 artists: { type: array, items: { type: object, properties: { name: { type: string } } } }
+ *                 releaseDate: { type: string, nullable: true }
+ *                 type: { type: string, nullable: true, example: album }
+ *                 coverUrl: { type: string, nullable: true }
+ *                 genres: { type: array, items: { type: string } }
+ *                 externalUrl: { type: string, nullable: true }
+ *                 totalTracks: { type: integer }
+ *                 tracks:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id: { type: string }
+ *                       number: { type: integer }
+ *                       discNumber: { type: integer }
+ *                       title: { type: string }
+ *                       durationMs: { type: integer, nullable: true }
+ *                       artists: { type: array, items: { type: string } }
+ *       404:
+ *         description: Album not found or ID not recognized by any provider
+ *       502:
+ *         description: Provider (Spotify or MusicBrainz) failed
  */
 router.get("/:id", getAlbumById);
 

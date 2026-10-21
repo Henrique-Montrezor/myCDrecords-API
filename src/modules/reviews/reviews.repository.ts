@@ -3,8 +3,14 @@ import { RowDataPacket, ResultSetHeader } from "mysql2";
 import { withTransaction } from "../../utils/withTransaction";
 
 
+// Vote score and the viewer's own vote, resolved per review row (first placeholder = viewer id)
+const VOTE_COLUMNS = `
+    CAST(COALESCE((SELECT SUM(v.value) FROM votes v WHERE v.target_type = 'review' AND v.target_id = r.id), 0) AS SIGNED) AS score,
+    (SELECT v.value FROM votes v WHERE v.target_type = 'review' AND v.target_id = r.id AND v.user_id = ?) AS user_vote
+`;
+
 // get reviews for a product with pagination
-export async function getReviewsByAlbumId(albumId: string, page: number) {
+export async function getReviewsByAlbumId(albumId: string, page: number, viewerId: number) {
     const connection = await initDatabase();
     const offset = (page - 1) * 10;
 
@@ -15,7 +21,8 @@ export async function getReviewsByAlbumId(albumId: string, page: number) {
             u.username,
             r.rating,
             r.text,
-            r.created_at
+            r.created_at,
+            ${VOTE_COLUMNS}
         FROM reviews r
         JOIN users u ON r.user_id = u.id
         WHERE r.album_id = ?
@@ -23,8 +30,38 @@ export async function getReviewsByAlbumId(albumId: string, page: number) {
         LIMIT ? OFFSET ?
     `;
 
-    const [rows] = await connection.query<RowDataPacket[]>(query, [albumId, 10, offset]);
+    const [rows] = await connection.query<RowDataPacket[]>(query, [viewerId, albumId, 10, offset]);
     return rows || [];
+}
+
+// the viewer's own review of an album, if any
+export async function getUserReviewForAlbum(userId: number, albumId: string) {
+    const connection = await initDatabase();
+    const [rows] = await connection.query<RowDataPacket[]>(`
+        SELECT
+            r.id,
+            r.user_id,
+            u.username,
+            r.rating,
+            r.text,
+            r.created_at,
+            ${VOTE_COLUMNS}
+        FROM reviews r
+        JOIN users u ON r.user_id = u.id
+        WHERE r.album_id = ? AND r.user_id = ?
+        LIMIT 1
+    `, [userId, albumId, userId]);
+    return rows[0] ?? null;
+}
+
+// rating counts per star for an album
+export async function getAlbumRatingCounts(albumId: string) {
+    const connection = await initDatabase();
+    const [rows] = await connection.query<RowDataPacket[]>(
+        `SELECT rating, COUNT(*) AS count FROM reviews WHERE album_id = ? GROUP BY rating`,
+        [albumId]
+    );
+    return (rows || []) as Array<{ rating: number; count: number }>;
 }
 
 // post a review for a album

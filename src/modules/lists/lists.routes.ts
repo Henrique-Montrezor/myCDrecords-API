@@ -1,6 +1,6 @@
 import { Router } from "express";
 import asyncHandler from "../../utils/asyncHandler";
-import authMiddleware from "../../middlewares/auth.middleware";
+import authMiddleware, { optionalAuthMiddleware } from "../../middlewares/auth.middleware";
 import {
     createListController,
     myListsController,
@@ -81,7 +81,7 @@ router.get("/me", authMiddleware, asyncHandler(myListsController));
  *       200:
  *         description: Public lists
  */
-router.get("/user/:userId", asyncHandler(userListsController));
+router.get("/user/:userId", optionalAuthMiddleware, asyncHandler(userListsController));
 
 /**
  * @swagger
@@ -148,7 +148,7 @@ router.get("/user/:userId", asyncHandler(userListsController));
  *       404:
  *         description: List not found or access denied
  */
-router.get("/:listId", asyncHandler(getListController));
+router.get("/:listId", optionalAuthMiddleware, asyncHandler(getListController));
 router.put("/:listId", authMiddleware, asyncHandler(updateListController));
 router.delete("/:listId", authMiddleware, asyncHandler(deleteListController));
 

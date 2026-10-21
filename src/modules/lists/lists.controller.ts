@@ -51,15 +51,8 @@ export async function userListsController(req: Request, res: Response) {
     res.json(lists);
 }
 
-// GET /api/lists/:listId
+// GET /api/lists/:listId  (public lists for anyone; private lists only for the owner)
 export async function getListController(req: Request, res: Response) {
-
-    const userId = req.user?.id;
-
-    if (!userId) {
-        return res.status(401).json({ error: "User not authenticated" });
-    }
-
     const { listId } = listIdParamSchema.parse(req.params);
 
     const list = await getListById(listId);

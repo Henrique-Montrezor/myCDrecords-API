@@ -46,4 +46,32 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   return res.status(401).json({ message: "Token not provided" });
 };
 
+// Populates req.user when a valid token is present, but never rejects the request.
+// Use on public read routes whose response depends on who is asking (e.g. private lists).
+export const optionalAuthMiddleware = (req: Request, _res: Response, next: NextFunction) => {
+  const headerToken = req.headers.authorization?.split(" ")[1];
+  const cookieToken = req.cookies?.token;
+
+  if (headerToken) {
+    try {
+      const decoded: any = jwt.verify(headerToken, process.env.JWT_SECRET || "your-secret-key");
+      req.user = { id: decoded.user_id, email: decoded.email };
+      return next();
+    } catch {
+      // Fall through to the cookie.
+    }
+  }
+
+  if (cookieToken) {
+    try {
+      const decoded: any = jwt.verify(cookieToken, process.env.JWT_REFRESH_SECRET || "your-refresh-secret");
+      req.user = { id: decoded.user_id, email: decoded.email };
+    } catch {
+      // Anonymous request.
+    }
+  }
+
+  return next();
+};
+
 export default authMiddleware;

@@ -10,6 +10,7 @@ import { swaggerSpec } from "./docs/swagger";
 import { initDatabase } from "./mysql2/init.database";
 import { 
   createProfileTable, 
+  createProfileFavoritesTable,
   createUserTable,
   createVerificationTokensTable,
   createRefreshTokensTable,
@@ -18,6 +19,8 @@ import {
   addAdminRoleToUsers,
   createAdminTable,
   createReviewsTable,
+  createCommentsTable,
+  createReportsTable,
   createFollowsTable,
   createVotesTable,
   createListsTable,
@@ -27,6 +30,7 @@ import {
   seedDefaultBadges
 } from "./mysql2/create.tables";
 import profileRoutes from "./modules/profile/profile.routes";
+import { UPLOADS_DIR } from "./modules/profile/profile.images";
 import authRoutes from "./modules/auth/auth.routes";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -80,6 +84,7 @@ const initializeApp = async () => {
     // Create tables in sequence to avoid race conditions
     await createUserTable({} as express.Request, {} as express.Response);
     await createProfileTable({} as express.Request, {} as express.Response);
+    await createProfileFavoritesTable({} as express.Request, {} as express.Response);
     await createVerificationTokensTable({} as express.Request, {} as express.Response);
     await createRefreshTokensTable({} as express.Request, {} as express.Response);
     await createOAuthProvidersTable({} as express.Request, {} as express.Response);
@@ -87,6 +92,9 @@ const initializeApp = async () => {
     await createAdminTable({} as express.Request, {} as express.Response);
     await createReviewsTable({} as express.Request, {} as express.Response);
 
+    // Review deletion and admin moderation query these tables
+    await createCommentsTable({} as express.Request, {} as express.Response);
+    await createReportsTable({} as express.Request, {} as express.Response);
     // Social: followers and votes
     await createFollowsTable({} as express.Request, {} as express.Response);
     await createVotesTable({} as express.Request, {} as express.Response);
@@ -141,6 +149,13 @@ app.use("/api/user", userRoutes);
 
 // Profile routes
 app.use("/api/profile", profileRoutes);
+
+// Uploaded avatars and banners (random file names, so they can be cached for good)
+app.use("/uploads", express.static(UPLOADS_DIR, {
+  maxAge: "30d",
+  immutable: true,
+  setHeaders: (res) => res.setHeader("X-Content-Type-Options", "nosniff"),
+}));
 
 // Authentication routes
 app.use("/api/auth", authLimiter, authRoutes);

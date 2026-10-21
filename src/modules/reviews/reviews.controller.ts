@@ -1,4 +1,5 @@
-import { getReviewsByAlbumId, postReview, deleteReview, getReviewsByUserId, updateReview, checkReview} from './reviews.repository';
+import { getReviewsByAlbumId, postReview, deleteReview, getReviewsByUserId, updateReview, checkReview, getAlbumRatingCounts, getUserReviewForAlbum} from './reviews.repository';
+import { buildRatingSummary } from './reviews.summary';
 import { Request, Response } from 'express';
 import { logger } from '../../utils/logger';
 import { evaluateUserBadges } from '../gamification/gamification.service';
@@ -17,10 +18,34 @@ export async function getReviewsByAlbumIdController(req: Request, res: Response)
     const { page } = paginationQuerySchema.parse(req.query);
 
     try {
-        const reviews = await getReviewsByAlbumId(albumId, page);
+        const reviews = await getReviewsByAlbumId(albumId, page, req.user!.id);
         res.json(reviews);
     } catch (error) {
         logger.error('Error fetching reviews', { error });
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+// The authenticated user's review of an album (null when none)
+export async function getMyAlbumReviewController(req: Request, res: Response) {
+    const { albumId } = albumIdParamSchema.parse(req.params);
+
+    try {
+        res.json(await getUserReviewForAlbum(req.user!.id, albumId));
+    } catch (error) {
+        logger.error('Error fetching own review', { error });
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+// Rating average and distribution for an album
+export async function getAlbumRatingSummaryController(req: Request, res: Response) {
+    const { albumId } = albumIdParamSchema.parse(req.params);
+
+    try {
+        res.json(buildRatingSummary(await getAlbumRatingCounts(albumId)));
+    } catch (error) {
+        logger.error('Error fetching rating summary', { error });
         res.status(500).json({ error: 'Internal server error' });
     }
 }

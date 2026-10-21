@@ -60,8 +60,24 @@ if (!isTest) {
   );
 }
 
+// Axios errors embed request headers (Authorization) in `config`; keep only safe fields.
+const sanitizeAxiosError = winston.format((info) => {
+  const error = info.error as any;
+  if (error && typeof error === "object" && error.config) {
+    info.error = {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      status: error.response?.status ?? error.status,
+      url: error.config.url,
+    };
+  }
+  return info;
+});
+
 export const logger = winston.createLogger({
   level: logLevel,
+  format: sanitizeAxiosError(),
   defaultMeta: { service: "mycdrecords-api" },
   transports,
 });
