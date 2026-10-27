@@ -7,7 +7,7 @@ import userRoutes from "./modules/users/user.routes";
 import { errorHandler } from "./middlewares/error.middleware";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./docs/swagger";
-import { initDatabase } from "./mysql2/init.database";
+import { initDatabase, getPool } from "./mysql2/init.database";
 import { 
   createProfileTable, 
   createProfileFavoritesTable,
@@ -34,6 +34,8 @@ import { UPLOADS_DIR } from "./modules/profile/profile.images";
 import authRoutes from "./modules/auth/auth.routes";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import helmet from "helmet";
+import { requestIdMiddleware } from "./middlewares/requestId.middleware";
 import dotenv from "dotenv";
 import morgan from "morgan";
 import { logger, stream } from "./utils/logger";
@@ -49,30 +51,40 @@ dotenv.config();
 
 // initialize express app
 const app = express();
+const isProduction = process.env.NODE_ENV === "production";
 
-// Configure CORS to allow cookies
+app.use(requestIdMiddleware);
+
+// JSON-only API: helmet defaults, but uploaded avatars must load from the client origin
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+
+// Production only trusts FRONTEND_URL; local dev servers are allowed outside production
+const devOrigins = [
+    "http://localhost:5173",      // Vite development server
+    "http://127.0.0.1:5173",      // Vite with IP
+    "http://localhost:5500",      // Live Server
+    "http://127.0.0.1:5500",      // Live Server with IP
+];
 app.use(cors({
-    origin: [
-        "http://localhost:5173",      // Vite development server
-        "http://127.0.0.1:5173",      // Vite with IP
-        "http://localhost:5500",      // Live Server
-        "http://127.0.0.1:5500",      // Live Server with IP
-        process.env.FRONTEND_URL || "" // Custom frontend URL from env
-    ].filter(Boolean), 
+    origin: [...(isProduction ? [] : devOrigins), process.env.FRONTEND_URL || ""].filter(Boolean),
     credentials: true, // Allow cookies to be sent
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
+    allowedHeaders: ["Content-Type", "Authorization", "X-Request-Id"],
+    exposedHeaders: ["X-Request-Id"]
 }));
 
 // Middleware to parse JSON
-app.use(express.json());
+app.use(express.json({ limit: "100kb" }));
 
 // Middleware to parse cookies
 app.use(cookieParser());
 
 // Logging HTTP requests (disabled during tests)
 if (process.env.NODE_ENV !== "test") {
-  const morganFormat = process.env.NODE_ENV === "production" ? "combined" : "dev";
+  morgan.token("id", (req) => (req as express.Request).requestId ?? "-");
+  const morganFormat = isProduction
+    ? ':id :remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"'
+    : ":method :url :status :response-time ms - :id";
   app.use(morgan(morganFormat, { stream }));
 }
 
@@ -119,6 +131,44 @@ const initializeApp = async () => {
 
 // Start initialization without blocking route definitions
 initializeApp();
+
+// Liveness and readiness probes stay outside the rate limit and never touch Spotify
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Liveness probe
+ *     description: Responds while the process is up, without touching the database or Spotify.
+ *     tags: [Health]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: "{ status: 'ok' }"
+ * /ready:
+ *   get:
+ *     summary: Readiness probe
+ *     description: Checks the MySQL connection (required dependency). Spotify and Redis are optional and not checked.
+ *     tags: [Health]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: "{ status: 'ready', database: 'up' }"
+ *       503:
+ *         description: "{ status: 'unavailable', database: 'down' }"
+ */
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok" });
+});
+
+app.get("/ready", async (_req, res) => {
+  try {
+    await getPool().query("SELECT 1");
+    res.json({ status: "ready", database: "up" });
+  } catch (error) {
+    logger.error("Readiness check failed", { error });
+    res.status(503).json({ status: "unavailable", database: "down" });
+  }
+});
 
 // 🔥 Rate limit global (Redis when available, memory as fallback)
 app.use(createRateLimiter({

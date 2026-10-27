@@ -11,7 +11,7 @@ import {
   verifyEmail,
   updateEmail,
   logout,
-  generateEmailVerificationToken,
+  issueEmailVerification,
 } from "./auth.service";
 import { findByEmail, findByIdForResponse } from "../users/user.repository";
 import {
@@ -43,10 +43,8 @@ export async function register(req: Request, res: Response) {
     // Generate tokens
     const tokens = await createTokensPair(user.id, user.email);
 
-    // Generate email verification token and send
-    const verificationToken = generateEmailVerificationToken(user.id);
-
-    // TODO: Send verification email with token
+    // A failed verification email must not undo the registration; the user can resend it
+    await issueEmailVerification(user.id, user.email).catch((error) => logger.error("Could not issue email verification", { error }));
 
     // Set refresh token as secure cookie
     res.cookie("token", tokens.refreshToken, {
@@ -63,6 +61,7 @@ export async function register(req: Request, res: Response) {
         id: user.id,
         username: user.username,
         email: user.email,
+        emailVerified: false,
       },
       accessToken: tokens.accessToken,
       expiresIn: tokens.expiresIn,
@@ -205,6 +204,19 @@ export async function verify(req: Request, res: Response) {
     logger.error("Email verification error", { error });
     res.status(400).json({ message: error.message || "Error verifying email" });
   }
+}
+
+// POST /auth/email/resend-verification
+export async function resendVerification(req: Request, res: Response) {
+  const user = await findByIdForResponse(req.user!.id);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+  if (user.email_verified) {
+    return res.status(409).json({ message: "Email already verified" });
+  }
+  await issueEmailVerification(user.id, user.email);
+  res.status(200).json({ message: "Verification email sent" });
 }
 
 // PATCH /auth/email

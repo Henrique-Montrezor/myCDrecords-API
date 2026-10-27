@@ -6,12 +6,14 @@ export function errorHandler(err: any, req: Request, res: Response, next: NextFu
   // Zod validation errors -> 400 with the list of issues
   if (err instanceof ZodError) {
     logger.warn("Validation failure", {
+      requestId: req.requestId,
       method: req.method,
       url: req.originalUrl,
       issues: err.issues,
     });
     return res.status(400).json({
       error: "Validation failed",
+      requestId: req.requestId,
       issues: err.issues.map((issue) => ({
         path: issue.path.join("."),
         message: issue.message,
@@ -22,6 +24,7 @@ export function errorHandler(err: any, req: Request, res: Response, next: NextFu
   const status = err.status || 500;
 
   logger.error(err.message || "Internal server error", {
+    requestId: req.requestId,
     method: req.method,
     url: req.originalUrl,
     status,
@@ -29,6 +32,7 @@ export function errorHandler(err: any, req: Request, res: Response, next: NextFu
   });
 
   res.status(status).json({
-    error: err.message || "Internal server error"
+    error: err.message || "Internal server error",
+    requestId: req.requestId,
   });
 }

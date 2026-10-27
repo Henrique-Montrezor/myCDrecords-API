@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { deleteReviewController, getAlbumRatingSummaryController, getMyAlbumReviewController, getReviewsByAlbumIdController, getReviewsByUserIdController, postReviewController, updateReviewController } from './reviews.controller';
 import authMiddleware from '../../middlewares/auth.middleware';
 import asyncHandler from '../../utils/asyncHandler';
+import { deleteCommentController, listCommentsController, postCommentController, updateCommentController } from './comments.controller';
 
 const router = Router();
 
@@ -311,5 +312,87 @@ router.delete('/:reviewId/delete', authMiddleware, asyncHandler(deleteReviewCont
  *         description: Internal server error.
  */
 router.put('/:reviewId/update', authMiddleware, asyncHandler(updateReviewController));
+
+/**
+ * @swagger
+ * /api/reviews/{reviewId}/comments:
+ *   get:
+ *     summary: Lists the comments of a review
+ *     description: Oldest first, 20 per page. Each item has `id`, `review_id`, `user_id`, `username`, `avatar_url`, `text`, `created_at`, `updated_at`.
+ *     tags: [Comments]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - { in: path, name: reviewId, required: true, schema: { type: integer } }
+ *       - { in: query, name: page, required: false, schema: { type: integer, default: 1 } }
+ *     responses:
+ *       200: { description: Array of comments }
+ *       400: { description: Invalid reviewId or page }
+ *       401: { description: Unauthorized }
+ *       404: { description: Review not found }
+ *   post:
+ *     summary: Comments on a review
+ *     tags: [Comments]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - { in: path, name: reviewId, required: true, schema: { type: integer } }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [text]
+ *             properties:
+ *               text: { type: string, minLength: 1, maxLength: 1000 }
+ *     responses:
+ *       201: { description: The created comment }
+ *       400: { description: Empty or too long text }
+ *       401: { description: Unauthorized }
+ *       404: { description: Review not found }
+ */
+router.get('/:reviewId/comments', authMiddleware, asyncHandler(listCommentsController));
+router.post('/:reviewId/comments', authMiddleware, asyncHandler(postCommentController));
+
+/**
+ * @swagger
+ * /api/reviews/comments/{commentId}:
+ *   put:
+ *     summary: Edits an own comment
+ *     tags: [Comments]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - { in: path, name: commentId, required: true, schema: { type: integer } }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [text]
+ *             properties:
+ *               text: { type: string, minLength: 1, maxLength: 1000 }
+ *     responses:
+ *       200: { description: The updated comment }
+ *       400: { description: Empty or too long text }
+ *       401: { description: Unauthorized }
+ *       404: { description: Comment not found or not owned by the user }
+ *   delete:
+ *     summary: Deletes an own comment
+ *     description: Admins remove any comment via DELETE /api/admin/comments/{id}.
+ *     tags: [Comments]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - { in: path, name: commentId, required: true, schema: { type: integer } }
+ *     responses:
+ *       204: { description: Deleted }
+ *       401: { description: Unauthorized }
+ *       404: { description: Comment not found or not owned by the user }
+ */
+router.put('/comments/:commentId', authMiddleware, asyncHandler(updateCommentController));
+router.delete('/comments/:commentId', authMiddleware, asyncHandler(deleteCommentController));
 
 export default router;

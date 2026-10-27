@@ -13,7 +13,7 @@ import {
 } from "./social.repository";
 import {
     userIdParamSchema,
-    paginationQuerySchema,
+    feedQuerySchema,
     voteSchema,
     voteTargetParamSchema,
     removeVoteSchema,
@@ -80,8 +80,8 @@ export async function feedController(req: Request, res: Response) {
         return res.status(401).json({ error: "User not authenticated" });
     }
 
-    const { page } = paginationQuerySchema.parse(req.query);
-    const feed = await getFollowingFeed(userId, page);
+    const { page, scope } = feedQuerySchema.parse(req.query);
+    const feed = await getFollowingFeed(userId, page, scope);
     res.json(feed);
 }
 

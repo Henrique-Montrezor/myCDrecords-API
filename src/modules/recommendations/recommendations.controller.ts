@@ -1,7 +1,17 @@
 import { Request, Response } from "express";
 import { cache } from "../../utils/cache";
-import { getCollaborativeRecommendations, getPopularRecommendations } from "./recommendations.repository";
+import { getCollaborativeRecommendations, getGenreRecommendations, getPopularRecommendations, getTasteProfile } from "./recommendations.repository";
 import { logger } from "../../utils/logger";
+
+const CACHE_TTL_SECONDS = 600;
+
+type Recommendations = { tipo: "colaborativa" | "genero" | "popular" | "vazio"; data: unknown[] };
+
+// Called whenever the user's taste signals change (review posted/deleted, favorites saved)
+export function clearRecommendationsCache(userId: number) {
+    const prefix = `recommendations_${userId}_`;
+    cache.del(cache.keys().filter((key) => key.startsWith(prefix)));
+}
 
 export async function getRecommendations(req: Request, res: Response) {
     const userId = req.user?.id;
@@ -10,40 +20,37 @@ export async function getRecommendations(req: Request, res: Response) {
         return res.status(401).json({ message: "User not authenticated" });
     }
 
-    const limit = parseInt(req.query.limit as string) || 10;
-    
-    // Using the native cache utility
+    const limit = Math.min(parseInt(req.query.limit as string) || 10, 50);
     const cacheKey = `recommendations_${userId}_${limit}`;
-    const cachedData = cache.get(cacheKey);
-
-    if (cachedData) {
-        return res.status(200).json(cachedData);
-    }
 
     try {
-        let recomendacoes = await getCollaborativeRecommendations(userId, limit);
-        let tipo = "colaborativa";
+        // Taste counters are cheap and must be fresh so the client can ask for reviews right away
+        const perfil = await getTasteProfile(userId);
 
-        // Cold Start logic
-        if (recomendacoes.length === 0) {
-            recomendacoes = await getPopularRecommendations(userId, limit);
-            tipo = "popular";
-            
-            // If the platform is new and has NOTHING popular, return a clean empty array
-            if (recomendacoes.length === 0) {
-                return res.status(200).json({ tipo: "vazio", data: [] });
-            }
+        const cached = cache.get<Recommendations>(cacheKey);
+        if (cached) {
+            return res.status(200).json({ ...cached, perfil });
         }
 
-        const respostaFinal = {
-            tipo,
-            data: recomendacoes
-        };
+        let resposta: Recommendations = { tipo: "colaborativa", data: await getCollaborativeRecommendations(userId, limit) };
 
-        // Save in cache for 1 hour (3600 seconds)
-        cache.set(cacheKey, respostaFinal, 3600);
+        if (resposta.data.length === 0) {
+            resposta = { tipo: "genero", data: await getGenreRecommendations(userId, limit) };
+        }
 
-        res.status(200).json(respostaFinal);
+        // Cold Start logic
+        if (resposta.data.length === 0) {
+            resposta = { tipo: "popular", data: await getPopularRecommendations(userId, limit) };
+        }
+
+        // If the platform is new and has NOTHING popular, return a clean empty array
+        if (resposta.data.length === 0) {
+            resposta = { tipo: "vazio", data: [] };
+        }
+
+        cache.set(cacheKey, resposta, CACHE_TTL_SECONDS);
+
+        res.status(200).json({ ...resposta, perfil });
     } catch (error) {
         logger.error("Error fetching recommendations", { error });
         res.status(500).json({ message: "Internal server error while generating recommendations" });

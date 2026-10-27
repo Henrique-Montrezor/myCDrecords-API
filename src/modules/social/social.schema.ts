@@ -11,6 +11,10 @@ export const paginationQuerySchema = z.object({
     page: z.coerce.number().int().positive().optional().default(1),
 });
 
+export const feedQuerySchema = paginationQuerySchema.extend({
+    scope: z.enum(["following", "friends"]).optional().default("following"),
+});
+
 export const voteSchema = z.object({
     targetType: z.enum(["review", "comment"], {
         required_error: "targetType is required",

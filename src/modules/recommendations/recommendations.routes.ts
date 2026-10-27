@@ -10,7 +10,7 @@ const router = Router();
  * /api/recommendations:
  *   get:
  *     summary: Get personalized recommendations for the user
- *     description: Returns a list of recommended albums based on collaborative filtering (what similar users like) or general popular ones if the user has no history.
+ *     description: Returns recommended albums, trying in order collaborative filtering (people who loved the same albums or favorites), genre affinity (genres the user rates highest) and platform-wide popular albums. `perfil` tells how many reviews and favorites the user has, so clients can ask for reviews when there is nothing to base suggestions on.
  *     tags:
  *       - Recommendations
  *     security:
@@ -22,6 +22,7 @@ const router = Router();
  *         schema:
  *           type: integer
  *           default: 10
+ *           maximum: 50
  *         description: Maximum number of recommendations to return.
  *     responses:
  *       200:
@@ -33,7 +34,17 @@ const router = Router();
  *               properties:
  *                 tipo:
  *                   type: string
+ *                   enum: [colaborativa, genero, popular, vazio]
  *                   example: "colaborativa"
+ *                 perfil:
+ *                   type: object
+ *                   properties:
+ *                     reviews:
+ *                       type: integer
+ *                       example: 3
+ *                     favorites:
+ *                       type: integer
+ *                       example: 2
  *                 data:
  *                   type: array
  *                   items:

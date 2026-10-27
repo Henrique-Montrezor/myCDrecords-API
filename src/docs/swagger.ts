@@ -36,7 +36,7 @@ const options: swaggerJsdoc.Options = {
     ],
   },
   // The path below instructs swagger-jsdoc to read all .ts files within src/modules/
-  apis: ["./src/modules/**/*.ts", "./src/modules/**/*.routes.ts"],
+  apis: ["./src/app.ts", "./src/modules/**/*.ts", "./src/modules/**/*.routes.ts"],
 };
 
 export const swaggerSpec = swaggerJsdoc(options);

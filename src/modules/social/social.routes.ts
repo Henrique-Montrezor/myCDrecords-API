@@ -25,7 +25,8 @@ const router = Router();
  * @swagger
  * /api/social/feed:
  *   get:
- *     summary: Feed of reviews from followed users
+ *     summary: Activity feed from followed users or mutual friends
+ *     description: Newest first, 10 per page. Each item has a `type` (review, list or follow) and the fields of that type; unused fields are null. Lists appear only when public and non-empty.
  *     tags: [Social]
  *     security:
  *       - BearerAuth: []
@@ -35,9 +36,16 @@ const router = Router();
  *         schema:
  *           type: integer
  *           default: 1
+ *       - in: query
+ *         name: scope
+ *         description: "following = everyone you follow; friends = only users who follow you back."
+ *         schema:
+ *           type: string
+ *           enum: [following, friends]
+ *           default: following
  *     responses:
  *       200:
- *         description: List of reviews
+ *         description: List of activity items
  *       401:
  *         description: Not authenticated
  */

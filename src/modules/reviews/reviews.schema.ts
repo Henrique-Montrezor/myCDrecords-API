@@ -48,3 +48,18 @@ export const userIdParamSchema = z.object({
 export const paginationQuerySchema = z.object({
   page: z.coerce.number().int().positive().optional().default(1),
 });
+
+export const commentBodySchema = z.object({
+  text: z
+    .string({ required_error: "text is required" })
+    .trim()
+    .min(1, "text is required")
+    .max(1000, "Text too long"),
+});
+
+export const commentIdParamSchema = z.object({
+  commentId: z.coerce
+    .number({ invalid_type_error: "Invalid commentId" })
+    .int("Invalid commentId")
+    .positive("Invalid commentId"),
+});

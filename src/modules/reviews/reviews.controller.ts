@@ -3,6 +3,7 @@ import { buildRatingSummary } from './reviews.summary';
 import { Request, Response } from 'express';
 import { logger } from '../../utils/logger';
 import { evaluateUserBadges } from '../gamification/gamification.service';
+import { clearRecommendationsCache } from '../recommendations/recommendations.controller';
 import {
     postReviewSchema,
     updateReviewSchema,
@@ -75,6 +76,7 @@ export async function postReviewController(req: Request, res: Response) {
 
         // Evaluate and grant gamification badges (does not block on failure)
         await evaluateUserBadges(userId);
+        clearRecommendationsCache(userId);
 
         res.status(201).json({ reviewId });
     } catch (error) {
@@ -104,6 +106,7 @@ export async function deleteReviewController(req: Request, res: Response) {
         }
 
         // Status 204 indicates success, but with no content in the response body
+        clearRecommendationsCache(userId);
         res.status(204).send();
     } catch (error) {
         logger.error('Error deleting review', { error });

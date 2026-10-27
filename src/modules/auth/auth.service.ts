@@ -14,6 +14,7 @@ import {
 } from "./auth.repository";
 import { createUser, findByEmail, findByUsername, findByIdForResponse } from "../users/user.repository";
 import { withTransaction } from "../../utils/withTransaction";
+import { frontendUrl, sendMailInBackground } from "../../utils/mailer";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "your-refresh-secret";
@@ -54,6 +55,17 @@ export function generateEmailVerificationToken(userId: number): string {
     JWT_VERIFY_SECRET,
     { expiresIn: "24h" }
   );
+}
+
+// Stores a 24h verification token and emails the confirmation link
+export async function issueEmailVerification(userId: number, email: string) {
+  const token = generateEmailVerificationToken(userId);
+  await createVerificationToken(userId, token, "email_verify", new Date(Date.now() + 24 * 60 * 60 * 1000));
+  sendMailInBackground({
+    to: email,
+    subject: "Confirme seu email no myCDrecords",
+    text: `Confirme seu email para manter sua conta segura. O link vale por 24 horas:\n${frontendUrl(`/auth/verify-email?token=${encodeURIComponent(token)}`)}`,
+  });
 }
 
 // Verify JWT token
@@ -163,9 +175,11 @@ export async function requestPasswordReset(email: string) {
 
   await createVerificationToken(user.id, resetToken, "password_reset", expiresAt);
 
-  // TODO: Send email with reset link
-  // const resetLink = `${process.env.FRONTEND_URL}/auth/reset-password?token=${resetToken}`;
-  // await sendResetEmail(email, resetLink);
+  sendMailInBackground({
+    to: user.email,
+    subject: "Redefinir sua senha no myCDrecords",
+    text: `Recebemos um pedido para redefinir sua senha. O link vale por 1 hora:\n${frontendUrl(`/auth/reset-password?token=${encodeURIComponent(resetToken)}`)}\n\nSe não foi você, ignore este email.`,
+  });
 
   return { success: true };
 }

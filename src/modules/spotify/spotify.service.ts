@@ -55,9 +55,9 @@ export async function fetchAlbumFromSpotify(albumId: string) {
     }
 }
 
-export async function searchSpotifyAlbum(albumName: string, artist?: string, limit = 10) {
+export async function searchSpotifyAlbum(albumName: string, artist?: string, limit = 10, offset = 0) {
     const query = `album:${albumName}${artist ? ` artist:${artist}` : ''}`;
-    const searchResult = await searchSpotify(query, 'album', limit);
+    const searchResult = await searchSpotify(query, 'album', limit, offset);
     return searchResult;
 }
 
@@ -81,8 +81,8 @@ export async function fetchArtistFromSpotify(artistId: string) {
     }  
 }
 
-export async function searchSpotify(query: string, type: string, limit = 10) {
-    const cacheKey = `spotify-search-${type}-${query}-${limit}`;
+export async function searchSpotify(query: string, type: string, limit = 10, offset = 0) {
+    const cacheKey = `spotify-search-${type}-${query}-${limit}-${offset}`;
     const cached = cache.get(cacheKey);
 
     if (cached) return cached;
@@ -95,7 +95,8 @@ export async function searchSpotify(query: string, type: string, limit = 10) {
             params: {
                 q: query,
                 type,
-                limit
+                limit,
+                offset
             }
         });
         cache.set(cacheKey, response.data);

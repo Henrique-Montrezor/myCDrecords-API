@@ -120,6 +120,7 @@ describe("POST /api/auth/register", () => {
       id: 1,
       username: validBody.username,
       email: validBody.email,
+      emailVerified: false,
     });
     expect(res.body.accessToken).toBe("access.token.value");
     expect(mockedRegisterUser).toHaveBeenCalledWith({

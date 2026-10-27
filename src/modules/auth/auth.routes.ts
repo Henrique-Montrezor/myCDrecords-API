@@ -8,6 +8,7 @@ import {
   requestReset,
   reset,
   verify,
+  resendVerification,
   updateEmailAddress,
   googleOAuth,
   spotifyOAuth,
@@ -179,6 +180,25 @@ router.post("/password/reset", asyncHandler(reset));
  *         description: Invalid or expired token
  */
 router.post("/email/verify", asyncHandler(verify));
+
+/**
+ * @swagger
+ * /api/auth/email/resend-verification:
+ *   post:
+ *     summary: Resend the email verification link
+ *     description: Issues a new 24h token and emails `FRONTEND_URL/auth/verify-email?token=...`. Without SMTP configured, the link is only logged outside production.
+ *     tags: [Authentication]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Verification email sent
+ *       401:
+ *         description: Not authenticated
+ *       409:
+ *         description: Email already verified
+ */
+router.post("/email/resend-verification", authMiddleware, asyncHandler(resendVerification));
 
 /**
  * @swagger

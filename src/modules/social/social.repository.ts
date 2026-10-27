@@ -63,28 +63,59 @@ export async function getFollowCounts(userId: number) {
     return rows[0] || { followers: 0, following: 0 };
 }
 
-// Feed of reviews from followed users
-export async function getFollowingFeed(userId: number, page: number) {
+export type FeedScope = "following" | "friends";
+
+const FOLLOWING_IDS = `SELECT following_id FROM follows WHERE follower_id = ?`;
+// Friends are mutual follows
+const FRIEND_IDS = `SELECT f.following_id FROM follows f
+    JOIN follows b ON b.follower_id = f.following_id AND b.following_id = f.follower_id
+    WHERE f.follower_id = ?`;
+
+// Activity (reviews, public lists, new follows) from followed users or mutual friends, newest first
+export async function getFollowingFeed(userId: number, page: number, scope: FeedScope = "following") {
     const connection = await initDatabase();
     const offset = (page - 1) * 10;
+    const circle = scope === "friends" ? FRIEND_IDS : FOLLOWING_IDS;
     const [rows] = await connection.query<RowDataPacket[]>(
-        `SELECT
-            r.id,
-            r.user_id,
-            u.username,
-            r.album_id,
-            r.album_title,
-            r.album_image,
-            r.album_artist,
-            r.rating,
-            r.text,
-            r.created_at
-         FROM reviews r
-         JOIN users u ON u.id = r.user_id
-         WHERE r.user_id IN (SELECT following_id FROM follows WHERE follower_id = ?)
-         ORDER BY r.created_at DESC
+        `SELECT * FROM (
+            SELECT 'review' AS type, r.id, r.user_id, u.username, p.avatar_url, r.created_at,
+                   r.album_id, r.album_title, r.album_image, r.album_artist, r.rating, r.text,
+                   NULL AS list_id, NULL AS list_title, NULL AS item_count,
+                   NULL AS target_id, NULL AS target_username, NULL AS target_avatar_url
+            FROM reviews r
+            JOIN users u ON u.id = r.user_id
+            LEFT JOIN profiles p ON p.user_id = r.user_id
+            WHERE r.user_id IN (${circle})
+            UNION ALL
+            SELECT 'list' AS type, l.id, l.user_id, u.username, p.avatar_url, l.created_at,
+                   NULL AS album_id, NULL AS album_title,
+                   (SELECT li.album_image FROM list_items li WHERE li.list_id = l.id ORDER BY li.position, li.id LIMIT 1) AS album_image,
+                   NULL AS album_artist, NULL AS rating, l.description AS text,
+                   l.id AS list_id, l.title AS list_title,
+                   (SELECT CAST(COUNT(*) AS SIGNED) FROM list_items li WHERE li.list_id = l.id) AS item_count,
+                   NULL AS target_id, NULL AS target_username, NULL AS target_avatar_url
+            FROM lists l
+            JOIN users u ON u.id = l.user_id
+            LEFT JOIN profiles p ON p.user_id = l.user_id
+            WHERE l.user_id IN (${circle})
+              AND l.is_public = 1
+              AND EXISTS (SELECT 1 FROM list_items li WHERE li.list_id = l.id)
+            UNION ALL
+            SELECT 'follow' AS type, f.id, f.follower_id AS user_id, u.username, p.avatar_url, f.created_at,
+                   NULL AS album_id, NULL AS album_title, NULL AS album_image, NULL AS album_artist,
+                   NULL AS rating, NULL AS text,
+                   NULL AS list_id, NULL AS list_title, NULL AS item_count,
+                   f.following_id AS target_id, t.username AS target_username, tp.avatar_url AS target_avatar_url
+            FROM follows f
+            JOIN users u ON u.id = f.follower_id
+            LEFT JOIN profiles p ON p.user_id = f.follower_id
+            JOIN users t ON t.id = f.following_id
+            LEFT JOIN profiles tp ON tp.user_id = f.following_id
+            WHERE f.follower_id IN (${circle})
+         ) activity
+         ORDER BY created_at DESC, type, id DESC
          LIMIT ? OFFSET ?`,
-        [userId, 10, offset]
+        [userId, userId, userId, 10, offset]
     );
     return rows || [];
 }

@@ -35,7 +35,7 @@ jest.mock("../../modules/reviews/reviews.repository", () => ({
 import request from "supertest";
 import jwt from "jsonwebtoken";
 import app from "../../app";
-import { fetchAlbumFromSpotify } from "../../modules/spotify/spotify.service";
+import { fetchAlbumFromSpotify, searchSpotifyAlbum } from "../../modules/spotify/spotify.service";
 import { fetchMusicBrainz } from "../../modules/musicbrainz/musicbrainz.service";
 import { getAlbumRatingCounts } from "../../modules/reviews/reviews.repository";
 
@@ -114,6 +114,28 @@ describe("GET /api/albums/:id", () => {
     const res = await request(app).get("/api/albums/abc");
     expect(res.status).toBe(404);
     expect(mockedSpotify).not.toHaveBeenCalled();
+  });
+});
+
+describe("GET /api/albums/search pagination", () => {
+  beforeEach(() => {
+    process.env.SPOTIFY_CLIENT_ID = "id";
+    process.env.SPOTIFY_CLIENT_SECRET = "secret";
+    (searchSpotifyAlbum as jest.Mock).mockResolvedValue({ albums: { items: [] } });
+    mockedMusicBrainz.mockResolvedValue({ "release-groups": [] });
+  });
+
+  it("forwards limit and offset to both providers", async () => {
+    await request(app).get("/api/albums/search?name=blue&limit=12&offset=24");
+    expect(searchSpotifyAlbum).toHaveBeenLastCalledWith("blue", undefined, 12, 24);
+    expect(mockedMusicBrainz).toHaveBeenLastCalledWith("release-group/", expect.objectContaining({ limit: 12, offset: 24 }));
+  });
+
+  it("clamps invalid values to the provider window", async () => {
+    await request(app).get("/api/albums/search?name=blue&limit=500&offset=-3");
+    expect(searchSpotifyAlbum).toHaveBeenLastCalledWith("blue", undefined, 50, 0);
+    await request(app).get("/api/albums/search?name=blue&offset=abc");
+    expect(searchSpotifyAlbum).toHaveBeenLastCalledWith("blue", undefined, 10, 0);
   });
 });
 

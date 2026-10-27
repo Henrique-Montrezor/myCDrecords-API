@@ -28,6 +28,13 @@ router.get("/trending", getTrendingAlbums);
  *         schema:
  *           type: string
  *         example: Nevermind
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10, minimum: 1, maximum: 50 }
+ *       - in: query
+ *         name: offset
+ *         description: Number of results to skip (pagination). Applied to Spotify and MusicBrainz.
+ *         schema: { type: integer, default: 0, minimum: 0, maximum: 1000 }
  *     responses:
  *       200:
  *         description: List of albums

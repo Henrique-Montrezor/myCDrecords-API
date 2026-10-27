@@ -6,7 +6,8 @@ import { withTransaction } from "../../utils/withTransaction";
 // Vote score and the viewer's own vote, resolved per review row (first placeholder = viewer id)
 const VOTE_COLUMNS = `
     CAST(COALESCE((SELECT SUM(v.value) FROM votes v WHERE v.target_type = 'review' AND v.target_id = r.id), 0) AS SIGNED) AS score,
-    (SELECT v.value FROM votes v WHERE v.target_type = 'review' AND v.target_id = r.id AND v.user_id = ?) AS user_vote
+    (SELECT v.value FROM votes v WHERE v.target_type = 'review' AND v.target_id = r.id AND v.user_id = ?) AS user_vote,
+    CAST((SELECT COUNT(*) FROM comments c WHERE c.review_id = r.id) AS SIGNED) AS comment_count
 `;
 
 // get reviews for a product with pagination

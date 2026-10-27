@@ -39,9 +39,16 @@ function formatSpotifyAlbums(albums: any[]) {
   }));
 }
 
+// Spotify caps `limit` at 50 and `offset` at 1000; MusicBrainz accepts the same window.
+function boundedInt(value: unknown, fallback: number, min: number, max: number) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) ? Math.min(Math.max(parsed, min), max) : fallback;
+}
+
 export async function searchAlbums(req: Request, res: Response) {
   const name = (req.query.name ?? req.query.nome) as string;
-  const limite = req.query.limit ?? req.query.limite ?? 10;
+  const limite = boundedInt(req.query.limit ?? req.query.limite, 10, 1, 50);
+  const offset = boundedInt(req.query.offset, 0, 0, 1000);
 
   let musicbrainzAlbums: any[] = [];
   let musicbrainzError: unknown;
@@ -49,6 +56,7 @@ export async function searchAlbums(req: Request, res: Response) {
     const musicbrainzData = await fetchMusicBrainz("release-group/", {
       query: `release:${name} AND primarytype:album`,
       limit: limite,
+      offset,
       inc: "tags+genres"
     });
     musicbrainzAlbums = musicbrainzData?.["release-groups"] ?? [];
@@ -59,7 +67,7 @@ export async function searchAlbums(req: Request, res: Response) {
   let formattedSpotify: any[] = [];
   if (isSpotifyConfigured()) {
     try {
-      const spotifySearch = await searchSpotifyAlbum(name as string, undefined, Number(limite) || 10);
+      const spotifySearch = await searchSpotifyAlbum(name as string, undefined, limite, offset);
       formattedSpotify = formatSpotifyAlbums(spotifySearch.albums?.items ?? []);
     } catch (error) {
       logger.warn("Spotify unavailable; returning MusicBrainz album results", { error });

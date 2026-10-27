@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { createOrUpdateProfile, getFavorites, getPublicProfile, getUserActivity, replaceFavorites, setProfileImage } from "./profile.repository";
 import { detectImageType, removeProfileImage, saveProfileImage, type ProfileImageKind } from "./profile.images";
 import { logger } from "../../utils/logger";
+import { clearRecommendationsCache } from "../recommendations/recommendations.controller";
 import { activityQuerySchema, favoritesSchema, profileUpsertSchema, userIdParamSchema, usernameParamSchema } from "./profile.schema";
 
 // Create or update profile
@@ -55,6 +56,7 @@ export async function getFavoritesController(req: Request, res: Response) {
 export async function replaceFavoritesController(req: Request, res: Response) {
     const { albums } = favoritesSchema.parse(req.body);
     await replaceFavorites(req.user!.id, albums);
+    clearRecommendationsCache(req.user!.id);
     res.json(await getFavorites(req.user!.id));
 }
 
