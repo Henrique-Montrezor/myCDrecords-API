@@ -17,7 +17,9 @@ import {
     listIdParamSchema,
     listItemParamSchema,
     userIdParamSchema,
+    listPageSchema,
 } from "./lists.schema";
+import { LIST_ITEMS_PAGE_SIZE } from "./lists.discovery.repository";
 
 // POST /api/lists
 export async function createListController(req: Request, res: Response) {
@@ -54,8 +56,8 @@ export async function userListsController(req: Request, res: Response) {
 // GET /api/lists/:listId  (public lists for anyone; private lists only for the owner)
 export async function getListController(req: Request, res: Response) {
     const { listId } = listIdParamSchema.parse(req.params);
-
-    const list = await getListById(listId);
+    const { page } = listPageSchema.parse(req.query);
+    const list = await getListById(listId, req.user?.id);
     if (!list) {
         return res.status(404).json({ error: "List not found" });
     }
@@ -65,8 +67,9 @@ export async function getListController(req: Request, res: Response) {
         return res.status(403).json({ error: "Private list" });
     }
 
-    const items = await getListItems(listId);
-    res.json({ ...list, items });
+    const items = await getListItems(listId, page, req.user?.id);
+    const total = Number(list.item_count);
+    res.json({ ...list, is_saved: Boolean(list.is_saved), items, page, pageSize: LIST_ITEMS_PAGE_SIZE, totalPages: Math.ceil(total / LIST_ITEMS_PAGE_SIZE) });
 }
 
 // PUT /api/lists/:listId
@@ -121,7 +124,7 @@ export async function addListItemController(req: Request, res: Response) {
         return res.status(403).json({ error: "Access denied" });
     }
 
-    const added = await addListItem(listId, item);
+    const added = await addListItem(listId, item, userId);
     if (!added) {
         return res.status(409).json({ error: "Album is already in the list" });
     }
@@ -146,7 +149,7 @@ export async function removeListItemController(req: Request, res: Response) {
         return res.status(403).json({ error: "Access denied" });
     }
 
-    const removed = await removeListItem(listId, albumId);
+    const removed = await removeListItem(listId, albumId, userId);
     if (!removed) {
         return res.status(404).json({ error: "Album not found in the list" });
     }

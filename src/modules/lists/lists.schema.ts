@@ -1,5 +1,28 @@
 import { z } from "zod";
 
+export const listPageSchema = z.object({
+    page: z.coerce.number().int().min(1).max(10000).default(1),
+}).strict();
+
+export const listDiscoverySchema = listPageSchema.extend({
+    scope: z.enum(["popular", "following", "friends", "mine", "saved"]).default("popular"),
+    q: z.string().trim().max(100).default(""),
+    sort: z.enum(["popular", "recent"]).default("popular"),
+}).strict();
+
+export type ListDiscoveryQuery = z.infer<typeof listDiscoverySchema>;
+
+export const listImageParamsSchema = z.object({
+    listId: z.coerce.number().int().positive(),
+    kind: z.enum(["thumbnail", "banner"]),
+});
+
+export const listMoveSchema = z.object({
+    revision: z.number().int().min(0).max(4294967294),
+    itemId: z.number().int().positive().safe(),
+    toPosition: z.number().int().positive().max(2147483647),
+}).strict();
+
 export const createListSchema = z.object({
     title: z
         .string({ required_error: "title is required" })

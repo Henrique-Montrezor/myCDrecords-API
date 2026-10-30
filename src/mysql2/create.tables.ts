@@ -1,7 +1,22 @@
 import {Request, Response} from 'express';
 import {initDatabase} from "./init.database";
 import { logger } from "../utils/logger";
+import { migrateDiscoveryCatalog } from "./migrations/001-discovery";
+import { migrateListSaves } from "./migrations/002-list-saves";
+import { migrateListIdentity } from "./migrations/003-list-identity";
 
+export async function createListIdentity() {
+    await migrateListIdentity(await initDatabase());
+}
+
+export async function createListSavesTable() {
+    await migrateListSaves(await initDatabase());
+}
+
+export async function createDiscoveryTables() {
+    const connection = await initDatabase();
+    await migrateDiscoveryCatalog(connection);
+}
 
 // Function to create the users table
 export async function createUserTable(req: Request, res: Response) {

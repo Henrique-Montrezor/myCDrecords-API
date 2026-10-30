@@ -8,7 +8,7 @@ function isSpotifyConfigured() {
   return Boolean(process.env.SPOTIFY_CLIENT_ID && process.env.SPOTIFY_CLIENT_SECRET);
 }
 
-function formatMusicBrainzAlbums(albums: any[]) {
+export function formatMusicBrainzAlbums(albums: any[]) {
   return albums.map((album: any) => ({
     id: album.id,
     source: 'musicbrainz',
