@@ -15,7 +15,7 @@ export function formatMusicBrainzAlbums(albums: any[]) {
     title: album.title,
     artistCredit: album['artist-credit'],
     releaseDate: album['first-release-date'],
-    imageUrl: `https://coverartarchive.org/release-group/${album.id}/front`,
+    imageUrl: `https://coverartarchive.org/release-group/${album.id}/front-250`,
     disambiguation: album.disambiguation,
     type: album['primary-type'],
     secondaryTypes: album['secondary-types'] || [],

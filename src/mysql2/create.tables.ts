@@ -4,6 +4,19 @@ import { logger } from "../utils/logger";
 import { migrateDiscoveryCatalog } from "./migrations/001-discovery";
 import { migrateListSaves } from "./migrations/002-list-saves";
 import { migrateListIdentity } from "./migrations/003-list-identity";
+import { migrateRecommendationDismissals } from "./migrations/004-recommendation-dismissals";
+import { migrateCoverThumbnails } from "./migrations/005-cover-thumbnails";
+import { migrateRecommendationPreferences } from "./migrations/006-recommendation-preferences";
+
+export async function createCoverThumbnails() {
+    await migrateCoverThumbnails(await initDatabase());
+}
+
+export async function createRecommendationDismissals() {
+    const connection = await initDatabase();
+    await migrateRecommendationDismissals(connection);
+    await migrateRecommendationPreferences(connection);
+}
 
 export async function createListIdentity() {
     await migrateListIdentity(await initDatabase());

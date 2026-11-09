@@ -89,7 +89,7 @@ export function normalizeMusicBrainzAlbum(releaseGroup: any, release?: any): Alb
     artists: (releaseGroup["artist-credit"] ?? []).map((credit: any) => ({ name: credit.name })),
     releaseDate: releaseGroup["first-release-date"] || null,
     type: releaseGroup["primary-type"]?.toLowerCase() ?? null,
-    coverUrl: `https://coverartarchive.org/release-group/${releaseGroup.id}/front`,
+    coverUrl: `https://coverartarchive.org/release-group/${releaseGroup.id}/front-500`,
     genres: genres.slice(0, 6),
     externalUrl: `https://musicbrainz.org/release-group/${releaseGroup.id}`,
     totalTracks: tracks.length,

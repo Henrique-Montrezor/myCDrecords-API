@@ -28,6 +28,8 @@ import {
   createListSavesTable,
   createListIdentity,
   createDiscoveryTables,
+  createRecommendationDismissals,
+  createCoverThumbnails,
   createBadgesTable,
   createUserBadgesTable,
   seedDefaultBadges
@@ -120,6 +122,8 @@ const initializeApp = async () => {
     await createListSavesTable();
     await createListIdentity();
     await createDiscoveryTables();
+    await createRecommendationDismissals();
+    await createCoverThumbnails();
 
     // Gamification: badges catalog + achievements + default seed
     await createBadgesTable({} as express.Request, {} as express.Response);

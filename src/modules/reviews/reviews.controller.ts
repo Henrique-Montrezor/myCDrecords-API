@@ -144,6 +144,7 @@ export async function updateReviewController(req: Request, res: Response) {
             // If affectedRows is 0, the review does not exist OR does not belong to the user
             return res.status(404).json({ error: 'Review not found or access denied' });
         }
+        clearRecommendationsCache(userId);
         
         res.status(200).json('Update review successfully');
     } catch(error) {
