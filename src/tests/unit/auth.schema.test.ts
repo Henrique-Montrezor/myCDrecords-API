@@ -9,11 +9,21 @@ describe("auth.schema - registerSchema", () => {
     email: "john@example.com",
     password: "password123",
     confirmPassword: "password123",
+    publicReviewNotice: { accepted: true, version: "public-reviews-v1" },
   };
 
   it("accepts valid data", () => {
     const result = registerSchema.safeParse(validInput);
     expect(result.success).toBe(true);
+  });
+
+  it.each([
+    undefined, { accepted: false, version: "public-reviews-v1" },
+    { accepted: "true", version: "public-reviews-v1" },
+    { accepted: true, version: "outdated" },
+    { accepted: true, version: "public-reviews-v1", mlConsent: true },
+  ])("rejects missing, refused or incompatible public review notices: %j", (publicReviewNotice) => {
+    expect(registerSchema.safeParse({ ...validInput, publicReviewNotice }).success).toBe(false);
   });
 
   it("trims the username and email", () => {

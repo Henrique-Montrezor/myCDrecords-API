@@ -28,6 +28,8 @@ const mysqlSuite = process.env.LIST_IDENTITY_MYSQL_TESTS === "true" ? describe :
 
 mysqlSuite("list identity on connection-local MySQL temporary tables only", () => {
     beforeAll(async () => {
+        jest.unmock("dotenv");
+        jest.requireActual<typeof import("dotenv")>("dotenv").config();
         const database = jest.requireActual<typeof import("../../mysql2/init.database")>("../../mysql2/init.database");
         pool = database.getPool();
         mockConnection = await pool.getConnection();

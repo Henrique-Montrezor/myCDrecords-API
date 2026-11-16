@@ -5,8 +5,10 @@ import {
 } from "./recommendations.controller";
 import authMiddleware from "../../middlewares/auth.middleware";
 import asyncHandler from "../../utils/asyncHandler";
+import pilotRouter from "./recommendations.pilot.routes";
 
 const router = Router();
+router.use("/pilot", pilotRouter);
 
 /**
  * @swagger

@@ -1,6 +1,7 @@
 import { initDatabase } from "../../mysql2/init.database";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
 import { withTransaction } from "../../utils/withTransaction";
+import { capturePilotReviewMutation, erasePilotAlbumEvents, lockPilotForMutation } from "../recommendations/recommendations.pilot.controls";
 
 
 // Vote score and the viewer's own vote, resolved per review row (first placeholder = viewer id)
@@ -75,15 +76,21 @@ export async function postReview(userId: number,
     rating: number, 
     text: string
 ){
-    const connection = await initDatabase();
-    
-    const query = `
-        INSERT INTO reviews (user_id, album_id, album_title, album_image, album_artist, album_genre, rating, text)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `;
+    return withTransaction(async (connection) => {
+        await lockPilotForMutation(connection);
+        const [existing] = await connection.query<RowDataPacket[]>(
+            "SELECT id FROM reviews WHERE user_id = ? AND album_id = ? FOR UPDATE", [userId, albumId],
+        );
+        if (existing[0]) throw Object.assign(new Error("User has already reviewed this album"), { status: 409 });
+        const query = `
+            INSERT INTO reviews (user_id, album_id, album_title, album_image, album_artist, album_genre, rating, text)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `;
 
-    const [result] = await connection.query<any>(query, [userId, albumId, albumTitle, albumImage, albumArtist, albumGenre, rating, text]);
-    return result.insertId;
+        const [result] = await connection.query<ResultSetHeader>(query, [userId, albumId, albumTitle, albumImage, albumArtist, albumGenre, rating, text]);
+        await capturePilotReviewMutation(connection, "create", userId, albumId, rating);
+        return result.insertId;
+    });
 }
 
 // delete a review
@@ -91,6 +98,12 @@ export async function deleteReview(reviewId: number, userId: number) {
     // Deletes attached comments and the review in a single transaction,
     // ensuring no data is left inconsistent on failure.
     return withTransaction(async (connection) => {
+        await lockPilotForMutation(connection);
+        const [rows] = await connection.query<RowDataPacket[]>(
+            "SELECT album_id FROM reviews WHERE id = ? AND user_id = ? FOR UPDATE", [reviewId, userId],
+        );
+        if (!rows[0]) return false;
+        await erasePilotAlbumEvents(connection, userId, rows[0].album_id);
         // 1. Remove the comments linked to the review
         await connection.query<ResultSetHeader>(
             `DELETE FROM comments WHERE review_id = ?`,
@@ -136,19 +149,24 @@ export async function getReviewsByUserId(userId: number, page: number) {
 }
 
 export async function updateReview(reviewId: number, userId: number, rating: number, text: string) {
-    const connection = await initDatabase();
+    return withTransaction(async (connection) => {
+        await lockPilotForMutation(connection);
+        const [rows] = await connection.query<RowDataPacket[]>(
+            "SELECT album_id, rating FROM reviews WHERE id = ? AND user_id = ? FOR UPDATE", [reviewId, userId],
+        );
+        if (!rows[0]) return false;
+        if (rows[0].rating !== rating) {
+            await capturePilotReviewMutation(connection, "update", userId, rows[0].album_id, rating);
+        }
+        const query = `
+            UPDATE reviews
+            SET rating = ?, text = ?
+            WHERE id = ? AND user_id = ?
+        `;
 
-    // The WHERE now requires the ID to match AND the owner to be the provided userId
-    const query = `
-        UPDATE reviews
-        SET rating = ?, text = ?
-        WHERE id = ? AND user_id = ?
-    `;
-
-    const [result] = await connection.query<ResultSetHeader>(query, [rating, text, reviewId, userId]);
-    
-    // Returns true if any row was updated, false otherwise
-    return result.affectedRows > 0;
+        const [result] = await connection.query<ResultSetHeader>(query, [rating, text, reviewId, userId]);
+        return result.affectedRows > 0;
+    });
 }
 
 export async function checkReview(userId: number, albumId: string): Promise<boolean> {

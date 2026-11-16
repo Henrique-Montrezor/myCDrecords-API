@@ -11,6 +11,15 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "ml:readiness": "ts-node src/modules/recommendations/recommendations.readiness.cli.ts",
+    "ml:preflight": "ts-node src/modules/recommendations/recommendations.pilot.cli.ts",
+    "ml:pilot:manage": "ts-node src/modules/recommendations/recommendations.pilot.manage.cli.ts",
+    "ml:mysql:verify": "ts-node src/modules/recommendations/recommendations.real.cli.ts mysql",
+    "ml:mysql:diagnose": "ts-node src/modules/recommendations/recommendations.real.cli.ts diagnose",
+    "ml:pilot:migrate": "ts-node src/modules/recommendations/recommendations.real.cli.ts migrate",
+    "ml:train:real": "ts-node src/modules/recommendations/recommendations.real.cli.ts train",
+    "ml:export:rehearsal": "ts-node src/modules/recommendations/recommendations.exchange.cli.ts",
+    "ml:lab": "ts-node src/modules/recommendations/recommendations.lab.ts",
     "test:health": "nodemon src/tests/tests.ts"
   },
   "keywords": [

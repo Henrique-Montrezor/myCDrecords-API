@@ -34,11 +34,11 @@ import {
 
 // POST /auth/register
 export async function register(req: Request, res: Response) {
-  const { username, email, password } = registerSchema.parse(req.body);
+  const { username, email, password, publicReviewNotice } = registerSchema.parse(req.body);
 
   try {
     // Register user
-    const user = await registerUser({ username, email, password });
+    const user = await registerUser({ username, email, password, publicReviewNotice });
 
     // Generate tokens
     const tokens = await createTokensPair(user.id, user.email);

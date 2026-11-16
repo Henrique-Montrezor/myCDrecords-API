@@ -49,7 +49,21 @@ describe("POST /api/auth/register", () => {
     email: "john@example.com",
     password: "password123",
     confirmPassword: "password123",
+    publicReviewNotice: { accepted: true, version: "public-reviews-v1" },
   };
+
+  it.each([undefined, { accepted: false, version: "public-reviews-v1" }, { accepted: true, version: "outdated" }])(
+    "rejects an absent/refused/outdated notice before creating an account: %j",
+    async (publicReviewNotice) => {
+      const res = await request(app).post("/api/auth/register").send({ ...validBody, publicReviewNotice });
+      expect(res.status).toBe(400);
+      expect(res.body.issues).toEqual(expect.arrayContaining([
+        expect.objectContaining({ path: expect.stringContaining("publicReviewNotice") }),
+      ]));
+      expect(mockedRegisterUser).not.toHaveBeenCalled();
+      expect(mockedCreateTokensPair).not.toHaveBeenCalled();
+    },
+  );
 
   it("returns 400 and the list of issues when the email is invalid", async () => {
     const res = await request(app)
@@ -127,6 +141,7 @@ describe("POST /api/auth/register", () => {
       username: validBody.username,
       email: validBody.email,
       password: validBody.password,
+      publicReviewNotice: validBody.publicReviewNotice,
     });
   });
 });

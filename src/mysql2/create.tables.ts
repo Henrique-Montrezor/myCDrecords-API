@@ -7,15 +7,24 @@ import { migrateListIdentity } from "./migrations/003-list-identity";
 import { migrateRecommendationDismissals } from "./migrations/004-recommendation-dismissals";
 import { migrateCoverThumbnails } from "./migrations/005-cover-thumbnails";
 import { migrateRecommendationPreferences } from "./migrations/006-recommendation-preferences";
+import { migratePublicReviewNotice } from "./migrations/007-public-review-notice";
+import { migrateMlPilotControls } from "./migrations/008-ml-pilot-controls";
+import { migrateMlPilotCollection } from "./migrations/009-ml-pilot-collection";
+import { startPilotRetention } from "../modules/recommendations/recommendations.pilot.retention";
+import { inspectPilotCollection } from "../modules/recommendations/recommendations.pilot.collection";
 
 export async function createCoverThumbnails() {
     await migrateCoverThumbnails(await initDatabase());
 }
 
 export async function createRecommendationDismissals() {
+    inspectPilotCollection();
     const connection = await initDatabase();
     await migrateRecommendationDismissals(connection);
     await migrateRecommendationPreferences(connection);
+    await migrateMlPilotControls(connection);
+    await migrateMlPilotCollection(connection);
+    await startPilotRetention();
 }
 
 export async function createListIdentity() {
@@ -64,6 +73,7 @@ export async function createUserTable(req: Request, res: Response) {
                 logger.warn('Spotify columns might already exist', { detail: alterError.message });
             }
         }
+        await migratePublicReviewNotice(connection);
     } catch (error) {
         logger.error('Error creating users table', { error });
         throw error;

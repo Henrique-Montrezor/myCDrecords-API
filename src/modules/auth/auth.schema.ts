@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+export const PUBLIC_REVIEW_NOTICE_VERSION = "public-reviews-v1";
+export const publicReviewNoticeSchema = z.object({
+  accepted: z.literal(true, { errorMap: () => ({ message: "Confirme que entende que as reviews serão públicas." }) }),
+  version: z.literal(PUBLIC_REVIEW_NOTICE_VERSION, { errorMap: () => ({ message: "O aviso de reviews públicas mudou. Atualize a página e confirme novamente." }) }),
+}).strict();
+export type PublicReviewNoticeAcknowledgement = z.infer<typeof publicReviewNoticeSchema>;
+
 export const registerSchema = z
   .object({
     username: z
@@ -17,6 +24,7 @@ export const registerSchema = z
       .min(8, "Password must be at least 8 characters")
       .max(128, "Password too long"),
     confirmPassword: z.string({ required_error: "Password confirmation is required" }),
+    publicReviewNotice: publicReviewNoticeSchema,
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",

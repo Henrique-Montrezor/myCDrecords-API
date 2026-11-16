@@ -1,6 +1,8 @@
 import { initDatabase } from "../../mysql2/init.database";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
 import { withTransaction } from "../../utils/withTransaction";
+import { erasePilotAlbumEvents, lockPilotForMutation, withdrawPilotParticipant } from "../recommendations/recommendations.pilot.controls";
+import { hasPilotStorage } from "../recommendations/recommendations.pilot.collection";
 
 // Get all users with pagination
 export async function getAllUsers(page: number = 1, limit: number = 20) {
@@ -38,23 +40,23 @@ export async function getTotalUsersCount() {
 
 // Ban user
 export async function banUser(userId: number, adminId: number, reason: string) {
-  const connection = await initDatabase();
-  const query = `
-    INSERT INTO banned_users (user_id, banned_by, reason, banned_at)
-    VALUES (?, ?, ?, NOW())
-    ON DUPLICATE KEY UPDATE 
-      banned_by = ?,
-      reason = ?,
-      unbanned_at = NULL,
-      banned_at = NOW()
-  `;
+  return withTransaction(async (connection) => {
+    await lockPilotForMutation(connection);
+    if (hasPilotStorage()) await withdrawPilotParticipant(connection, userId);
+    const query = `
+      INSERT INTO banned_users (user_id, banned_by, reason, banned_at)
+      VALUES (?, ?, ?, NOW())
+      ON DUPLICATE KEY UPDATE
+        banned_by = ?,
+        reason = ?,
+        unbanned_at = NULL,
+        banned_at = NOW()
+    `;
 
-  const [result] = await connection.query<any>(query, [userId, adminId, reason, adminId, reason]);
-  
-  // Update user is_active to false
-  await connection.query(`UPDATE users SET is_active = false WHERE id = ?`, [userId]);
-  
-  return result;
+    const [result] = await connection.query<ResultSetHeader>(query, [userId, adminId, reason, adminId, reason]);
+    await connection.query(`UPDATE users SET is_active = false WHERE id = ?`, [userId]);
+    return result;
+  });
 }
 
 // Unban user
@@ -117,6 +119,11 @@ export async function getAllReviews(page: number = 1, limit: number = 20) {
 export async function deleteReview(reviewId: number) {
   // Removes attached comments and the review atomically.
   return withTransaction(async (connection) => {
+    await lockPilotForMutation(connection);
+    const [reviews] = await connection.query<RowDataPacket[]>(
+      "SELECT user_id, album_id FROM reviews WHERE id = ? FOR UPDATE", [reviewId],
+    );
+    if (reviews[0]) await erasePilotAlbumEvents(connection, reviews[0].user_id, reviews[0].album_id);
     await connection.query<ResultSetHeader>(
       `DELETE FROM comments WHERE review_id = ?`,
       [reviewId]

@@ -1,20 +1,22 @@
 import { initDatabase } from "../../mysql2/init.database";
 import { UserRegisterParams } from "./user.entity";
-import { RowDataPacket } from "mysql2";
+import { RowDataPacket, ResultSetHeader } from "mysql2";
 import { logger } from "../../utils/logger";
 
 export async function createUser(user: UserRegisterParams) {
     const connection = await initDatabase();
     const query = `
         INSERT INTO users
-        (username, email, password, is_active)
-        VALUES (?, ?, ?, true)
+        (username, email, password, is_active, public_review_notice_version, public_review_notice_accepted_at)
+        VALUES (?, ?, ?, ?, ?, IF(? IS NULL, NULL, UTC_TIMESTAMP(3)))
     `;
-    const [result] = await connection.query<any>(query, [
+    const [result] = await connection.query<ResultSetHeader>(query, [
         user.username,
         user.email,
         user.password,
-        user.is_active
+        user.is_active,
+        user.publicReviewNoticeVersion ?? null,
+        user.publicReviewNoticeVersion ?? null,
     ]);
 
     // Return the created user with the ID
@@ -26,7 +28,7 @@ export async function createUser(user: UserRegisterParams) {
     };
 }
 
-export async function findByEmail(email: string) {
+export async function findByEmail(email: string): Promise<RowDataPacket | null> {
     logger.debug("findByEmail", { email });
     
     const connection = await initDatabase();
@@ -39,7 +41,7 @@ export async function findByEmail(email: string) {
     return rows[0] || null;
 }
 
-export async function findByUsername(username: string) {
+export async function findByUsername(username: string): Promise<RowDataPacket | null> {
     
     const connection = await initDatabase();
     const [rows] = await connection.query<RowDataPacket[]>(

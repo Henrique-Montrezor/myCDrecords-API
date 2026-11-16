@@ -30,6 +30,7 @@ const router = Router();
  *         application/json:
  *           schema:
  *             type: object
+ *             required: [username, email, password, confirmPassword, publicReviewNotice]
  *             properties:
  *               username:
  *                 type: string
@@ -39,11 +40,23 @@ const router = Router();
  *                 type: string
  *               confirmPassword:
  *                 type: string
+ *               publicReviewNotice:
+ *                 type: object
+ *                 additionalProperties: false
+ *                 required: [accepted, version]
+ *                 description: Acknowledges public reviews only; not consent for ML or a liability waiver.
+ *                 properties:
+ *                   accepted:
+ *                     type: boolean
+ *                     enum: [true]
+ *                   version:
+ *                     type: string
+ *                     enum: [public-reviews-v1]
  *     responses:
  *       201:
  *         description: User registered successfully
  *       400:
- *         description: Validation error
+ *         description: Validation error, including absent/refused acknowledgement or an incompatible notice version.
  */
 router.post("/register", asyncHandler(register));
 

@@ -1,10 +1,13 @@
 // Request/Response types for Auth endpoints
 
+import type { PublicReviewNoticeAcknowledgement } from "./auth.schema";
+
 export interface RegisterRequest {
   username: string;
   email: string;
   password: string;
   confirmPassword?: string;
+  publicReviewNotice: PublicReviewNoticeAcknowledgement;
 }
 
 export interface LoginRequest {

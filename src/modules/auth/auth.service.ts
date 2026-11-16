@@ -15,6 +15,7 @@ import {
 import { createUser, findByEmail, findByUsername, findByIdForResponse } from "../users/user.repository";
 import { withTransaction } from "../../utils/withTransaction";
 import { frontendUrl, sendMailInBackground } from "../../utils/mailer";
+import { publicReviewNoticeSchema } from "./auth.schema";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "your-refresh-secret";
@@ -92,6 +93,7 @@ export async function comparePassword(
 
 // Register user
 export async function registerUser(data: RegisterRequest) {
+  const publicReviewNotice = publicReviewNoticeSchema.parse(data.publicReviewNotice);
   // Validate whether the email already exists
   const existingEmail = await findByEmail(data.email);
   if (existingEmail) {
@@ -113,7 +115,8 @@ export async function registerUser(data: RegisterRequest) {
     email: data.email,
     password: hashedPassword,
     is_active: true,
-  } as any);
+    publicReviewNoticeVersion: publicReviewNotice.version,
+  });
 
   return user;
 }

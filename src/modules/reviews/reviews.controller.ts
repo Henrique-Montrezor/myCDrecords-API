@@ -80,6 +80,9 @@ export async function postReviewController(req: Request, res: Response) {
 
         res.status(201).json({ reviewId });
     } catch (error) {
+        if (error instanceof Error && "status" in error && error.status === 409) {
+            return res.status(409).json({ error: error.message });
+        }
         logger.error('Error posting review', { error });
         res.status(500).json({ error: 'Internal server error' });
     }

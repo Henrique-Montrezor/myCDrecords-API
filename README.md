@@ -121,6 +121,282 @@ docker run --env-file .env -p 3000:3000 mycdrecords-server
 
 ## Running Tests
 
+### ML0: isolated synthetic readiness diagnostic
+
+The [PyTorch roadmap](../ML-ROADMAP.md) starts with data eligibility and
+measurement, not model training. Run the initial diagnostic from this package:
+
+```powershell
+npm run ml:readiness -- --synthetic
+```
+
+This command uses an internal deterministic fixture only: three synthetic users,
+five catalog identities and six ratings. It does not initialize the application,
+read `.env`, connect to MySQL/Redis, request provider data, import files or write
+datasets. Unsupported or missing arguments produce an error and exit code 2.
+No new dependency is required.
+
+The report contains aggregates, not user/album IDs:
+
+- `coverage`: distinct rated albums / declared catalog albums.
+- `density`: distinct user/album ratings / (users with ratings × catalog albums).
+- `ratingsPerUser`: minimum, maximum and average among users with ratings only.
+- `overlap`: albums rated >= 4 by at least two users and distinct users sharing
+  such an album; this is not a count of user pairs.
+- `updatedRows`: rows whose update time exceeds creation time, not proof that
+  the rating value changed.
+- `period`: first creation and last update among the current snapshot rows.
+
+Empty inputs produce zero ratios and null period boundaries, never an approval.
+The CLI always reports `promotionAllowed: false`,
+`realWorldQuality: "not_measured"` and
+`temporalEvaluation: "blocked_missing_event_history"`. Passing this diagnostic
+does not validate recommendation relevance or reconstruct deleted/edited events.
+The synthetic schema is not an import contract or proof of provenance for real
+records; only the internal fixture is accepted by the CLI.
+
+The pilot is isolated and intended to remain compatible with future commercial
+use. Spotify content and MusicBrainz tags/genre associations without validated
+licensing are excluded. Real data collection/export remains a separate, gated
+roadmap step.
+
+### Synthetic PyTorch laboratory in the application
+
+The [ML package guide](../myCDrecords-ml/README.md) documents setup, training and
+validation. Once its synthetic snapshot has been generated, run from this API:
+
+```powershell
+npm run ml:lab
+```
+
+This starts a separate development entry of the existing Express package at
+`http://localhost:3005/api/recommendations/lab`, bound to loopback. It does not
+load `.env`, initialize the main app/database or train on HTTP requests.
+No login, cookies or real catalog data are used. Production startup is refused;
+the endpoint is not mounted in the main API.
+
+With the Vite client running, open
+`http://localhost:5173/recommendations/lab` to compare saved PyTorch/BPR and
+popularity rankings for 12 synthetic profiles. The page is development-only and
+isolated from the real session provider. Existing recommendations are unchanged.
+
+Missing/invalid snapshots return explicit 503 errors, not invented suggestions.
+The response is validated and `no-store`; scores are not probabilities.
+Synthetic success does not establish relevance for real users or authorize ML
+promotion.
+
+### Real-data pilot preflight and synthetic exchange
+
+```powershell
+npm run ml:preflight
+npm run ml:export:rehearsal -- --synthetic
+```
+
+The preflight prints the owner's pilot decisions and outstanding blockers. It
+deliberately exits **1** while blocked (unsupported arguments: **2**), without
+starting the app, loading `.env` or accessing a database/provider. The current
+decision is an internal, explicit opt-in pilot using prospective independent
+ratings, with 30-day event retention. The owner has declared specific, optional,
+revocable consent and an approved confidential policy, which was not requested
+or inspected. These declarations do not establish legal compliance; linked
+ratings may be personal data.
+
+The static preflight covers **persisted real models and serving**, not the
+running collection state or the separate private in-memory trainer.
+`realDataAllowed=false` and `promotionAllowed=false` refer to that scope.
+Confidential policy references need not be shared. Collection uses separate,
+default-off runtime controls below.
+
+### Private real training and MySQL verification
+
+```powershell
+npm run ml:mysql:diagnose
+npm run ml:mysql:verify
+npm run ml:pilot:migrate
+npm run ml:train:real
+```
+
+Diagnosis exposes only DNS/TCP/protocol status, never endpoint or credentials.
+Verification creates a unique `mycdrecords_ml_tests_<uuid>` schema and runs real
+008/009 migrations and transaction/consent/expiry/locking checks with disposable
+fixtures. Application data is untouched. The schema/public notice archive are
+retained; all test rows are rolled back. Requires CREATE DATABASE privilege and
+at least two pool connections. `migrate` explicitly applies only additive ML
+migrations in the configured application database; it never enables collection.
+
+Training reads only retained prospective independent events with an active
+account, matching unwithdrawn receipt for **ml-pilot-v2** and core/CC0 ledger.
+It sends per-run pseudonyms and closed fields to local PyTorch through stdin,
+without inherited DB/provider credentials. Datasets, maps, weights and individual
+rankings are never saved. Real timestamps retain six decimals; sequences retain
+BIGINT precision. Global time cuts (60/20/20), validation-only epoch selection,
+held-out test and popularity baseline reuse the temporal/BPR core.
+
+After training, Node rechecks DB generation and the exact eligible rows before
+accepting the aggregate result. Empty/inadequate history, expiry, withdrawal,
+oversized inputs or database failures produce explicit nonzero errors.
+Only private aggregate run results are stored under the ML package's ignored
+`artifacts` directory; failure replaces the current result with a blocked status.
+This does not publish to the visual lab or production recommendations.
+
+**Actual execution on 2026-11-16:** after an initial transient connection failure
+(`ETIMEDOUT`/`MYSQL_GREETING_TIMEOUT`), real MySQL verification passed all **14
+checks**. Additive migrations 008/009 were then applied in the configured
+application database. Real training returned **`NO_ELIGIBLE_EVENTS`**: zero
+eligible authorized events, so no real model was trained. No receipts were
+fabricated and old reviews were not backfilled. TLS and `.env` were not changed.
+Code verification: 376 tests/38 API suites, API/test types and build passed;
+20 Python tests passed, including the disposable Node-to-PyTorch bridge.
+See the [training guide](../myCDrecords-ml/README.md) for the closed contract and
+pilot size limits. No confidential document is needed by these commands.
+
+The exchange command prints only the built-in synthetic event fixture as JSON.
+It rejects missing/unsupported arguments and never accepts user IDs, SQL,
+input files or `--real`. The [ML guide](../myCDrecords-ml/README.md) documents
+piping this strict contract into PyTorch through `temporal --synthetic --stdin`.
+Review text, images, tags, account identifiers and provider content are excluded.
+The synthetic exchange is a rehearsal, not a way to relabel real data.
+
+### ML1b: optional prospective rating collection
+
+The [pilot controls](src/modules/recommendations/recommendations.pilot.controls.ts)
+now run on review creation/rating updates, owner/moderator deletion and account
+ban transactions. **Collection is off by default.** Normal registration,
+existing reviews and public-review acknowledgements never enroll anyone.
+Only invited, active accounts with a matching unwithdrawn consent receipt and
+verified independent album eligibility can contribute.
+
+[Migrations 008](src/mysql2/migrations/008-ml-pilot-controls.ts) and
+[009](src/mysql2/migrations/009-ml-pilot-collection.ts) are registered in the
+normal bootstrap after users/recommendation tables. Restarting the main API
+will apply these additive changes using its usual migration privileges.
+No backfill, automatic invitations or invented acknowledgements are performed.
+Migration 009 archives the exact public notice JSON: changing its contents
+under the same version fails startup instead of overwriting consent evidence.
+
+The [router](src/modules/recommendations/recommendations.pilot.routes.ts) is
+mounted under `/api/recommendations/pilot` and documented in Swagger:
+
+| Method | Contract |
+| --- | --- |
+| GET `/notice` | Public, no SQL; full versioned notice, purpose, data, retention, withdrawal and contact |
+| GET `/participation` | Authenticated own status: invited, participating, closed, noticeVersion |
+| PUT `/participation` | Strict `{ accepted: true, noticeVersion: "ml-pilot-v2" }`; invited authenticated account only |
+| DELETE `/participation` | No body fields; withdraws only the authenticated subject, including while collection is disabled |
+
+Authenticated responses are `private, no-store`. GET/PUT return 503
+`ML_PILOT_BLOCKED` before SQL while the runtime gate is closed. Extra body
+fields, refused permission, registration-only and draft versions are rejected;
+when disabled, the availability gate takes precedence over body validation.
+Withdrawal removes pilot events, closes active receipts and invalidates the
+generation atomically. It does not delete public reviews. Rejoining requires a
+fresh explicit acknowledgement; previous withdrawal receipts are retained
+until their own expiry, not overwritten.
+
+The public notice is `ml-pilot-v2`, held by Administradores - MyCDRecords,
+contact `Contato@MyCDRecords.com`; its immutable content is in
+[pilot.collection](src/modules/recommendations/recommendations.pilot.collection.ts)
+and the database notice archive. This is a separate public summary, not a copy
+of the confidential document. The operator must check that this exact notice
+matches the approved policy before enabling it. This delivery does not certify
+the policy or the contact's operation. Version v1 explicitly excluded training
+in its stage; it is not rewritten or treated as authorization for v2. Participants
+must explicitly acknowledge v2 before contributing to real memory training.
+
+Only newly created independent ratings are captured. Editing a pre-enrollment
+or otherwise untracked review does not start collection. Rating updates require
+a still-retained event from the current participation; text-only edits create
+no ML event. After that stream's 30-day window expires, editing the old review
+does not recreate history. Owner/moderator deletion erases that album's events
+and invalidates the generation rather than retaining deleted ratings. A rating
+edit while collection is paused removes stale collected ratings. Ban withdraws
+participation; unban does not restore permission.
+
+The recorder receives only internal IDs, rating, server UUID and database UTC
+timestamps/sequence; no review text, titles, covers, tags or Spotify content.
+Raw account IDs remain private in MySQL; they are not anonymized and cannot be
+fed to the Python package. UUID format alone does not establish provenance.
+
+#### Private local activation (operator only)
+
+**No real account/rating records or confidential document were inspected.**
+Real isolated MySQL verification passed; application ML migrations were applied,
+and the authorized export query returned no eligible events.
+First homologate migrations, concurrent consent/write/withdrawal, expiry and
+failure/rollback on an authorized isolated MySQL with disposable fixtures.
+Do not treat SQL mocks as real MySQL certification.
+
+1. Review `GET /api/recommendations/pilot/notice` and ensure the contact works.
+2. Provision and monitor an independent durable scheduler, at least every
+   minute, for `node dist\modules\recommendations\recommendations.pilot.manage.cli.js purge`,
+   including periods when the API is stopped. Use the built API directory as
+   its working directory; this command does not require development dependencies.
+   Secure its credentials and working directory. Define deletion for replicas,
+   logs/backups/restores; a confirmation flag does not implement these controls.
+3. Only after these checks, configure locally (never send credentials, policy
+   contents or real records to AI tools):
+
+   ```dotenv
+   ML_PILOT_COLLECTION_ENABLED=true
+   ML_PILOT_NOTICE_APPROVED_VERSION=ml-pilot-v2
+   ML_PILOT_DURABLE_RETENTION_CONFIRMED=true
+   ```
+
+4. Restart the main API. Bootstrap validates/archives the notice and performs
+   cleanup before allowing collection. A process-local 60-second cleanup loop
+   also runs while paused; failure blocks new collection until a successful
+   cleanup. Expiry is server-owned; physical removal is periodic, not a promise
+   of exact-clock deletion. If the required durable retention/backup controls
+   cannot be operated, **leave collection disabled**.
+5. Prepare invitations and independently verified core/CC0 album eligibility
+   through the private CLI, not an HTTP endpoint. Replace placeholders locally:
+
+   ```powershell
+   npm run ml:pilot:manage -- --help
+   npm run ml:pilot:manage -- invite --user-id ID_INTERNO
+   npm run ml:pilot:manage -- album --album-id MBID_VERIFICADO --evidence REFERENCIA_PRIVADA --first-available-at ISO_UTC_COM_EVIDENCIA --confirm-independent-core-cc0
+   ```
+
+   The attestation is the operator's responsibility, not automated license
+   verification. Existing eligibility is not silently overwritten. A correction
+   requires explicit revocation (which erases its events) before registration.
+6. Each participant reads the notice and submits their own authenticated PUT
+   in Swagger (`http://localhost:3004/docs`) or another trusted API client.
+   Administrators cannot give consent by supplying somebody else's ID.
+   An invitation alone collects nothing. This slice adds **API participation,
+   not a new frontend consent form**.
+
+Pause new collection by setting `ML_PILOT_COLLECTION_ENABLED=false` and
+restarting the API; withdrawal, expiry and deletion remain available.
+`revoke-album --album-id MBID_VERIFICADO` removes eligibility and its events.
+`close --confirm-end` permanently closes this pilot in the database, deletes
+events and starts the 30-day post-closure receipt period; restarting with flags
+enabled does not reopen it. These are private destructive operations: run only
+with explicit operator authorization. Successful CLI output contains status or
+cleanup counts, not user records; keep error logs private as well.
+
+Retention keeps receipts throughout participation and deletes withdrawn
+receipts/participation records after 30 days. The public notice archive contains
+no individual acknowledgements and remains available as version evidence.
+A generation change does not erase weights or make a model forget. Real
+exports, pseudonymization, derivative-file cleanup and real ML publication are
+still blocked; do not send these rows to the synthetic-only Python importer.
+After restoring a backup, keep collection disabled and close/quarantine this
+pilot before reopening application traffic; never restore old consent as a
+fresh authorization. Account-deletion/derivative invalidation and recovery
+must be integrated before any future real model can be published.
+See the [roadmap](../ML-ROADMAP.md) for validation evidence and remaining gates.
+
+Validation for this slice: API typecheck/build and **368 tests in 36 suites**
+passed with `npm test -- --runInBand --testPathIgnorePatterns=mysql.test.ts`;
+the private CLI help also ran without database access. Ordinary tests mock
+dotenv and the database; the two explicitly opt-in MySQL suites keep their
+local credential loading but were excluded from this run. This does **not**
+certify real MySQL migration/locking or activate collection. No UI/Python code
+was changed or revalidated.
+
+### API test suite
+
 The project uses Jest with ts-jest and Supertest (unit and integration tests under `src/tests/`).
 
 ```bash
@@ -130,6 +406,49 @@ npm run test:coverage # run tests with a coverage report
 ```
 
 ## API Overview
+
+### Public-review acknowledgement on password registration
+
+`POST /api/auth/register` now requires this object in addition to the existing
+username, email, password and password confirmation:
+
+```json
+{
+  "publicReviewNotice": {
+    "accepted": true,
+    "version": "public-reviews-v1"
+  }
+}
+```
+
+Archived notice **`public-reviews-v1`**, introduced on 2026-11-16:
+
+> Entendo que minhas reviews serão públicas e que não devo publicar dados pessoais meus ou de terceiros.
+
+This acknowledges publication only. It is not consent for model training, a
+general privacy policy, or a waiver of the application's legal responsibilities.
+Keep this version's text immutable; a changed notice needs a new version and
+coordinated API/client deployment.
+
+Missing/refused acknowledgements, unsupported versions and extra fields inside
+the acknowledgement return HTTP 400 before account creation. Old clients are
+not automatically opted in: update the client together with the API.
+
+Migration `007-public-review-notice` runs through `createUserTable` on the next
+main API startup. It additively creates nullable
+`users.public_review_notice_version` and
+`users.public_review_notice_accepted_at` columns, resuming after a partial run.
+Account creation writes the version and database UTC time in the same INSERT;
+neither IP nor a client-supplied acceptance timestamp is recorded.
+
+Deploy/restart the API with the existing schema migration privileges before
+using the new registration flow. Existing accounts are not backfilled. The
+legacy OAuth account-creation path remains unchanged and receives no invented
+acknowledgement; this slice does not certify that flow.
+
+Validation used mocked MySQL queries/migrations and HTTP integration tests;
+the migration was **not run against a real database** during this change.
+Real-data ML gates remain blocked.
 
 All routes are mounted under `/api`. Explore and try them via the Swagger UI at `/docs`.
 

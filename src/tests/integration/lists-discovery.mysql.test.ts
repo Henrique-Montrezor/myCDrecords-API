@@ -17,6 +17,8 @@ const mysqlSuite = process.env.LIST_DISCOVERY_MYSQL_TESTS === "true" ? describe 
 
 mysqlSuite("list discovery against an explicitly provisioned test database", () => {
     beforeAll(async () => {
+        jest.unmock("dotenv");
+        jest.requireActual<typeof import("dotenv")>("dotenv").config();
         const databaseName = process.env.LIST_DISCOVERY_MYSQL_DATABASE;
         if (!databaseName || !/^mycdrecords_list_tests_[a-z0-9_]+$/.test(databaseName) || databaseName.toLowerCase() === process.env.MYSQL_DATABASE?.toLowerCase()) {
             throw new Error("Provide an isolated, pre-created LIST_DISCOVERY_MYSQL_DATABASE named mycdrecords_list_tests_<suffix>; never use the application database.");
