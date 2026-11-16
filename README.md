@@ -121,6 +121,51 @@ docker run --env-file .env -p 3000:3000 mycdrecords-server
 
 ## Running Tests
 
+### Experimental PyTorch recommendations in the feed
+
+`GET /api/recommendations?engine=ml` explicitly selects the bundled
+`artist-bpr-fictional-v1` model. Default requests still use `f11b-v1`.
+Training uses only 24 fictional profiles / 72 manually simulated artist
+interactions. Published JSON includes artist vectors, SHA-256 and Python/Node
+conformance scores, not real or fictional user embeddings.
+
+```powershell
+npm run ml:catalog:seed
+npm run ml:catalog:verify
+npm run build
+npm test -- --runInBand
+```
+
+The seed uses official MusicBrainz browse requests with independently identified
+artist MBIDs, existing throttling/backoff, and core/CC0 fields only; no tags or
+Spotify. Wikidata/P434 supplies lookup identities, not affinity data. Existing
+catalog records are not overwritten. No user/account/review fixtures are inserted.
+The verified MySQL catalog contains 244 albums; the compiled runtime produced
+different 10-item rankings for two fictional profiles without reading real users.
+
+Inference reads only the authenticated actor's own MusicBrainz-linked ratings,
+favorites, dismissals and explicit artist preferences. Exact names from the
+24-artist vocabulary are supported; genres and aliases are not ML features.
+Ratings override favorites, 3 is neutral and 1/2 push away. Profile vectors and
+ML rankings are discarded after the response, never used to update model weights.
+Candidates require affinity >= 0.35, exclude known/dismissed albums and allow at
+most two albums per artist. There is no HTTP Python service or new dependency.
+
+`ml.status=active` identifies an actual ML ranking. `cold_start`/`no_candidates`
+identify an explicit fallback to the original engine; version and reasons always
+describe the engine used. Invalid model/checksum/parity/storage returns
+`503 ML_UNAVAILABLE`. See route Swagger for the complete contract.
+
+Open `http://localhost:5173/recommendations?engine=ml`, choose supported artists
+in **Ajuste seu gosto**, add and save. No external artist search is needed in this
+mode. **Ver minhas sugestões ML no feed** preserves the choice in the feed URL.
+
+Verified: 385 API tests / 40 suites (8 existing skipped), build and real MySQL
+14-check homologation. The [ML package](https://github.com/Henrique-Montrezor/myCDrecords-ml#readme)
+documents retraining/publication and the synthetic evaluation limits.
+Real-user quality remains unmeasured; the consented real-training pilot below
+is separate and does not authorize publication of real-user model weights.
+
 ### ML0: isolated synthetic readiness diagnostic
 
 The [PyTorch roadmap](../ML-ROADMAP.md) starts with data eligibility and

@@ -44,6 +44,7 @@ export type CatalogCandidate = { albumId: string; title: string; artists: string
 export type CommunityStats = { reviews: number; averageRating: number };
 
 export type RecommendationReason =
+    | { type: "ml" }
     | { type: "tags"; tags: string[] }
     | { type: "collaborative"; people: number }
     | { type: "exploration"; tag: string; from: string }

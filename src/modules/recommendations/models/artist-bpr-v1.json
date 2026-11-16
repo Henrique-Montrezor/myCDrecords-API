@@ -1,0 +1,360 @@
+{
+  "schemaVersion": 1,
+  "modelVersion": "artist-bpr-fictional-v1",
+  "trainedOn": "fictional-profiles",
+  "curation": "independent-manual-affinities-v1",
+  "realWorldQuality": "not_measured",
+  "dimensions": 4,
+  "minimumAffinity": 0.35,
+  "training": {
+    "initialLoss": 0.692073404788971,
+    "finalLoss": 0.03232378885149956,
+    "epochs": 200,
+    "seed": 42,
+    "torchVersion": "2.15.0+cpu",
+    "profiles": 24,
+    "interactions": 72
+  },
+  "evaluation": {
+    "protocol": "fictional-new-profile-fold-in-v1",
+    "validation": {
+      "profiles": 36,
+      "recallAt3": 1.0,
+      "popularityRecallAt3": 0.16666666666666666
+    },
+    "test": {
+      "profiles": 24,
+      "recallAt3": 1.0,
+      "popularityRecallAt3": 0.16666666666666666
+    }
+  },
+  "embeddingSha256": "e516495e7bf473e36e7e9ffe281cf5c919bb0c55cbf30f4fc37222b9c894ab6e",
+  "artists": [
+    {
+      "name": "Radiohead",
+      "vector": [
+        "0.44844340",
+        "0.73139085",
+        "0.17898554",
+        "0.48159124"
+      ]
+    },
+    {
+      "name": "Pink Floyd",
+      "vector": [
+        "0.56205941",
+        "0.67357129",
+        "0.46451172",
+        "-0.12091235"
+      ]
+    },
+    {
+      "name": "David Bowie",
+      "vector": [
+        "0.74575326",
+        "0.36151370",
+        "0.35953393",
+        "0.42883012"
+      ]
+    },
+    {
+      "name": "The Beatles",
+      "vector": [
+        "0.49310074",
+        "0.46021485",
+        "0.72667768",
+        "-0.13035909"
+      ]
+    },
+    {
+      "name": "Metallica",
+      "vector": [
+        "-0.28785270",
+        "-0.50904304",
+        "-0.42112926",
+        "-0.69330091"
+      ]
+    },
+    {
+      "name": "Iron Maiden",
+      "vector": [
+        "-0.50188965",
+        "-0.71046758",
+        "-0.45126243",
+        "-0.19926066"
+      ]
+    },
+    {
+      "name": "Black Sabbath",
+      "vector": [
+        "-0.34802559",
+        "-0.75812507",
+        "0.28003047",
+        "-0.47508684"
+      ]
+    },
+    {
+      "name": "Megadeth",
+      "vector": [
+        "-0.70920278",
+        "-0.24793921",
+        "0.06083251",
+        "-0.65715825"
+      ]
+    },
+    {
+      "name": "The Cure",
+      "vector": [
+        "0.63238157",
+        "-0.11361224",
+        "-0.66744971",
+        "-0.37642622"
+      ]
+    },
+    {
+      "name": "Bauhaus",
+      "vector": [
+        "0.73818555",
+        "-0.04961285",
+        "-0.26949378",
+        "-0.61643635"
+      ]
+    },
+    {
+      "name": "Joy Division",
+      "vector": [
+        "0.46199697",
+        "0.57918004",
+        "-0.48007607",
+        "-0.46971934"
+      ]
+    },
+    {
+      "name": "Siouxsie and the Banshees",
+      "vector": [
+        "0.41144110",
+        "0.51932198",
+        "-0.53160042",
+        "-0.52765699"
+      ]
+    },
+    {
+      "name": "Miles Davis",
+      "vector": [
+        "0.32245073",
+        "-0.63089207",
+        "0.68190273",
+        "0.18168488"
+      ]
+    },
+    {
+      "name": "John Coltrane",
+      "vector": [
+        "0.66158285",
+        "-0.70403194",
+        "0.22851283",
+        "0.12012099"
+      ]
+    },
+    {
+      "name": "Dave Brubeck",
+      "vector": [
+        "0.25764485",
+        "-0.46688309",
+        "0.33961233",
+        "0.77479209"
+      ]
+    },
+    {
+      "name": "Bill Evans",
+      "vector": [
+        "0.34438097",
+        "-0.73739859",
+        "-0.16194690",
+        "0.55804864"
+      ]
+    },
+    {
+      "name": "Milton Nascimento",
+      "vector": [
+        "-0.39411734",
+        "0.65859933",
+        "-0.56289608",
+        "0.30670255"
+      ]
+    },
+    {
+      "name": "Caetano Veloso",
+      "vector": [
+        "-0.20958719",
+        "0.24204542",
+        "-0.67215259",
+        "0.66760626"
+      ]
+    },
+    {
+      "name": "Gilberto Gil",
+      "vector": [
+        "-0.56973964",
+        "0.65885416",
+        "-0.48340689",
+        "-0.08732528"
+      ]
+    },
+    {
+      "name": "Chico Buarque",
+      "vector": [
+        "-0.70395689",
+        "0.02843475",
+        "-0.63865615",
+        "0.30944222"
+      ]
+    },
+    {
+      "name": "Daft Punk",
+      "vector": [
+        "-0.45553314",
+        "0.21775112",
+        "0.86273262",
+        "0.02768448"
+      ]
+    },
+    {
+      "name": "Kraftwerk",
+      "vector": [
+        "-0.40428267",
+        "0.50754816",
+        "0.42534418",
+        "0.63089834"
+      ]
+    },
+    {
+      "name": "The Chemical Brothers",
+      "vector": [
+        "-0.69049308",
+        "-0.02440185",
+        "0.49657855",
+        "0.52538900"
+      ]
+    },
+    {
+      "name": "Massive Attack",
+      "vector": [
+        "-0.61699623",
+        "0.62775320",
+        "0.45445701",
+        "0.13678595"
+      ]
+    }
+  ],
+  "probe": {
+    "signals": [
+      {
+        "artist": "The Cure",
+        "weight": 1.0
+      },
+      {
+        "artist": "Metallica",
+        "weight": -0.25
+      }
+    ],
+    "scores": [
+      {
+        "artist": "The Cure",
+        "score": 0.96931067
+      },
+      {
+        "artist": "Bauhaus",
+        "score": 0.86153188
+      },
+      {
+        "artist": "Siouxsie and the Banshees",
+        "score": 0.76080655
+      },
+      {
+        "artist": "Joy Division",
+        "score": 0.75614498
+      },
+      {
+        "artist": "John Coltrane",
+        "score": 0.32851827
+      },
+      {
+        "artist": "David Bowie",
+        "score": 0.26084039
+      },
+      {
+        "artist": "Bill Evans",
+        "score": 0.22751615
+      },
+      {
+        "artist": "Pink Floyd",
+        "score": 0.18238231
+      },
+      {
+        "artist": "Metallica",
+        "score": 0.18168861
+      },
+      {
+        "artist": "Radiohead",
+        "score": 0.13790588
+      },
+      {
+        "artist": "Caetano Veloso",
+        "score": 0.10602221
+      },
+      {
+        "artist": "Milton Nascimento",
+        "score": -0.0156462
+      },
+      {
+        "artist": "The Beatles",
+        "score": -0.03078756
+      },
+      {
+        "artist": "Iron Maiden",
+        "score": -0.07473316
+      },
+      {
+        "artist": "Gilberto Gil",
+        "score": -0.1112789
+      },
+      {
+        "artist": "Dave Brubeck",
+        "score": -0.18744847
+      },
+      {
+        "artist": "Chico Buarque",
+        "score": -0.21567169
+      },
+      {
+        "artist": "Miles Davis",
+        "score": -0.21835765
+      },
+      {
+        "artist": "Black Sabbath",
+        "score": -0.34247711
+      },
+      {
+        "artist": "Megadeth",
+        "score": -0.43688801
+      },
+      {
+        "artist": "Kraftwerk",
+        "score": -0.69822039
+      },
+      {
+        "artist": "Massive Attack",
+        "score": -0.76770347
+      },
+      {
+        "artist": "Daft Punk",
+        "score": -0.87510914
+      },
+      {
+        "artist": "The Chemical Brothers",
+        "score": -0.94442728
+      }
+    ]
+  }
+}

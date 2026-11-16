@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
 import { z } from "zod";
 import { cache } from "../../utils/cache";
+import { logger } from "../../utils/logger";
+import { getArtistModel, rankArtistModel, MLStatus } from "./recommendations.ml";
+import { getMLCatalog, getMLTaste } from "./recommendations.ml.repository";
 import {
     addDismissal, getCatalogAlbums, getCollaborativeCandidates, getCommunityStats, getPopularCandidates,
     getDismissedRecommendations, getPreferenceCandidates, getRecommendationPreferences, getTagCandidates,
@@ -15,6 +18,7 @@ const CACHE_TTL_SECONDS = 600;
 const MAX_PROFILE_TAGS = 30;
 
 const querySchema = z.object({
+    engine: z.enum(["heuristic", "ml"]).default("heuristic"),
     limit: z.coerce.number().int().min(1).max(48).default(12),
     offset: z.coerce.number().int().min(0).max(RECOMMENDATION_PARAMS.maxRanked).default(0),
 });
@@ -69,12 +73,29 @@ export async function getRecommendations(req: Request, res: Response) {
     if (!userId) {
         return res.status(401).json({ message: "User not authenticated" });
     }
-    const { limit, offset } = querySchema.parse(req.query);
+    const { limit, offset, engine } = querySchema.parse(req.query);
     const cacheKey = `recommendations_${userId}_ranking`;
 
     // Taste counters are cheap and must be fresh so the client can ask for reviews right away
     const perfil = await getTasteProfile(userId);
-    let ranking = cache.get<RecommendationResult>(cacheKey);
+    let ml: { status: MLStatus; modelVersion: string; trainedOn: "fictional-profiles"; supportedArtists: string[] } | undefined;
+    let mlRanking: RecommendationResult | undefined;
+    if (engine === "ml") {
+        try {
+            const model = getArtistModel();
+            const [taste, albums] = await Promise.all([getMLTaste(userId), getMLCatalog([...model.vectors.keys()])]);
+            const result = rankArtistModel(model, taste.signals, taste.excluded, albums);
+            ml = { status: result.status, modelVersion: model.version, trainedOn: "fictional-profiles", supportedArtists: [...model.vectors.keys()] };
+            if (result.status === "active") mlRanking = result.ranking;
+        } catch (error) {
+            logger.error("Experimental ML inference unavailable", { errorType: error instanceof Error ? error.name : "Unknown", requestId: req.requestId });
+            return res.set("Cache-Control", "private, no-store").status(503).json({
+                message: "O modelo experimental está indisponível. Tente novamente ou desative o modo ML.",
+                code: "ML_UNAVAILABLE", requestId: req.requestId,
+            });
+        }
+    }
+    let ranking = mlRanking ?? cache.get<RecommendationResult>(cacheKey);
     if (!ranking) {
         ranking = await rankFor(userId);
         cache.set(cacheKey, ranking, CACHE_TTL_SECONDS);
@@ -85,8 +106,9 @@ export async function getRecommendations(req: Request, res: Response) {
     res.set("Cache-Control", "private, no-store");
     res.status(200).json({
         tipo: ranking.kind,
-        version: RECOMMENDATION_VERSION,
-        evidence: { signals: ranking.evidence, required: RECOMMENDATION_PARAMS.minEvidence },
+        version: mlRanking ? ml!.modelVersion : RECOMMENDATION_VERSION,
+        ...(ml ? { ml } : {}),
+        evidence: { signals: ranking.evidence, required: mlRanking ? 1 : RECOMMENDATION_PARAMS.minEvidence },
         perfil,
         total: ranking.items.length,
         offset,

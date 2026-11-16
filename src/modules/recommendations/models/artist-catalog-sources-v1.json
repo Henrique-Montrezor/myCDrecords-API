@@ -1,0 +1,31 @@
+{
+  "identityReference": "https://www.wikidata.org/wiki/Property:P434",
+  "metadataSource": "https://musicbrainz.org/ws/2/",
+  "license": "CC0-1.0",
+  "artists": [
+    { "name": "Radiohead", "mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711" },
+    { "name": "Pink Floyd", "mbid": "83d91898-7763-47d7-b03b-b92132375c47" },
+    { "name": "David Bowie", "mbid": "5441c29d-3602-4898-b1a1-b77fa23b8e50" },
+    { "name": "The Beatles", "mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d" },
+    { "name": "Metallica", "mbid": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab" },
+    { "name": "Iron Maiden", "mbid": "ca891d65-d9b0-4258-89f7-e6ba29d83767" },
+    { "name": "Black Sabbath", "mbid": "5182c1d9-c7d2-4dad-afa0-ccfeada921a8" },
+    { "name": "Megadeth", "mbid": "a9044915-8be3-4c7e-b11f-9e2d2ea0a91e" },
+    { "name": "The Cure", "mbid": "69ee3720-a7cb-4402-b48d-a02c366f2bcf" },
+    { "name": "Bauhaus", "mbid": "0688add2-c282-4ee2-ba61-223ffdb3c201" },
+    { "name": "Joy Division", "mbid": "9a58fda3-f4ed-4080-a3a5-f457aac9fcdd" },
+    { "name": "Siouxsie and the Banshees", "mbid": "78ea5ea1-3c4d-4b7e-ac5d-68900319ebe2" },
+    { "name": "Miles Davis", "mbid": "561d854a-6a28-4aa7-8c99-323e6ce46c2a" },
+    { "name": "John Coltrane", "mbid": "b625448e-bf4a-41c3-a421-72ad46cdb831" },
+    { "name": "Dave Brubeck", "mbid": "de0222a6-e1c4-403d-8b01-3f66d505061b" },
+    { "name": "Bill Evans", "mbid": "8247a3f2-3a8e-4256-b322-6c57b03a4e36" },
+    { "name": "Milton Nascimento", "mbid": "1bfa27e3-0376-4206-a772-4586e25a64f5" },
+    { "name": "Caetano Veloso", "mbid": "f07dbc2f-317b-470f-bad4-5f1b0eb6faf1" },
+    { "name": "Gilberto Gil", "mbid": "cf6b70f6-2616-481c-912c-0263cabfc974" },
+    { "name": "Chico Buarque", "mbid": "3a5d1cc7-627e-48ea-aba3-fdd20d782c33" },
+    { "name": "Daft Punk", "mbid": "056e4f3e-d505-4dad-8ec1-d04f521cbb56" },
+    { "name": "Kraftwerk", "mbid": "5700dcd4-c139-4f31-aa3e-6382b9af9032" },
+    { "name": "The Chemical Brothers", "mbid": "1946a82a-f927-40c2-8235-38d64f50d043" },
+    { "name": "Massive Attack", "mbid": "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8" }
+  ]
+}

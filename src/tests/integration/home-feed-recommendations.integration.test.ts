@@ -16,6 +16,11 @@ jest.mock("../../modules/social/social.repository", () => ({
   getFollowingFeed: jest.fn(),
 }));
 
+jest.mock("../../modules/recommendations/recommendations.ml.repository", () => ({
+  getMLTaste: jest.fn(),
+  getMLCatalog: jest.fn(),
+}));
+
 jest.mock("../../modules/recommendations/recommendations.repository", () => ({
   ...jest.requireActual("../../modules/recommendations/recommendations.repository"),
   getTasteProfile: jest.fn(),
@@ -38,6 +43,8 @@ import jwt from "jsonwebtoken";
 import app from "../../app";
 import { cache } from "../../utils/cache";
 import { getFollowingFeed } from "../../modules/social/social.repository";
+import { getMLCatalog, getMLTaste } from "../../modules/recommendations/recommendations.ml.repository";
+import * as mlModel from "../../modules/recommendations/recommendations.ml";
 import {
   addDismissal,
   getCatalogAlbums,
@@ -113,6 +120,56 @@ describe("GET /api/social/feed", () => {
 });
 
 describe("GET /api/recommendations", () => {
+  it("serves published ML for the authenticated actor only, never caching their vector/ranking", async () => {
+    (getMLCatalog as jest.Mock).mockResolvedValue([
+      { ...album(201, "Bauhaus", []), source: "musicbrainz" },
+      { ...album(202, "John Coltrane", []), source: "musicbrainz" },
+      { ...album(203, "The Cure", []), source: "musicbrainz" },
+      { ...album(204, "Bauhaus", []), source: "musicbrainz" },
+    ]);
+    (getMLTaste as jest.Mock).mockImplementation(async (id: number) => ({
+      signals: [{ artist: id === 7 ? "The Cure" : "Miles Davis", weight: 1 }],
+      excluded: new Set([mbid(203)]),
+    }));
+    const goth = await request(app).get("/api/recommendations?engine=ml&userId=8&limit=1").set(auth(7));
+    const jazz = await request(app).get("/api/recommendations?engine=ml&limit=1").set(auth(8));
+    expect(goth.status).toBe(200);
+    expect(goth.body).toMatchObject({
+      version: "artist-bpr-fictional-v1", evidence: { signals: 1, required: 1 },
+      ml: { status: "active", trainedOn: "fictional-profiles" }, nextOffset: expect.anything(),
+    });
+    expect(goth.body.data[0].album_artist).toBe("Bauhaus");
+    expect(goth.body.data[0].reasons).toEqual([{ type: "ml" }]);
+    expect(jazz.body.data[0].album_artist).toBe("John Coltrane");
+    expect(goth.headers["cache-control"]).toBe("private, no-store");
+    expect(getMLTaste).toHaveBeenNthCalledWith(1, 7);
+    expect(getMLTaste).toHaveBeenNthCalledWith(2, 8);
+    expect(getUserTaste).not.toHaveBeenCalled();
+    expect(cache.keys().some((key) => key.startsWith("recommendations_"))).toBe(false);
+    const next = await request(app).get("/api/recommendations?engine=ml&limit=1&offset=1").set(auth(7));
+    expect(next.body.data.every((item: { album_id: string }) => item.album_id !== mbid(203))).toBe(true);
+    expect(getMLTaste).toHaveBeenCalledTimes(3);
+  });
+
+  it("identifies insufficient model coverage as an original-engine fallback", async () => {
+    (getMLCatalog as jest.Mock).mockResolvedValue([]);
+    (getMLTaste as jest.Mock).mockResolvedValue({ signals: [], excluded: new Set() });
+    const res = await request(app).get("/api/recommendations?engine=ml").set(auth());
+    expect(res.body).toMatchObject({ version: "f11b-v1", ml: { status: "cold_start" } });
+    expect(getUserTaste).toHaveBeenCalledWith(7);
+  });
+
+  it("reports model failure explicitly and rejects an unknown engine", async () => {
+    const spy = jest.spyOn(mlModel, "getArtistModel").mockImplementationOnce(() => { throw new Error("ML_CHECKSUM_MISMATCH"); });
+    const res = await request(app).get("/api/recommendations?engine=ml").set(auth());
+    expect(res.status).toBe(503);
+    expect(res.body.code).toBe("ML_UNAVAILABLE");
+    expect(getUserTaste).not.toHaveBeenCalled();
+    spy.mockRestore();
+    expect((await request(app).get("/api/recommendations?engine=unknown").set(auth())).status).toBe(400);
+    expect((await request(app).get("/api/recommendations?engine=ml")).status).toBe(401);
+  });
+
   it("requires authentication", async () => {
     const res = await request(app).get("/api/recommendations");
     expect(res.status).toBe(401);
