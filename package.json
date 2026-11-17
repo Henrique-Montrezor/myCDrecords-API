@@ -14,6 +14,7 @@
     "ml:readiness": "ts-node src/modules/recommendations/recommendations.readiness.cli.ts",
     "ml:catalog:seed": "ts-node src/modules/recommendations/recommendations.ml.catalog.cli.ts seed",
     "ml:catalog:verify": "ts-node src/modules/recommendations/recommendations.ml.catalog.cli.ts verify",
+    "ml:engine:migrate": "ts-node src/mysql2/migrations/recommendation-engine.cli.ts",
     "ml:preflight": "ts-node src/modules/recommendations/recommendations.pilot.cli.ts",
     "ml:pilot:manage": "ts-node src/modules/recommendations/recommendations.pilot.manage.cli.ts",
     "ml:mysql:verify": "ts-node src/modules/recommendations/recommendations.real.cli.ts mysql",

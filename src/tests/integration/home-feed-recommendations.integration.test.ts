@@ -24,6 +24,8 @@ jest.mock("../../modules/recommendations/recommendations.ml.repository", () => (
 jest.mock("../../modules/recommendations/recommendations.repository", () => ({
   ...jest.requireActual("../../modules/recommendations/recommendations.repository"),
   getTasteProfile: jest.fn(),
+  getRecommendationEngine: jest.fn(),
+  saveRecommendationEngine: jest.fn(),
   getUserTaste: jest.fn(),
   getCatalogAlbums: jest.fn(),
   getTagCandidates: jest.fn(),
@@ -56,6 +58,8 @@ import {
   getRecommendationPreferences,
   getTagCandidates,
   getTasteProfile,
+  getRecommendationEngine,
+  saveRecommendationEngine,
   getUserTaste,
   removeDismissal,
   saveRecommendationPreferences,
@@ -73,6 +77,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   cache.flushAll();
   (getTasteProfile as jest.Mock).mockResolvedValue({ reviews: 0, favorites: 0 });
+  (getRecommendationEngine as jest.Mock).mockResolvedValue(false);
   (getUserTaste as jest.Mock).mockResolvedValue({ ratings: new Map(), excluded: new Set() });
   (getCatalogAlbums as jest.Mock).mockResolvedValue([]);
   (getTagCandidates as jest.Mock).mockResolvedValue([]);
@@ -120,7 +125,31 @@ describe("GET /api/social/feed", () => {
 });
 
 describe("GET /api/recommendations", () => {
+  it("uses the saved account choice, not a bookmarked engine query", async () => {
+    const res = await request(app).get("/api/recommendations?engine=ml").set(auth());
+    expect(res.status).toBe(200);
+    expect(res.body.mlEnabled).toBe(false);
+    expect(getRecommendationEngine).toHaveBeenCalledWith(7);
+    expect(getMLTaste).not.toHaveBeenCalled();
+  });
+
+  it("saves the engine for the actor and exposes it independently of model availability", async () => {
+    const saved = new Map<number, boolean>();
+    (saveRecommendationEngine as jest.Mock).mockImplementation(async (id: number, enabled: boolean) => { saved.set(id, enabled); });
+    (getRecommendationEngine as jest.Mock).mockImplementation(async (id: number) => saved.get(id) ?? false);
+    expect((await request(app).get("/api/recommendations/engine")).status).toBe(401);
+    expect((await request(app).put("/api/recommendations/engine").send({ enabled: true })).status).toBe(401);
+    expect((await request(app).put("/api/recommendations/engine").set(auth()).send({ enabled: true, userId: 8 })).status).toBe(400);
+    expect(saveRecommendationEngine).not.toHaveBeenCalled();
+    expect((await request(app).put("/api/recommendations/engine").set(auth()).send({ enabled: true })).body).toEqual({ enabled: true });
+    expect((await request(app).get("/api/recommendations/engine").set(auth())).body).toEqual({ enabled: true });
+    expect((await request(app).get("/api/recommendations/engine").set(auth(8))).body).toEqual({ enabled: false });
+    expect((await request(app).put("/api/recommendations/engine").set(auth()).send({ enabled: false })).body).toEqual({ enabled: false });
+    expect((await request(app).get("/api/recommendations/engine").set(auth())).body).toEqual({ enabled: false });
+  });
+
   it("serves published ML for the authenticated actor only, never caching their vector/ranking", async () => {
+    (getRecommendationEngine as jest.Mock).mockResolvedValue(true);
     (getMLCatalog as jest.Mock).mockResolvedValue([
       { ...album(201, "Bauhaus", []), source: "musicbrainz" },
       { ...album(202, "John Coltrane", []), source: "musicbrainz" },
@@ -152,6 +181,7 @@ describe("GET /api/recommendations", () => {
   });
 
   it("identifies insufficient model coverage as an original-engine fallback", async () => {
+    (getRecommendationEngine as jest.Mock).mockResolvedValue(true);
     (getMLCatalog as jest.Mock).mockResolvedValue([]);
     (getMLTaste as jest.Mock).mockResolvedValue({ signals: [], excluded: new Set() });
     const res = await request(app).get("/api/recommendations?engine=ml").set(auth());
@@ -160,6 +190,7 @@ describe("GET /api/recommendations", () => {
   });
 
   it("reports model failure explicitly and rejects an unknown engine", async () => {
+    (getRecommendationEngine as jest.Mock).mockResolvedValue(true);
     const spy = jest.spyOn(mlModel, "getArtistModel").mockImplementationOnce(() => { throw new Error("ML_CHECKSUM_MISMATCH"); });
     const res = await request(app).get("/api/recommendations?engine=ml").set(auth());
     expect(res.status).toBe(503);
@@ -182,6 +213,7 @@ describe("GET /api/recommendations", () => {
     expect(res.headers["cache-control"]).toBe("private, no-store");
     expect(res.body).toEqual({
       tipo: "personalizada",
+      mlEnabled: false,
       version: "f11b-v1",
       evidence: { signals: 3, required: 3 },
       perfil: { reviews: 3, favorites: 0 },

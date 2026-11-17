@@ -1,12 +1,42 @@
 jest.mock("../../mysql2/init.database", () => ({ initDatabase: jest.fn() }));
 import { initDatabase } from "../../mysql2/init.database";
 import { getMLCatalog, getMLTaste } from "../../modules/recommendations/recommendations.ml.repository";
+import { getRecommendationEngine, saveRecommendationEngine, saveRecommendationPreferences } from "../../modules/recommendations/recommendations.repository";
+import { migrateRecommendationEngine } from "../../mysql2/migrations/010-recommendation-engine";
 
 const id = "00000000-0000-4000-8000-000000000001";
 const query = jest.fn();
 beforeEach(() => {
     query.mockReset();
     (initDatabase as jest.Mock).mockResolvedValue({ query });
+});
+
+it("defaults unconfigured accounts to disabled and rejects corrupt stored choices", async () => {
+    query.mockResolvedValueOnce([[]]).mockResolvedValueOnce([[{ ml_enabled: 1 }]]).mockResolvedValueOnce([[{ ml_enabled: 2 }]]);
+    expect(await getRecommendationEngine(7)).toBe(false);
+    expect(await getRecommendationEngine(8)).toBe(true);
+    await expect(getRecommendationEngine(9)).rejects.toThrow("INVALID_RECOMMENDATION_ENGINE");
+    expect(query.mock.calls.map(([, values]) => values)).toEqual([[7], [8], [9]]);
+});
+
+it("persists only the actor's engine choice without overwriting taste or pilot consent, and vice versa", async () => {
+    query.mockResolvedValue([{}]);
+    await saveRecommendationEngine(7, true);
+    await saveRecommendationEngine(8, false);
+    await saveRecommendationPreferences(7, { genres: ["jazz"], artists: ["Miles Davis"] });
+    expect(query.mock.calls[0][1]).toEqual([7, 1]);
+    expect(query.mock.calls[1][1]).toEqual([8, 0]);
+    expect(query.mock.calls[0][0].split("ON DUPLICATE KEY UPDATE")[1].trim()).toBe("ml_enabled = VALUES(ml_enabled)");
+    expect(query.mock.calls[2][0].split("ON DUPLICATE KEY UPDATE")[1]).not.toContain("ml_enabled");
+    expect(query.mock.calls.flat().join(" ")).not.toMatch(/ml_pilot|consent/);
+});
+
+it("adds a disabled-by-default engine column once without retroactive acceptance", async () => {
+    query.mockResolvedValueOnce([[]]).mockResolvedValueOnce([{}]).mockResolvedValueOnce([[{ COLUMN_NAME: "ml_enabled" }]]);
+    await migrateRecommendationEngine({ query });
+    await migrateRecommendationEngine({ query });
+    const changes = query.mock.calls.filter(([sql]) => sql.startsWith("ALTER"));
+    expect(changes).toEqual([["ALTER TABLE recommendation_preferences ADD COLUMN ml_enabled TINYINT(1) NOT NULL DEFAULT 0"]]);
 });
 
 it("reads only actor-owned fields and independently sourced credits, not tags, text or peers", async () => {

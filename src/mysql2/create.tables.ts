@@ -10,6 +10,7 @@ import { migrateRecommendationPreferences } from "./migrations/006-recommendatio
 import { migratePublicReviewNotice } from "./migrations/007-public-review-notice";
 import { migrateMlPilotControls } from "./migrations/008-ml-pilot-controls";
 import { migrateMlPilotCollection } from "./migrations/009-ml-pilot-collection";
+import { migrateRecommendationEngine } from "./migrations/010-recommendation-engine";
 import { startPilotRetention } from "../modules/recommendations/recommendations.pilot.retention";
 import { inspectPilotCollection } from "../modules/recommendations/recommendations.pilot.collection";
 
@@ -22,6 +23,7 @@ export async function createRecommendationDismissals() {
     const connection = await initDatabase();
     await migrateRecommendationDismissals(connection);
     await migrateRecommendationPreferences(connection);
+    await migrateRecommendationEngine(connection);
     await migrateMlPilotControls(connection);
     await migrateMlPilotCollection(connection);
     await startPilotRetention();

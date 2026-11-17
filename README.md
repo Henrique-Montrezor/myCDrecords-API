@@ -123,8 +123,16 @@ docker run --env-file .env -p 3000:3000 mycdrecords-server
 
 ### Experimental PyTorch recommendations in the feed
 
-`GET /api/recommendations?engine=ml` explicitly selects the bundled
-`artist-bpr-fictional-v1` model. Default requests still use `f11b-v1`.
+`GET /api/recommendations` uses the authenticated account's saved choice.
+`GET/PUT /api/recommendations/engine` reads/saves `{ "enabled": boolean }`;
+the PUT body is strict and never accepts a user ID. Disabled by default,
+the setting selects the bundled `artist-bpr-fictional-v1` model when enabled;
+otherwise requests use `f11b-v1`. The deprecated `engine` query is ignored.
+Responses include `mlEnabled` even when inference falls back.
+Migration 010 adds `recommendation_preferences.ml_enabled` with default 0
+and runs at startup after migration 006. Restart the API before using the new
+client. Existing taste preferences are preserved; prior URL choices are not
+silently converted into saved activation. This setting is not pilot training consent.
 Training uses only 24 fictional profiles / 72 manually simulated artist
 interactions. Published JSON includes artist vectors, SHA-256 and Python/Node
 conformance scores, not real or fictional user embeddings.
@@ -132,9 +140,14 @@ conformance scores, not real or fictional user embeddings.
 ```powershell
 npm run ml:catalog:seed
 npm run ml:catalog:verify
+npm run ml:engine:migrate
 npm run build
 npm test -- --runInBand
 ```
+
+`ml:engine:migrate` applies/checks migration 010 twice and verifies its disabled
+default without reading account data. It requires the existing preferences table
+(migration 006) and ALTER permission, and closes its pool on completion.
 
 The seed uses official MusicBrainz browse requests with independently identified
 artist MBIDs, existing throttling/backoff, and core/CC0 fields only; no tags or
@@ -156,12 +169,17 @@ identify an explicit fallback to the original engine; version and reasons always
 describe the engine used. Invalid model/checksum/parity/storage returns
 `503 ML_UNAVAILABLE`. See route Swagger for the complete contract.
 
-Open `http://localhost:5173/recommendations?engine=ml`, choose supported artists
+Activate ML in the feed or **Configurações → Recomendações**, then open
+`http://localhost:5173/recommendations`, choose supported artists
 in **Ajuste seu gosto**, add and save. No external artist search is needed in this
-mode. **Ver minhas sugestões ML no feed** preserves the choice in the feed URL.
+mode. Once enabled, the checkbox disappears outside settings. The choice follows
+the account across navigation, reload and login; profile vectors are still ephemeral.
 
-Verified: 385 API tests / 40 suites (8 existing skipped), build and real MySQL
-14-check homologation. The [ML package](https://github.com/Henrique-Montrezor/myCDrecords-ml#readme)
+Original serving delivery: 385 API tests / 40 suites (8 existing skipped), build
+and real MySQL 14-check homologation. The account-setting adjustment passed build
+and 27 targeted HTTP/SQL/migration tests. Migration 010 was applied and checked
+twice on the configured MySQL without reading account data.
+The [ML package](https://github.com/Henrique-Montrezor/myCDrecords-ml#readme)
 documents retraining/publication and the synthetic evaluation limits.
 Real-user quality remains unmeasured; the consented real-training pilot below
 is separate and does not authorize publication of real-user model weights.

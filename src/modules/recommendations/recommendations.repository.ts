@@ -11,6 +11,25 @@ export const isMbid = (value: unknown): value is string => typeof value === "str
 
 const emptyPreferences = (): RecommendationPreferences => ({ genres: [], artists: [] });
 
+export async function getRecommendationEngine(userId: number): Promise<boolean> {
+    const connection = await initDatabase();
+    const [rows] = await connection.query<RowDataPacket[]>(
+        "SELECT ml_enabled FROM recommendation_preferences WHERE user_id = ?", [userId],
+    );
+    if (!rows[0]) return false;
+    const enabled: unknown = rows[0].ml_enabled;
+    if (enabled !== 0 && enabled !== 1) throw new Error("INVALID_RECOMMENDATION_ENGINE");
+    return enabled === 1;
+}
+
+export async function saveRecommendationEngine(userId: number, enabled: boolean) {
+    const connection = await initDatabase();
+    await connection.query(`
+        INSERT INTO recommendation_preferences (user_id, genres, artists, ml_enabled) VALUES (?, JSON_ARRAY(), JSON_ARRAY(), ?)
+        ON DUPLICATE KEY UPDATE ml_enabled = VALUES(ml_enabled)
+    `, [userId, enabled ? 1 : 0]);
+}
+
 export async function getRecommendationPreferences(userId: number): Promise<RecommendationPreferences> {
     const connection = await initDatabase();
     const [rows] = await connection.query<RowDataPacket[]>("SELECT genres, artists FROM recommendation_preferences WHERE user_id = ?", [userId]);

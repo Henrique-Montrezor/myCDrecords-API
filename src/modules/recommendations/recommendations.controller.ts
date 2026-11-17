@@ -8,6 +8,7 @@ import {
     addDismissal, getCatalogAlbums, getCollaborativeCandidates, getCommunityStats, getPopularCandidates,
     getDismissedRecommendations, getPreferenceCandidates, getRecommendationPreferences, getTagCandidates,
     getTasteProfile, getUserTaste, isMbid, removeDismissal, saveRecommendationPreferences,
+    getRecommendationEngine, saveRecommendationEngine,
 } from "./recommendations.repository";
 import {
     adjacentTags, buildRecommendations, RECOMMENDATION_PARAMS, RECOMMENDATION_VERSION, RecommendationPreferences,
@@ -73,14 +74,15 @@ export async function getRecommendations(req: Request, res: Response) {
     if (!userId) {
         return res.status(401).json({ message: "User not authenticated" });
     }
-    const { limit, offset, engine } = querySchema.parse(req.query);
+    const { limit, offset } = querySchema.parse(req.query);
+    const mlEnabled = await getRecommendationEngine(userId);
     const cacheKey = `recommendations_${userId}_ranking`;
 
     // Taste counters are cheap and must be fresh so the client can ask for reviews right away
     const perfil = await getTasteProfile(userId);
     let ml: { status: MLStatus; modelVersion: string; trainedOn: "fictional-profiles"; supportedArtists: string[] } | undefined;
     let mlRanking: RecommendationResult | undefined;
-    if (engine === "ml") {
+    if (mlEnabled) {
         try {
             const model = getArtistModel();
             const [taste, albums] = await Promise.all([getMLTaste(userId), getMLCatalog([...model.vectors.keys()])]);
@@ -106,6 +108,7 @@ export async function getRecommendations(req: Request, res: Response) {
     res.set("Cache-Control", "private, no-store");
     res.status(200).json({
         tipo: ranking.kind,
+        mlEnabled,
         version: mlRanking ? ml!.modelVersion : RECOMMENDATION_VERSION,
         ...(ml ? { ml } : {}),
         evidence: { signals: ranking.evidence, required: mlRanking ? 1 : RECOMMENDATION_PARAMS.minEvidence },
@@ -129,6 +132,18 @@ export async function getRecommendations(req: Request, res: Response) {
 export async function getRecommendationPreferencesHandler(req: Request, res: Response) {
     const preferences = await getRecommendationPreferences(req.user!.id);
     res.set("Cache-Control", "private, no-store").status(200).json(preferences);
+}
+
+export async function getRecommendationEngineHandler(req: Request, res: Response) {
+    const enabled = await getRecommendationEngine(req.user!.id);
+    res.set("Cache-Control", "private, no-store").status(200).json({ enabled });
+}
+
+export async function updateRecommendationEngine(req: Request, res: Response) {
+    const { enabled } = z.object({ enabled: z.boolean() }).strict().parse(req.body);
+    await saveRecommendationEngine(req.user!.id, enabled);
+    clearRecommendationsCache(req.user!.id);
+    res.set("Cache-Control", "private, no-store").status(200).json({ enabled });
 }
 
 export async function updateRecommendationPreferences(req: Request, res: Response) {
